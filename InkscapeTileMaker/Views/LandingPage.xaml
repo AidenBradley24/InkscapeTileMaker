@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="InkscapeTileMaker.Pages.LandingPage"
+             Title="LandingPage"
+
+             xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels"
+             x:DataType="vms:LandingViewModel">
+    <Grid RowDefinitions="0.2*, 0.8*"
+          ColumnDefinitions="0.3*, 0.7*"
+          Padding="50"
+          ColumnSpacing="5">
+        
+        <Label 
+            Text="Welcome to Inkscape Tile Maker!"
+            VerticalOptions="Center" 
+            HorizontalOptions="Center"
+            Grid.ColumnSpan="2"
+            FontSize="Title"/>
+
+        <!--Options-->
+        <VerticalStackLayout
+            Grid.Row="1"
+            Grid.Column="0"
+            Spacing="5"
+            VerticalOptions="Start"
+            Padding="0, 15">
+            <Button 
+                Text="Create New"
+                Command="{Binding CreateNewDesignCommand}"/>
+            <Button 
+                Text="Open Existing"
+                Command="{Binding OpenExistingDesignCommand}"/>
+        </VerticalStackLayout>
+
+        <StackLayout
+            Grid.Row="1"
+            Grid.Column="1"
+            Padding="10">
+            <Label 
+                Text="Inkscape Tile Maker helps you create beautiful tile designs using Inkscape. Get started by creating a new design or opening an existing one."
+                FontSize="Body"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"/>
+        </StackLayout>
+
+    </Grid>
+</ContentPage>

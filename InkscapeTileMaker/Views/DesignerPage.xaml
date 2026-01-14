@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="InkscapeTileMaker.Pages.DesignerPage"
+
+             xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels"
+             x:DataType="vms:DesignerViewModel"
+
+             xmlns:ska="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             
+             xmlns:pages="clr-namespace:InkscapeTileMaker.Pages">
+
+    <ContentPage.MenuBarItems>
+        <MenuBarItem Text="File">
+            <MenuFlyoutItem Text="New Design"
+                             Command="{Binding NewDesignCommand}" />
+            <MenuFlyoutItem Text="Open Design"
+                             Command="{Binding OpenDesignCommand}" />
+            <MenuFlyoutItem Text="Save Design"
+                             Command="{Binding SaveDesignCommand}" />
+            <MenuFlyoutItem Text="Save Design As..."
+                             Command="{Binding SaveDesignAsCommand}" />
+            <MenuFlyoutSeparator />
+            <MenuFlyoutItem Text="Exit"
+                             Command="{Binding ExitCommand}" />
+        </MenuBarItem>
+    </ContentPage.MenuBarItems>
+
+    <Grid RowDefinitions="0.25*, 0.75*"
+          ColumnDefinitions="0.35*, 0.65*"
+          Padding="10"
+          ColumnSpacing="5">
+
+        <Shell Shell.FlyoutBehavior="Disabled"
+               Grid.Column="0"
+               Grid.Row="0"
+               Grid.RowSpan="2">
+            <TabBar>
+                <Tab Title="Tileset">
+                    <ShellContent
+                        Title="Tileset"
+                        ContentTemplate="{DataTemplate pages:TileSetPage}"
+                        BindingContext="{Binding .}"
+                        Route="TilesetPage" />
+                </Tab>
+                <Tab Title="Export">
+                    <ShellContent
+                        Title="Export"
+                        ContentTemplate="{DataTemplate pages:ExportPage}"
+                        BindingContext="{Binding .}"
+                        Route="ExportPage" />
+                </Tab>
+            </TabBar>
+        </Shell>
+
+        <ska:SKCanvasView
+            Grid.Row="0"
+            Grid.RowSpan="2"
+            Grid.Column="1"
+            x:Name="PreviewCanvasView"
+            PaintSurface="OnPreviewCanvasViewPaintSurface" />
+
+    </Grid>
+</ContentPage>
