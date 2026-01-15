@@ -94,7 +94,6 @@ namespace InkscapeTileMaker.ViewModels
 
 			if (_renderedBitmap == null)
 			{
-				// Optional: draw an error indicator instead of silently doing nothing
 				using var errorPaint = new SKPaint
 				{
 					Color = SKColors.Red,
@@ -105,10 +104,8 @@ namespace InkscapeTileMaker.ViewModels
 				return;
 			}
 
-			// Draw the bitmap to fill the canvas (you can adjust the rect as needed)
-			var destRect = new SKRect(0, 0, width, height);
-
-			canvas.DrawBitmap(_renderedBitmap, destRect);
+			var destPoint = new SKPoint((width - _renderedBitmap.Width) / 2f, (height - _renderedBitmap.Height) / 2f);
+			canvas.DrawBitmap(_renderedBitmap, destPoint);
 		}
 
 		[RelayCommand]
