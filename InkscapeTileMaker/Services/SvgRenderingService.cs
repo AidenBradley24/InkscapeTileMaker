@@ -18,7 +18,7 @@ namespace InkscapeTileMaker.Services
 			// open file in inkscape
 			var startInfo = _inkscapeService.GetProcessStartInfo();
 			FileInfo exportFile = new FileInfo(Path.Combine(_tempDirService.TempDir.FullName, $"{Guid.NewGuid()}.png"));
-			startInfo.Arguments = $"--export-type=png --export-filename={exportFile.FullName} {svgFile.FullName}";
+			startInfo.Arguments = $"--export-type=\"png\" --export-filename=\"{exportFile.FullName}\" \"{svgFile.FullName}\"";
 
 			// start inkscape process
 			var process = Process.Start(startInfo) ?? throw new Exception("Failed to start Inkscape process.");

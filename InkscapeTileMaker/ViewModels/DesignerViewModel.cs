@@ -1,11 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Services;
+using Microsoft.Maui.ApplicationModel;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml.Linq;
-using CommunityToolkit.Mvvm.Input;
 
 namespace InkscapeTileMaker.ViewModels
 {
@@ -18,7 +19,11 @@ namespace InkscapeTileMaker.ViewModels
 		[ObservableProperty]
 		private string fileName;
 
+		private SKBitmap? _renderedBitmap;
+
 		public SvgConnectionService SvgConnectionService => _svgConnectionService;
+
+		public event Action CanvasNeedsRedraw = delegate { };
 
 		public DesignerViewModel(SvgConnectionService svgConnectionService, IWindowService windowService, ISvgRenderingService svgRenderingService)
 		{
@@ -35,13 +40,23 @@ namespace InkscapeTileMaker.ViewModels
 
 		private void UpdateSVG(XDocument obj)
 		{
-			
+			_renderedBitmap?.Dispose();
+			_renderedBitmap = null;
+
+			var svgFile = _svgConnectionService.SvgFile;
+			if (svgFile == null) return;
+
+			Task.Run(async () =>
+			{
+				using var stream = await _svgRenderingService.RenderSvgFile(svgFile);
+				if (stream.CanSeek) stream.Position = 0;
+				_renderedBitmap = SKBitmap.Decode(stream);
+				await MainThread.InvokeOnMainThreadAsync(CanvasNeedsRedraw);
+			});
 		}
 
-		public async Task Render(SKCanvas canvas, int width, int height)
+		public void RenderCanvas(SKCanvas canvas, int width, int height) // note that this must run synchronously
 		{
-			// All drawing logic goes here; canvas is provided by SKCanvasView.
-
 			const int tileSize = 20;
 
 			using (var lightPaint = new SKPaint { Color = new SKColor(0xEE, 0xEE, 0xEE) })
@@ -77,9 +92,23 @@ namespace InkscapeTileMaker.ViewModels
 				return;
 			}
 
-			using var stream = await _svgRenderingService.RenderSvgFile(_svgConnectionService.SvgFile);
-			var picture = SKPicture.Deserialize(stream);
-			canvas.DrawPicture(picture);
+			if (_renderedBitmap == null)
+			{
+				// Optional: draw an error indicator instead of silently doing nothing
+				using var errorPaint = new SKPaint
+				{
+					Color = SKColors.Red,
+					IsStroke = true,
+					StrokeWidth = 3
+				};
+				canvas.DrawRect(new SKRect(10, 10, width - 10, height - 10), errorPaint);
+				return;
+			}
+
+			// Draw the bitmap to fill the canvas (you can adjust the rect as needed)
+			var destRect = new SKRect(0, 0, width, height);
+
+			canvas.DrawBitmap(_renderedBitmap, destRect);
 		}
 
 		[RelayCommand]
@@ -110,7 +139,6 @@ namespace InkscapeTileMaker.ViewModels
 
 			if (!string.Equals(Path.GetExtension(result.FullPath), ".svg", StringComparison.OrdinalIgnoreCase))
 			{
-				// Optionally handle non-SVG selection here (toast, alert, etc.)
 				return;
 			}
 

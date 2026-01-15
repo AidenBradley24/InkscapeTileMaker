@@ -10,6 +10,15 @@ namespace InkscapeTileMaker.Pages
 		{
 			InitializeComponent();
 			BindingContext = vm;
+			vm.CanvasNeedsRedraw += PreviewCanvasView.InvalidateSurface;
+		}
+
+		~DesignerPage()
+		{
+			if (BindingContext is DesignerViewModel viewModel)
+			{
+				viewModel.CanvasNeedsRedraw -= PreviewCanvasView.InvalidateSurface;
+			}
 		}
 
 		private void OnPreviewCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -23,7 +32,7 @@ namespace InkscapeTileMaker.Pages
 			var width = e.Info.Width;
 			var height = e.Info.Height;
 
-			MainThread.InvokeOnMainThreadAsync(() => viewModel.Render(canvas, width, height));
+			viewModel.RenderCanvas(canvas, width, height);    
 		}
 	}
 }
