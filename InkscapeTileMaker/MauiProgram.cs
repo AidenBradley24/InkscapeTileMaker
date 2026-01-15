@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Maui;
+using CommunityToolkit.Maui.Storage;
 using InkscapeTileMaker.Pages;
 using InkscapeTileMaker.Services;
 using InkscapeTileMaker.ViewModels;
@@ -39,6 +40,7 @@ namespace InkscapeTileMaker
 			builder.Services.AddSingleton<ISettingsService, SettingsService>();
 			builder.Services.AddSingleton<ISvgRenderingService, SvgRenderingService>();
 			builder.Services.AddSingleton<ITempDirectoryService, TempDirectoryService>();
+            builder.Services.AddSingleton<IFileSaver>(FileSaver.Default);
 
 			// Windows + pages + viewmodels
 			builder.Services.AddTransient<LandingWindow>()

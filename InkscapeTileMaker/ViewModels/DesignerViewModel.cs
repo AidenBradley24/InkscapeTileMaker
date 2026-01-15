@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Maui.Storage;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Services;
 using Microsoft.Maui.ApplicationModel;
@@ -15,6 +16,7 @@ namespace InkscapeTileMaker.ViewModels
 		private readonly SvgConnectionService _svgConnectionService;
 		private readonly IWindowService _windowService;
 		private readonly ISvgRenderingService _svgRenderingService;
+		private readonly IFileSaver _fileSaver;
 
 		[ObservableProperty]
 		private string fileName;
@@ -25,12 +27,13 @@ namespace InkscapeTileMaker.ViewModels
 
 		public event Action CanvasNeedsRedraw = delegate { };
 
-		public DesignerViewModel(SvgConnectionService svgConnectionService, IWindowService windowService, ISvgRenderingService svgRenderingService)
+		public DesignerViewModel(SvgConnectionService svgConnectionService, IWindowService windowService, ISvgRenderingService svgRenderingService, IFileSaver fileSaver)
 		{
 			_svgConnectionService = svgConnectionService;
 			_svgConnectionService.DocumentLoaded += UpdateSVG;
 			_windowService = windowService;
 			_svgRenderingService = svgRenderingService;
+			_fileSaver = fileSaver;
 		}
 
 		~DesignerViewModel()
@@ -92,6 +95,15 @@ namespace InkscapeTileMaker.ViewModels
 				return;
 			}
 
+			if (_svgConnectionService.Document != null)
+			{
+				var gridElement = _svgConnectionService.Grid;
+				if (gridElement != null) DrawGrid(canvas, gridElement);
+
+				var svgElement = _svgConnectionService.SvgRoot;
+				if (svgElement != null) DrawBorder(canvas, svgElement);
+			}
+
 			if (_renderedBitmap == null)
 			{
 				using var errorPaint = new SKPaint
@@ -106,6 +118,119 @@ namespace InkscapeTileMaker.ViewModels
 
 			var destPoint = new SKPoint((width - _renderedBitmap.Width) / 2f, (height - _renderedBitmap.Height) / 2f);
 			canvas.DrawBitmap(_renderedBitmap, destPoint);
+		}
+
+		private void DrawGrid(SKCanvas canvas, XElement gridElement)
+		{
+			if (!((bool?)gridElement.Attribute("enabled") ?? true)) return;
+			if (gridElement.Attribute("units")?.Value != "px") return;
+
+			var color = SKColor.Parse(gridElement.Attribute("color")?.Value ?? "#0099e5");
+			var empColor = SKColor.Parse(gridElement.Attribute("empcolor")?.Value ?? "#e500a7");
+
+			float spacingX = Convert.ToSingle(gridElement.Attribute("spacingx")?.Value);
+			float spacingY = Convert.ToSingle(gridElement.Attribute("spacingy")?.Value);
+			int empSpacing = Convert.ToInt32(gridElement.Attribute("empspacing")?.Value);
+
+			if (spacingX <= 0 || spacingY <= 0 || empSpacing <= 0)
+			{
+				return;
+			}
+
+			using var normalPaint = new SKPaint
+			{
+				Color = color,
+				StrokeWidth = 1,
+				IsAntialias = false,
+				Style = SKPaintStyle.Stroke,
+			};
+
+			using var empPaint = new SKPaint
+			{
+				Color = empColor,
+				StrokeWidth = 1,
+				IsAntialias = false,
+				Style = SKPaintStyle.Stroke
+			};
+
+			var width = canvas.DeviceClipBounds.Width;
+			var height = canvas.DeviceClipBounds.Height;
+
+			// Vertical lines
+			int verticalIndex = 0;
+			for (float x = 0; x <= width; x += spacingX)
+			{
+				var paint = (verticalIndex % empSpacing == 0) ? empPaint : normalPaint;
+				canvas.DrawLine(x, 0, x, height, paint);
+				verticalIndex++;
+			}
+
+			// Horizontal lines
+			int horizontalIndex = 0;
+			for (float y = 0; y <= height; y += spacingY)
+			{
+				var paint = (horizontalIndex % empSpacing == 0) ? empPaint : normalPaint;
+				canvas.DrawLine(0, y, width, y, paint);
+				horizontalIndex++;
+			}
+		}
+
+		private void DrawBorder(SKCanvas canvas, XElement svgElement)
+		{
+			float width = Convert.ToSingle(svgElement.Attribute("width")?.Value);
+			float height = Convert.ToSingle(svgElement.Attribute("height")?.Value);
+			var namedViewElement = svgElement.Element(XName.Get("namedview", "sodipodi"));
+			SKColor borderColor = SKColor.Parse(namedViewElement?.Attribute("bordercolor")?.Value ?? "#ffffff");
+
+			// Canvas bounds
+			var canvasWidth = canvas.DeviceClipBounds.Width;
+			var canvasHeight = canvas.DeviceClipBounds.Height;
+
+			// Clamp SVG width/height to canvas in case they are larger or invalid
+			if (width <= 0 || height <= 0)
+			{
+				return;
+			}
+
+			var drawWidth = Math.Min(width, canvasWidth);
+			var drawHeight = Math.Min(height, canvasHeight);
+
+			using var borderPaint = new SKPaint
+			{
+				Color = SKColors.Black,
+				Style = SKPaintStyle.Fill,
+				IsAntialias = false
+			};
+
+			// Left area (excluding the top-left corner)
+			if (drawWidth < canvasWidth)
+			{
+				var leftRect = new SKRect(0, drawHeight, canvasWidth - drawWidth, canvasHeight);
+				if (!leftRect.IsEmpty)
+				{
+					canvas.DrawRect(leftRect, borderPaint);
+				}
+			}
+
+			// Right area
+			if (drawWidth < canvasWidth)
+			{
+				var rightRect = new SKRect(drawWidth, 0, canvasWidth, canvasHeight);
+				if (!rightRect.IsEmpty)
+				{
+					canvas.DrawRect(rightRect, borderPaint);
+				}
+			}
+
+			// Bottom area
+			if (drawHeight < canvasHeight)
+			{
+				var bottomRect = new SKRect(0, drawHeight, drawWidth, canvasHeight);
+				if (!bottomRect.IsEmpty)
+				{
+					canvas.DrawRect(bottomRect, borderPaint);
+				}
+			}
 		}
 
 		[RelayCommand]
@@ -141,6 +266,28 @@ namespace InkscapeTileMaker.ViewModels
 
 			var svgFile = new FileInfo(result.FullPath);
 			_windowService.OpenDesignerWindow(svgFile);
+		}
+
+		[RelayCommand]
+		public async Task SaveDesign()
+		{
+			var svgFile = _svgConnectionService.SvgFile;
+			if (svgFile == null) return;
+			_svgConnectionService.SaveSvg(svgFile);
+		}
+
+		[RelayCommand]
+		public async Task SaveDesignAs()
+		{
+			var svgFile = _svgConnectionService.SvgFile;
+			if (svgFile == null) return;
+
+			using (var ms = new MemoryStream())
+			{
+				await _svgConnectionService.Document!.SaveAsync(ms, SaveOptions.None, CancellationToken.None);
+				ms.Position = 0;
+				var result = await _fileSaver.SaveAsync(svgFile.FullName, svgFile.Name, ms);
+			}
 		}
 	}
 }
