@@ -6,6 +6,7 @@ using Microsoft.Maui.ApplicationModel;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Text;
 using System.Xml.Linq;
 
@@ -21,11 +22,35 @@ namespace InkscapeTileMaker.ViewModels
 		[ObservableProperty]
 		private string fileName;
 
+		[ObservableProperty]
+		private PointF previewOffset;
+
+		[ObservableProperty]
+		private ObservableCollection<decimal> zoomLevels =
+		[
+			0.1m,
+			0.25m,
+			0.5m,
+			0.75m,
+			1.0m,
+			1.25m,
+			1.5m,
+			2.0m,
+			3.0m,
+			4.0m,
+			5.0m,
+		];
+
+		[ObservableProperty]
+		private decimal _selectedZoomLevel;
+
 		private SKBitmap? _renderedBitmap;
 
 		public SvgConnectionService SvgConnectionService => _svgConnectionService;
 
 		public event Action CanvasNeedsRedraw = delegate { };
+
+		SKRect _previewRect;
 
 		public DesignerViewModel(SvgConnectionService svgConnectionService, IWindowService windowService, ISvgRenderingService svgRenderingService, IFileSaver fileSaver)
 		{
@@ -34,6 +59,8 @@ namespace InkscapeTileMaker.ViewModels
 			_windowService = windowService;
 			_svgRenderingService = svgRenderingService;
 			_fileSaver = fileSaver;
+
+			SelectedZoomLevel = 1.0m;
 		}
 
 		~DesignerViewModel()
@@ -60,21 +87,19 @@ namespace InkscapeTileMaker.ViewModels
 
 		public void RenderCanvas(SKCanvas canvas, int width, int height) // note that this must run synchronously
 		{
-			const int tileSize = 20;
-
-			using (var lightPaint = new SKPaint { Color = new SKColor(0xEE, 0xEE, 0xEE) })
-			using (var darkPaint = new SKPaint { Color = new SKColor(0xCC, 0xCC, 0xCC) })
+			if (_svgConnectionService.Document != null && _svgConnectionService.SvgRoot != null)
 			{
-				for (var y = 0; y < height; y += tileSize)
-				{
-					for (var x = 0; x < width; x += tileSize)
-					{
-						var useDark = ((x / tileSize) + (y / tileSize)) % 2 == 0;
-						var rect = new SKRect(x, y, x + tileSize, y + tileSize);
-						canvas.DrawRect(rect, useDark ? darkPaint : lightPaint);
-					}
-				}
+				var svgElement = _svgConnectionService.SvgRoot;
+				float w = Convert.ToSingle(svgElement.Attribute("width")?.Value) * (float)SelectedZoomLevel;
+				float h = Convert.ToSingle(svgElement.Attribute("height")?.Value) * (float)SelectedZoomLevel;
+				_previewRect = new SKRect(PreviewOffset.X, PreviewOffset.Y, w, h);
 			}
+			else
+			{
+				_previewRect = new SKRect(PreviewOffset.X, PreviewOffset.Y, width, height);
+			}
+
+			DrawTransparentBackground(canvas, width, height, PreviewOffset);
 
 			if (_svgConnectionService.SvgFile == null)
 			{
@@ -95,15 +120,6 @@ namespace InkscapeTileMaker.ViewModels
 				return;
 			}
 
-			if (_svgConnectionService.Document != null)
-			{
-				var gridElement = _svgConnectionService.Grid;
-				if (gridElement != null) DrawGrid(canvas, gridElement);
-
-				var svgElement = _svgConnectionService.SvgRoot;
-				if (svgElement != null) DrawBorder(canvas, svgElement);
-			}
-
 			if (_renderedBitmap == null)
 			{
 				using var errorPaint = new SKPaint
@@ -112,15 +128,71 @@ namespace InkscapeTileMaker.ViewModels
 					IsStroke = true,
 					StrokeWidth = 3
 				};
+
 				canvas.DrawRect(new SKRect(10, 10, width - 10, height - 10), errorPaint);
+				canvas.DrawLine(10, 10, width - 10, height - 10, errorPaint);
+				canvas.DrawLine(width - 10, 10, 10, height - 10, errorPaint);
 				return;
 			}
 
-			var destPoint = new SKPoint((width - _renderedBitmap.Width) / 2f, (height - _renderedBitmap.Height) / 2f);
+			var destPoint = new SKPoint((width - _renderedBitmap.Width) / 2f + PreviewOffset.X, (height - _renderedBitmap.Height) / 2f + PreviewOffset.Y);
 			canvas.DrawBitmap(_renderedBitmap, destPoint);
+
+			if (_svgConnectionService.Document != null)
+			{
+				var gridElement = _svgConnectionService.Grid;
+				if (gridElement != null) DrawGrid(canvas, gridElement, PreviewOffset, SelectedZoomLevel);
+
+				var svgElement = _svgConnectionService.SvgRoot;
+				if (svgElement != null) DrawBorder(canvas, svgElement, PreviewOffset, SelectedZoomLevel);
+			}
 		}
 
-		private void DrawGrid(SKCanvas canvas, XElement gridElement)
+		partial void OnSelectedZoomLevelChanged(decimal value)
+		{
+			CanvasNeedsRedraw.Invoke();
+		}
+
+		partial void OnPreviewOffsetChanged(PointF value)
+		{
+			CanvasNeedsRedraw.Invoke();
+		}
+
+		#region Drawing Methods
+
+		private void DrawTransparentBackground(SKCanvas canvas, int width, int height, PointF offset)
+		{
+			const int tileSize = 20;
+			using var lightPaint = new SKPaint { Color = new SKColor(0xEE, 0xEE, 0xEE) };
+			using var darkPaint = new SKPaint { Color = new SKColor(0xCC, 0xCC, 0xCC) };
+
+			// Normalize offset so we always fill the entire canvas
+			var offsetX = offset.X % tileSize;
+			var offsetY = offset.Y % tileSize;
+
+			if (offsetX < 0)
+				offsetX += tileSize;
+			if (offsetY < 0)
+				offsetY += tileSize;
+
+			for (var y = -tileSize; y < height + tileSize; y += tileSize)
+			{
+				for (var x = -tileSize; x < width + tileSize; x += tileSize)
+				{
+					var tileX = x + offsetX;
+					var tileY = y + offsetY;
+
+					// Determine which color this tile should be, taking offset into account
+					var useDark = (((int)Math.Floor(tileX / (float)tileSize)) +
+					               ((int)Math.Floor(tileY / (float)tileSize))) % 2 == 0;
+
+					var rect = new SKRect(tileX, tileY, tileX + tileSize, tileY + tileSize);
+					canvas.DrawRect(rect, useDark ? darkPaint : lightPaint);
+				}
+			}
+		}
+
+		private void DrawGrid(SKCanvas canvas, XElement gridElement, PointF offset, decimal zoom)
 		{
 			if (!((bool?)gridElement.Attribute("enabled") ?? true)) return;
 			if (gridElement.Attribute("units")?.Value != "px") return;
@@ -132,10 +204,14 @@ namespace InkscapeTileMaker.ViewModels
 			float spacingY = Convert.ToSingle(gridElement.Attribute("spacingy")?.Value);
 			int empSpacing = Convert.ToInt32(gridElement.Attribute("empspacing")?.Value);
 
-			if (spacingX <= 0 || spacingY <= 0 || empSpacing <= 0)
+			if (spacingX <= 0 || spacingY <= 0 || empSpacing <= 0 || zoom <= 0)
 			{
 				return;
 			}
+
+			// Apply zoom (unit scale)
+			spacingX *= (float)zoom;
+			spacingY *= (float)zoom;
 
 			using var normalPaint = new SKPaint
 			{
@@ -156,44 +232,69 @@ namespace InkscapeTileMaker.ViewModels
 			var width = canvas.DeviceClipBounds.Width;
 			var height = canvas.DeviceClipBounds.Height;
 
+			// Scale offset with zoom so grid stays aligned with content
+			var scaledOffsetX = offset.X * (float)zoom;
+			var scaledOffsetY = offset.Y * (float)zoom;
+
+			// Align grid with offset (same logic as transparent background, but zoom-aware)
+			var offsetX = scaledOffsetX % spacingX;
+			var offsetY = scaledOffsetY % spacingY;
+
+			if (offsetX < 0)
+				offsetX += spacingX;
+			if (offsetY < 0)
+				offsetY += spacingY;
+
 			// Vertical lines
 			int verticalIndex = 0;
-			for (float x = 0; x <= width; x += spacingX)
+			for (float x = -spacingX; x <= width + spacingX; x += spacingX)
 			{
+				var drawX = x + offsetX;
+				if (drawX < 0 || drawX > width) continue;
+
 				var paint = (verticalIndex % empSpacing == 0) ? empPaint : normalPaint;
-				canvas.DrawLine(x, 0, x, height, paint);
+				canvas.DrawLine(drawX, 0, drawX, height, paint);
 				verticalIndex++;
 			}
 
 			// Horizontal lines
 			int horizontalIndex = 0;
-			for (float y = 0; y <= height; y += spacingY)
+			for (float y = -spacingY; y <= height + spacingY; y += spacingY)
 			{
+				var drawY = y + offsetY;
+				if (drawY < 0 || drawY > height) continue;
+
 				var paint = (horizontalIndex % empSpacing == 0) ? empPaint : normalPaint;
-				canvas.DrawLine(0, y, width, y, paint);
+				canvas.DrawLine(0, drawY, width, drawY, paint);
 				horizontalIndex++;
 			}
 		}
 
-		private void DrawBorder(SKCanvas canvas, XElement svgElement)
+		private void DrawBorder(SKCanvas canvas, XElement svgElement, PointF offset, decimal zoom)
 		{
 			float width = Convert.ToSingle(svgElement.Attribute("width")?.Value);
 			float height = Convert.ToSingle(svgElement.Attribute("height")?.Value);
 			var namedViewElement = svgElement.Element(XName.Get("namedview", "sodipodi"));
 			SKColor borderColor = SKColor.Parse(namedViewElement?.Attribute("bordercolor")?.Value ?? "#ffffff");
 
-			// Canvas bounds
-			var canvasWidth = canvas.DeviceClipBounds.Width;
-			var canvasHeight = canvas.DeviceClipBounds.Height;
-
-			// Clamp SVG width/height to canvas in case they are larger or invalid
-			if (width <= 0 || height <= 0)
+			if (width <= 0 || height <= 0 || zoom <= 0)
 			{
 				return;
 			}
 
-			var drawWidth = Math.Min(width, canvasWidth);
-			var drawHeight = Math.Min(height, canvasHeight);
+			// Apply zoom (unit scale)
+			width *= (float)zoom;
+			height *= (float)zoom;
+
+			// Canvas bounds
+			var canvasWidth = canvas.DeviceClipBounds.Width;
+			var canvasHeight = canvas.DeviceClipBounds.Height;
+
+			// Box position aligned to offset and zoom
+			var boxLeft = offset.X * (float)zoom;
+			var boxTop = offset.Y * (float)zoom;
+			var boxRight = boxLeft + width;
+			var boxBottom = boxTop + height;
 
 			using var borderPaint = new SKPaint
 			{
@@ -202,36 +303,58 @@ namespace InkscapeTileMaker.ViewModels
 				IsAntialias = false
 			};
 
-			// Left area (excluding the top-left corner)
-			if (drawWidth < canvasWidth)
+			// Left area (to the left of the box, including top-left corner if in view)
+			if (boxLeft > 0)
 			{
-				var leftRect = new SKRect(0, drawHeight, canvasWidth - drawWidth, canvasHeight);
+				var leftRect = new SKRect(0, 0, Math.Min(boxLeft, canvasWidth), canvasHeight);
 				if (!leftRect.IsEmpty)
 				{
 					canvas.DrawRect(leftRect, borderPaint);
 				}
 			}
 
-			// Right area
-			if (drawWidth < canvasWidth)
+			// Right area (to the right of the box)
+			if (boxRight < canvasWidth)
 			{
-				var rightRect = new SKRect(drawWidth, 0, canvasWidth, canvasHeight);
+				var rightRect = new SKRect(Math.Max(boxRight, 0), 0, canvasWidth, canvasHeight);
 				if (!rightRect.IsEmpty)
 				{
 					canvas.DrawRect(rightRect, borderPaint);
 				}
 			}
 
-			// Bottom area
-			if (drawHeight < canvasHeight)
+			// Top area (above the box)
+			if (boxTop > 0)
 			{
-				var bottomRect = new SKRect(0, drawHeight, drawWidth, canvasHeight);
+				var topRect = new SKRect(
+					Math.Max(boxLeft, 0),
+					0,
+					Math.Min(boxRight, canvasWidth),
+					Math.Min(boxTop, canvasHeight));
+				if (!topRect.IsEmpty)
+				{
+					canvas.DrawRect(topRect, borderPaint);
+				}
+			}
+
+			// Bottom area (below the box)
+			if (boxBottom < canvasHeight)
+			{
+				var bottomRect = new SKRect(
+					Math.Max(boxLeft, 0),
+					Math.Max(boxBottom, 0),
+					Math.Min(boxRight, canvasWidth),
+					canvasHeight);
 				if (!bottomRect.IsEmpty)
 				{
 					canvas.DrawRect(bottomRect, borderPaint);
 				}
 			}
 		}
+
+		#endregion
+
+		#region Commands
 
 		[RelayCommand]
 		public async Task NewDesign()
@@ -289,5 +412,12 @@ namespace InkscapeTileMaker.ViewModels
 				var result = await _fileSaver.SaveAsync(svgFile.FullName, svgFile.Name, ms);
 			}
 		}
+
+		[RelayCommand]
+		public void ResetView()
+		{
+			PreviewOffset = new PointF(0, 0);
+		}
+		#endregion
 	}
 }
