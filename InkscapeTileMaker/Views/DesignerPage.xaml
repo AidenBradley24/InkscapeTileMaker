@@ -80,7 +80,7 @@
 
         </HorizontalStackLayout>
 
-        <ska:SKCanvasView     
+        <ska:SKCanvasView
                 x:Name="PreviewCanvasView"
                 PaintSurface="OnPreviewCanvasViewPaintSurface"
                 Grid.Row="1"

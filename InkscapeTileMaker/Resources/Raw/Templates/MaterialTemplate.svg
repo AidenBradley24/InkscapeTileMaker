@@ -8,7 +8,7 @@
    version="1.1"
    id="svg1"
    inkscape:version="1.4 (86a8ad7, 2024-10-11)"
-   sodipodi:docname="GridTemplate.svg"
+   sodipodi:docname="MaterialTemplate.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -24,9 +24,9 @@
      inkscape:deskcolor="#000000"
      inkscape:document-units="px"
      showgrid="true"
-     inkscape:zoom="1.1"
-     inkscape:cx="511.36364"
-     inkscape:cy="578.18182"
+     inkscape:zoom="2.04"
+     inkscape:cx="521.32353"
+     inkscape:cy="336.27451"
      inkscape:window-width="3840"
      inkscape:window-height="2036"
      inkscape:window-x="-12"
@@ -39,8 +39,8 @@
        units="px"
        originx="0"
        originy="0"
-       spacingx="64"
-       spacingy="64"
+       spacingx="128"
+       spacingy="128"
        empcolor="#e500a7"
        empopacity="0.30196078"
        color="#0099e5"
@@ -54,5 +54,39 @@
   <g
      inkscape:label="Tiles"
      inkscape:groupmode="layer"
-     id="layer1" />
+     id="layer1">
+    <rect
+       style="fill:#f9f9f9;stroke-width:14.231;paint-order:fill markers stroke"
+       id="rect1"
+       width="128"
+       height="128"
+       x="0"
+       y="128" />
+    <rect
+       style="fill:#f9f9f9;stroke-width:20.1256;paint-order:fill markers stroke"
+       id="rect1-8"
+       width="256"
+       height="128"
+       x="256"
+       y="128" />
+    <path
+       id="rect1-8-5"
+       style="fill:#f9f9f9;stroke-width:20.1256;paint-order:fill markers stroke"
+       d="M 512 128 L 512 256 L 768 256 L 768 128 L 512 128 z " />
+    <rect
+       style="fill:#f9f9f9;stroke-width:20.1256;paint-order:fill markers stroke"
+       id="rect1-8-5-1"
+       width="256"
+       height="128"
+       x="0"
+       y="-768"
+       transform="rotate(90)" />
+    <rect
+       style="fill:#f9f9f9;stroke-width:31.9563;paint-order:fill markers stroke"
+       id="rect2"
+       width="256"
+       height="256"
+       x="768"
+       y="0" />
+  </g>
 </svg>
