@@ -125,13 +125,23 @@ namespace InkscapeTileMaker.ViewModels
 				return;
 			}
 
-			var destPoint = new SKPoint((width - _renderedBitmap.Width) / 2f + PreviewOffset.X, (height - _renderedBitmap.Height) / 2f + PreviewOffset.Y);
-			canvas.DrawBitmap(_renderedBitmap, destPoint);
+			var zoomFactor = (float)SelectedZoomLevel;
+
+			var previewRect = new SKRect()
+			{
+				Top = PreviewOffset.Y * zoomFactor,
+				Left = PreviewOffset.X * zoomFactor,
+				Size = new SKSize(
+					_renderedBitmap.Width * zoomFactor,
+					_renderedBitmap.Height * zoomFactor),
+			};
+
+			canvas.DrawBitmap(_renderedBitmap, previewRect);
 
 			if (_svgConnectionService.Document != null)
 			{
 				var gridElement = _svgConnectionService.Grid;
-				if (gridElement != null) DrawGrid(canvas, gridElement, PreviewOffset, SelectedZoomLevel);
+				if (gridElement != null) DrawGrid(canvas, gridElement, previewRect, SelectedZoomLevel);
 
 				var svgElement = _svgConnectionService.SvgRoot;
 				if (svgElement != null) DrawBorder(canvas, svgElement, PreviewOffset, SelectedZoomLevel);
@@ -182,7 +192,7 @@ namespace InkscapeTileMaker.ViewModels
 			}
 		}
 
-		private void DrawGrid(SKCanvas canvas, XElement gridElement, PointF offset, decimal zoom)
+		private void DrawGrid(SKCanvas canvas, XElement gridElement, SKRect rect, decimal scale)
 		{
 			if (!((bool?)gridElement.Attribute("enabled") ?? true)) return;
 			if (gridElement.Attribute("units")?.Value != "px") return;
@@ -190,27 +200,9 @@ namespace InkscapeTileMaker.ViewModels
 			float spacingX = Convert.ToSingle(gridElement.Attribute("spacingx")?.Value);
 			float spacingY = Convert.ToSingle(gridElement.Attribute("spacingy")?.Value);
 			int empSpacing = Convert.ToInt32(gridElement.Attribute("empspacing")?.Value);
-			if (spacingX <= 0 || spacingY <= 0 || empSpacing <= 0 || zoom <= 0) return;
-
-			// Apply zoom (unit scale)
-			spacingX *= (float)zoom;
-			spacingY *= (float)zoom;
-
-			var width = canvas.DeviceClipBounds.Width;
-			var height = canvas.DeviceClipBounds.Height;
-
-			// Scale offset with zoom so grid stays aligned with content
-			var scaledOffsetX = offset.X * (float)zoom;
-			var scaledOffsetY = offset.Y * (float)zoom;
-
-			// Align grid with offset (same logic as transparent background, but zoom-aware)
-			var offsetX = scaledOffsetX % spacingX;
-			var offsetY = scaledOffsetY % spacingY;
-
-			if (offsetX < 0)
-				offsetX += spacingX;
-			if (offsetY < 0)
-				offsetY += spacingY;
+			if (spacingX <= 0 || spacingY <= 0 || empSpacing <= 0 || scale <= 0) return;
+			spacingX *= (float)scale;
+			spacingY *= (float)scale;
 
 			var color = SKColor.Parse(gridElement.Attribute("color")?.Value ?? "#0099e5");
 			var empColor = SKColor.Parse(gridElement.Attribute("empcolor")?.Value ?? "#e500a7");
@@ -235,25 +227,19 @@ namespace InkscapeTileMaker.ViewModels
 
 			// Vertical lines
 			int verticalIndex = 0;
-			for (float x = -spacingX; x <= width + spacingX; x += spacingX)
+			for (float x = rect.Left; x <= rect.Right; x += spacingX)
 			{
-				var drawX = x + offsetX;
-				if (drawX < 0 || drawX > width) continue;
-
 				var paint = (verticalIndex % empSpacing == 0) ? empPaint : normalPaint;
-				canvas.DrawLine(drawX, 0, drawX, height, paint);
+				canvas.DrawLine(x, rect.Top, x, rect.Bottom, paint);
 				verticalIndex++;
 			}
 
 			// Horizontal lines
 			int horizontalIndex = 0;
-			for (float y = -spacingY; y <= height + spacingY; y += spacingY)
+			for (float y = rect.Top; y <= rect.Bottom; y += spacingY)
 			{
-				var drawY = y + offsetY;
-				if (drawY < 0 || drawY > height) continue;
-
 				var paint = (horizontalIndex % empSpacing == 0) ? empPaint : normalPaint;
-				canvas.DrawLine(0, drawY, width, drawY, paint);
+				canvas.DrawLine(rect.Left, y, rect.Right, y, paint);
 				horizontalIndex++;
 			}
 		}
