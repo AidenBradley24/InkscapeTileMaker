@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="InkscapeTileMaker.Pages.TileSetPage"
              Title="TileSetPage"
+             x:Name="TilePage"
              xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels"
              x:DataType="vms:DesignerViewModel"
              xmlns:models="clr-namespace:InkscapeTileMaker.Models">
@@ -16,10 +17,9 @@
               ColumnDefinitions="Auto,*"
               RowDefinitions="Auto,Auto"
               Padding="0,0,0,12">
-            <!-- Name -->
             <Label Grid.Row="0"
                    Grid.Column="0"
-                   Text="Name:"
+                   Text="Tileset:"
                    FontAttributes="Bold"
                    VerticalTextAlignment="Center"
                    Margin="0,0,8,0" />
@@ -29,17 +29,16 @@
                    Text="{Binding FileName}"
                    VerticalTextAlignment="Center" />
 
-            <!-- Image size -->
             <Label Grid.Row="1"
                    Grid.Column="0"
-                   Text="Image Size:"
+                   Text="Tile Size:"
                    FontAttributes="Bold"
                    VerticalTextAlignment="Center"
                    Margin="0,4,8,0" />
 
             <Label Grid.Row="1"
                    Grid.Column="1"
-                   Text="{Binding }"
+                   Text="{Binding TileSize, StringFormat='{}{0.x} x {0.y}'}"
                    VerticalTextAlignment="Center"
                    Margin="0,4,0,0" />
         </Grid>
@@ -65,7 +64,6 @@
                             Stroke="Black"
                             StrokeThickness="1"
                             ToolTipProperties.Text="{Binding Value.Name}">
-
                             <Grid WidthRequest="32"
                                   HeightRequest="32"
                                   BackgroundColor="LightGray">
@@ -85,6 +83,10 @@
                                        TextColor="Black"
                                        BackgroundColor="#80FFFFFF" />
                             </Grid>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding BindingContext.SelectTileCommand, Source={x:Reference Name=TilePage}}"
+                                                      CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
                         </Border>
                     </DataTemplate>
                 </BindableLayout.ItemTemplate>

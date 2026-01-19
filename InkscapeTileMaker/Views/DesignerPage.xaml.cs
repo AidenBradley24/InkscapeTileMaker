@@ -106,7 +106,6 @@ namespace InkscapeTileMaker.Pages
 		}
 
 		private (int row, int col)? PointToPosition(Point? point)
-		// TODO make this function work correctly
 		{
 			if (BindingContext is not DesignerViewModel viewModel) return null;
 			if (point is null) return null;

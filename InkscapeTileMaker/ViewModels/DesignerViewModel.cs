@@ -45,6 +45,9 @@ namespace InkscapeTileMaker.ViewModels
 		public partial Tile? SelectedTile { get; set; }
 
 		[ObservableProperty]
+		public partial (int x, int y) TileSize { get; set; }
+
+		[ObservableProperty]
 		public partial ObservableCollection<TileViewModel> Tiles { get; set; } = [];
 
 		[ObservableProperty]
@@ -81,6 +84,8 @@ namespace InkscapeTileMaker.ViewModels
 			FileName = svgFile?.Name;
 			if (svgFile == null) return;
 
+			TileSize = _svgConnectionService.TileSize ?? (0, 0);
+
 			var newTiles = _svgConnectionService.GetAllTiles().ToArray();
 			if (Tiles.Count > 0)
 			{
@@ -90,6 +95,7 @@ namespace InkscapeTileMaker.ViewModels
 					SelectedTile = matchingTile?.Value;
 				}
 			}
+
 			Tiles.Clear();
 			foreach (var tile in newTiles)
 			{
@@ -473,6 +479,12 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			var tile = Tiles.FirstOrDefault(t => t.Value.Row == row && t.Value.Column == column);
 			SelectedTile = tile?.Value;
+		}
+
+		[RelayCommand]
+		public void SelectTile(TileViewModel tvm)
+		{
+			SelectedTile = tvm.Value;
 		}
 		#endregion
 	}
