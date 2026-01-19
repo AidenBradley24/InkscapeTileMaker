@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 
 namespace InkscapeTileMaker.Models;
 
-[XmlRoot("tile", Namespace = SvgConnectionService.appNamespacePrefix)]
+[XmlRoot("tile", Namespace = "https://github.com/AidenBradley24/InkscapeTileMaker")]
 public class Tile : IComparable<Tile>
 {
 	public string Name { get; set; } = "";

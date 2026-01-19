@@ -3,7 +3,7 @@ using System.Xml.Serialization;
 
 namespace InkscapeTileMaker.Models
 {
-    public class TileWrapper : IDisposable
+    public class TileWrapper
     {
         private readonly Tile _tile;
         private readonly XElement _element;
@@ -18,12 +18,6 @@ namespace InkscapeTileMaker.Models
             _tile = (Tile)serializer.Deserialize(reader)!;
             _collection = collectionElement;
             _element = tileElement;
-		}
-
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-			Sync();
 		}
 
         public void Sync()

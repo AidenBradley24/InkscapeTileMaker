@@ -15,7 +15,7 @@ public partial class SvgConnectionService : IDisposable
 	public XElement? SvgRoot => Document?.Root;
 	public XElement? NamedView => SvgRoot?.Element(XName.Get("namedview", sodipodiNamespace.NamespaceName));
 	public XElement? Grid => NamedView?.Element(XName.Get("grid", inkscapeNamespace.NamespaceName));
-	public XElement? Defs => SvgRoot?.Element(XName.Get("defs"));
+	public XElement? Defs => SvgRoot?.Element(XName.Get("defs", svgNamespace.NamespaceName));
 
 	public (int width, int height)? TileSize
 	{
@@ -24,9 +24,10 @@ public partial class SvgConnectionService : IDisposable
 			if (Grid is null) return null;
 			var spacingX = Grid.Attribute(XName.Get("spacingx"))?.Value;
 			var spacingY = Grid.Attribute(XName.Get("spacingy"))?.Value;
-			if (int.TryParse(spacingX, out var width) && int.TryParse(spacingY, out var height))
+			var empSpacing = Grid.Attribute(XName.Get("empspacing"))?.Value;
+			if (int.TryParse(spacingX, out int width) && int.TryParse(spacingY, out int height) && int.TryParse(empSpacing, out int unitsPerTile))
 			{
-				return (width, height);
+				return (width * unitsPerTile, height * unitsPerTile);
 			}
 			return null;
 		}
@@ -34,10 +35,11 @@ public partial class SvgConnectionService : IDisposable
 
 	public event Action<XDocument> DocumentLoaded = delegate { };
 
-	public const string appNamespacePrefix = "itm";
+	public const string appNamespacePrefix = "tilemaker";
 	public static readonly XNamespace appNamespace = "https://github.com/AidenBradley24/InkscapeTileMaker";
 	public static readonly XNamespace inkscapeNamespace = "http://www.inkscape.org/namespaces/inkscape";
 	public static readonly XNamespace sodipodiNamespace = "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd";
+	public static readonly XNamespace svgNamespace = "http://www.w3.org/2000/svg";
 
 	public void LoadSvg(FileInfo svgFile)
 	{
