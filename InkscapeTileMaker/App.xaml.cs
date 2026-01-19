@@ -2,20 +2,20 @@
 
 namespace InkscapeTileMaker
 {
-    public partial class App : Application
-    {
+	public partial class App : Application
+	{
 		private readonly IServiceProvider _services;
 
 		public App(IServiceProvider services)
-        {
-            InitializeComponent();
+		{
+			InitializeComponent();
 			_services = services;
 		}
 
 		protected override Window CreateWindow(IActivationState? activationState)
-        {
-            var landingWindow = _services.GetRequiredService<LandingWindow>();
-            return landingWindow;
-        }
-    }
+		{
+			var landingWindow = _services.GetRequiredService<LandingWindow>();
+			return landingWindow;
+		}
+	}
 }

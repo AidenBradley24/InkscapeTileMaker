@@ -3,15 +3,92 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="InkscapeTileMaker.Pages.TileSetPage"
              Title="TileSetPage"
-
              xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels"
-             x:DataType="vms:DesignerViewModel"            
-             >
-    <VerticalStackLayout
-        BackgroundColor="Gray">
-        <Label 
-            Text="tileset"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             x:DataType="vms:DesignerViewModel"
+             xmlns:models="clr-namespace:InkscapeTileMaker.Models">
+
+    <Grid BackgroundColor="Gray"
+          Padding="12"
+          RowDefinitions="Auto,*">
+
+        <!-- Top details section -->
+        <Grid Row="0"
+              ColumnDefinitions="Auto,*"
+              RowDefinitions="Auto,Auto"
+              Padding="0,0,0,12">
+            <!-- Name -->
+            <Label Grid.Row="0"
+                   Grid.Column="0"
+                   Text="Name:"
+                   FontAttributes="Bold"
+                   VerticalTextAlignment="Center"
+                   Margin="0,0,8,0" />
+
+            <Label Grid.Row="0"
+                   Grid.Column="1"
+                   Text="{Binding FileName}"
+                   VerticalTextAlignment="Center" />
+
+            <!-- Image size -->
+            <Label Grid.Row="1"
+                   Grid.Column="0"
+                   Text="Image Size:"
+                   FontAttributes="Bold"
+                   VerticalTextAlignment="Center"
+                   Margin="0,4,8,0" />
+
+            <Label Grid.Row="1"
+                   Grid.Column="1"
+                   Text="{Binding }"
+                   VerticalTextAlignment="Center"
+                   Margin="0,4,0,0" />
+        </Grid>
+
+        <!-- Tiles flex layout -->
+        <ScrollView Grid.Row="1">
+            <FlexLayout
+                Direction="Row"
+                Wrap="Wrap"
+                AlignItems="Start"
+                AlignContent="Start"
+                BindableLayout.ItemsSource="{Binding Tiles}"
+                JustifyContent="Start"
+                Margin="0">
+
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vms:TileViewModel">
+                        <!-- Each tile -->
+                        <Border
+                            Padding="4"
+                            Margin="2"
+                            BackgroundColor="White"
+                            Stroke="Black"
+                            StrokeThickness="1"
+                            ToolTipProperties.Text="{Binding Value.Name}">
+
+                            <Grid WidthRequest="32"
+                                  HeightRequest="32"
+                                  BackgroundColor="LightGray">
+
+                                <!-- Tile visual -->
+                                <Image Source="{Binding PreviewImage}"
+                                       Aspect="AspectFill"
+                                       WidthRequest="32"
+                                       HeightRequest="32" />
+
+                                <!-- Name overlay (optional) -->
+                                <Label Text="{Binding Value.Name}"
+                                       FontSize="10"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       LineBreakMode="TailTruncation"
+                                       TextColor="Black"
+                                       BackgroundColor="#80FFFFFF" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+        </ScrollView>
+    </Grid>
 </ContentPage>

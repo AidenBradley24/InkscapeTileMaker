@@ -1,12 +1,10 @@
-﻿using InkscapeTileMaker.Pages;
-
-namespace InkscapeTileMaker
+﻿namespace InkscapeTileMaker
 {
-    public partial class AppShell : Shell
-    {
-        public AppShell()
-        {
-            InitializeComponent();
+	public partial class AppShell : Shell
+	{
+		public AppShell()
+		{
+			InitializeComponent();
 		}
-    }
+	}
 }

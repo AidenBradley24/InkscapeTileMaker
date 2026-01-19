@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace InkscapeTileMaker.Models;
+﻿namespace InkscapeTileMaker.Models;
 
 public enum TileType
 {

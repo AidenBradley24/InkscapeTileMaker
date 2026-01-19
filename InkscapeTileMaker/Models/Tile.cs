@@ -1,6 +1,4 @@
-﻿using InkscapeTileMaker.Services;
-using SkiaSharp;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
 namespace InkscapeTileMaker.Models;
 

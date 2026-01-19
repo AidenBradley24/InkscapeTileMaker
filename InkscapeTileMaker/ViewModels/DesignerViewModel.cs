@@ -1,15 +1,10 @@
 ﻿using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using InkscapeTileMaker.Models;
 using InkscapeTileMaker.Services;
-using Microsoft.Maui.ApplicationModel;
 using SkiaSharp;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
 using System.Xml.Linq;
 
 namespace InkscapeTileMaker.ViewModels
@@ -50,6 +45,9 @@ namespace InkscapeTileMaker.ViewModels
 		public partial Tile? SelectedTile { get; set; }
 
 		[ObservableProperty]
+		public partial ObservableCollection<TileViewModel> Tiles { get; set; } = [];
+
+		[ObservableProperty]
 		public partial (int row, int col)? HoveredTile { get; set; }
 
 		private SKBitmap? _renderedBitmap;
@@ -57,8 +55,6 @@ namespace InkscapeTileMaker.ViewModels
 		public SvgConnectionService SvgConnectionService => _svgConnectionService;
 
 		public event Action CanvasNeedsRedraw = delegate { };
-
-		private TileWrapper[] _tiles;
 
 		public DesignerViewModel(SvgConnectionService svgConnectionService, IWindowService windowService, ISvgRenderingService svgRenderingService, IFileSaver fileSaver)
 		{
@@ -69,7 +65,6 @@ namespace InkscapeTileMaker.ViewModels
 			_fileSaver = fileSaver;
 
 			SelectedZoomLevel = 1.0m;
-			_tiles = [];
 		}
 
 		~DesignerViewModel()
@@ -83,10 +78,11 @@ namespace InkscapeTileMaker.ViewModels
 			_renderedBitmap = null;
 
 			var svgFile = _svgConnectionService.SvgFile;
+			FileName = svgFile?.Name;
 			if (svgFile == null) return;
 
 			var newTiles = _svgConnectionService.GetAllTiles().ToArray();
-			if (_tiles != null && _tiles.Length > 0)
+			if (Tiles.Count > 0)
 			{
 				if (SelectedTile != null)
 				{
@@ -94,13 +90,34 @@ namespace InkscapeTileMaker.ViewModels
 					SelectedTile = matchingTile?.Value;
 				}
 			}
-			_tiles = newTiles;
+			Tiles.Clear();
+			foreach (var tile in newTiles)
+			{
+				Tiles.Add(tile);
+			}
 
 			Task.Run(async () =>
 			{
-				using var stream = await _svgRenderingService.RenderSvgFile(svgFile);
-				if (stream.CanSeek) stream.Position = 0;
-				_renderedBitmap = SKBitmap.Decode(stream);
+				using (var stream = await _svgRenderingService.RenderSvgFile(svgFile, CancellationToken.None))
+				{
+					if (stream.CanSeek) stream.Position = 0;
+					_renderedBitmap = SKBitmap.Decode(stream);
+				}
+
+				foreach (var tileWrapper in Tiles)
+				{
+					tileWrapper.PreviewImage = ImageSource.FromStream(token =>
+					{
+						return _svgRenderingService.RenderSvgSegment(
+						svgFile,
+						left: tileWrapper.Value.Column * _svgConnectionService.TileSize!.Value.width,
+						top: tileWrapper.Value.Row * _svgConnectionService.TileSize!.Value.height,
+						right: (tileWrapper.Value.Column + 1) * _svgConnectionService.TileSize!.Value.width,
+						bottom: (tileWrapper.Value.Row + 1) * _svgConnectionService.TileSize!.Value.height,
+						token);
+					});
+				}
+
 				await MainThread.InvokeOnMainThreadAsync(CanvasNeedsRedraw);
 			});
 		}
@@ -155,16 +172,16 @@ namespace InkscapeTileMaker.ViewModels
 				if (svgElement != null) DrawBorder(canvas, svgElement, PreviewOffset, SelectedZoomLevel);
 			}
 
-			if (SelectedTile != null)
-			{
-				var tileRect = GetTileRect(SelectedTile.Row, SelectedTile.Column);
-				DrawSelectionOutline(canvas, tileRect);
-			}
-
 			if (HoveredTile != null)
 			{
 				var tileRect = GetTileRect(HoveredTile.Value.row, HoveredTile.Value.col);
-				DrawSelectionOutline(canvas, tileRect);
+				DrawSelectionOutline(canvas, tileRect, SKColors.DarkGreen.WithAlpha(128));
+			}
+
+			if (SelectedTile != null)
+			{
+				var tileRect = GetTileRect(SelectedTile.Row, SelectedTile.Column);
+				DrawSelectionOutline(canvas, tileRect, SKColors.Blue);
 			}
 		}
 
@@ -190,8 +207,8 @@ namespace InkscapeTileMaker.ViewModels
 			float width = _svgConnectionService.TileSize!.Value.width * (float)SelectedZoomLevel;
 			float height = _svgConnectionService.TileSize!.Value.height * (float)SelectedZoomLevel;
 
-			float top = height * row + PreviewOffset.Y;
-			float left = width * column + PreviewOffset.X;
+			float top = height * row + PreviewOffset.Y * (float)SelectedZoomLevel;
+			float left = width * column + PreviewOffset.X * (float)SelectedZoomLevel;
 			float right = left + width;
 			float bottom = top + height;
 
@@ -231,7 +248,7 @@ namespace InkscapeTileMaker.ViewModels
 				for (var x = -tileSize; x < width + tileSize; x += tileSize)
 				{
 					var useDark = (((int)Math.Floor(x / (float)tileSize)) +
-					               ((int)Math.Floor(y / (float)tileSize))) % 2 == 0;
+								   ((int)Math.Floor(y / (float)tileSize))) % 2 == 0;
 
 					var rect = new SKRect(x, y, x + tileSize, y + tileSize);
 					canvas.DrawRect(rect, useDark ? darkPaint : lightPaint);
@@ -373,11 +390,11 @@ namespace InkscapeTileMaker.ViewModels
 			}
 		}
 
-		private void DrawSelectionOutline(SKCanvas canvas, SKRect rect)
+		private void DrawSelectionOutline(SKCanvas canvas, SKRect rect, SKColor color)
 		{
 			using var outlinePaint = new SKPaint
 			{
-				Color = SKColors.Blue,
+				Color = color,
 				Style = SKPaintStyle.Stroke,
 				StrokeWidth = 2,
 				IsAntialias = true
@@ -454,7 +471,7 @@ namespace InkscapeTileMaker.ViewModels
 
 		public void SelectTileAt(int row, int column)
 		{
-			var tile = _tiles.FirstOrDefault(t => t.Value.Row == row && t.Value.Column == column);
+			var tile = Tiles.FirstOrDefault(t => t.Value.Row == row && t.Value.Column == column);
 			SelectedTile = tile?.Value;
 		}
 		#endregion

@@ -15,6 +15,6 @@ public partial class DesignerWindow : Window
 			Title = "Inkscape Tile Maker - Designer",
 		};
 
-		
+
 	}
 }

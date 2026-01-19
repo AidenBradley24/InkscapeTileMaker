@@ -1,7 +1,4 @@
-﻿using InkscapeTileMaker.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using InkscapeTileMaker.ViewModels;
 using System.Xml.Linq;
 
 namespace InkscapeTileMaker.Services;
@@ -85,7 +82,7 @@ public partial class SvgConnectionService : IDisposable
 		return collectionElement;
 	}
 
-	public TileWrapper GetTile(int x, int y)
+	public TileViewModel GetTile(int x, int y)
 	{
 		if (Document is null) throw new InvalidOperationException("SVG Document is not loaded.");
 
@@ -96,16 +93,16 @@ public partial class SvgConnectionService : IDisposable
 			tileElement = new XElement(XName.Get($"tile-{x}-{y}", appNamespace.NamespaceName));
 			collectionElement.Add(tileElement);
 		}
-		var tileWrapper = new TileWrapper(tileElement, collectionElement);
+		var tileWrapper = new TileViewModel(tileElement, collectionElement);
 		return tileWrapper;
 	}
 
-	public IEnumerable<TileWrapper> GetAllTiles()
+	public IEnumerable<TileViewModel> GetAllTiles()
 	{
 		if (Document is null) throw new InvalidOperationException("SVG Document is not loaded.");
 		XElement collectionElement = GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
 		return collectionElement
 			.Elements(XName.Get("tile", appNamespace.NamespaceName))
-			.Select(tileElement => new TileWrapper(tileElement, collectionElement));
+			.Select(tileElement => new TileViewModel(tileElement, collectionElement));
 	}
 }

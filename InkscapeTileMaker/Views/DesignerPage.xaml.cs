@@ -1,6 +1,5 @@
 using InkscapeTileMaker.ViewModels;
 using SkiaSharp.Views.Maui;
-using SkiaSharp.Views.Maui.Controls;
 
 namespace InkscapeTileMaker.Pages
 {
@@ -106,8 +105,8 @@ namespace InkscapeTileMaker.Pages
 			}
 		}
 
-		private (int row, int col)? PointToPosition(Point? point) 
-			// TODO make this function work correctly
+		private (int row, int col)? PointToPosition(Point? point)
+		// TODO make this function work correctly
 		{
 			if (BindingContext is not DesignerViewModel viewModel) return null;
 			if (point is null) return null;
@@ -122,8 +121,8 @@ namespace InkscapeTileMaker.Pages
 			if (zoom <= 0) zoom = 1.0;
 
 			// 1) Convert from screen coordinates to coordinates relative to the preview rect
-			var px = point.Value.X - rect.Left + viewModel.PreviewOffset.X;
-			var py = point.Value.Y - rect.Top + viewModel.PreviewOffset.Y;
+			var px = point.Value.X - rect.Left + viewModel.PreviewOffset.X / 2;
+			var py = point.Value.Y - rect.Top + viewModel.PreviewOffset.Y / 2;
 
 			// 2) If outside the preview rect, ignore (no tile)
 			if (px < 0 || py < 0 || px > rect.Width || py > rect.Height)
