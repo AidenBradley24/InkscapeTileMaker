@@ -5,10 +5,19 @@ namespace InkscapeTileMaker.Models;
 [XmlRoot("tile", Namespace = "https://github.com/AidenBradley24/InkscapeTileMaker")]
 public class Tile : IComparable<Tile>
 {
+	[XmlAttribute("name")]
 	public string Name { get; set; } = "";
+
+	[XmlAttribute("type")]
 	public TileType Type { get; set; } = TileType.Singular;
+
+	[XmlAttribute("rotation")]
 	public RotationAlignment Rotation { get; set; } = RotationAlignment.None;
+
+	[XmlAttribute("row")]
 	public int Row { get; set; }
+
+	[XmlAttribute("column")]
 	public int Column { get; set; }
 
 	public int CompareTo(Tile? other)

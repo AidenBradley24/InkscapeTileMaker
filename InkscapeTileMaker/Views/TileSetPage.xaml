@@ -45,52 +45,66 @@
 
         <!-- Tiles flex layout -->
         <ScrollView Grid.Row="1">
-            <FlexLayout
-                Direction="Row"
-                Wrap="Wrap"
-                AlignItems="Start"
-                AlignContent="Start"
-                BindableLayout.ItemsSource="{Binding Tiles}"
-                JustifyContent="Start"
-                Margin="0">
+            <VerticalStackLayout Spacing="8">
 
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="vms:TileViewModel">
-                        <!-- Each tile -->
-                        <Border
-                            Padding="4"
-                            Margin="2"
-                            BackgroundColor="White"
-                            Stroke="Black"
-                            StrokeThickness="1"
-                            ToolTipProperties.Text="{Binding Value.Name}">
-                            <Grid WidthRequest="32"
-                                  HeightRequest="32"
-                                  BackgroundColor="LightGray">
+                <!-- Tiles flex layout -->
+                <FlexLayout
+                    Direction="Row"
+                    Wrap="Wrap"
+                    AlignItems="Start"
+                    AlignContent="Start"
+                    JustifyContent="Start"
+                    Margin="0"
+                    BindableLayout.ItemsSource="{Binding Tiles}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vms:TileViewModel">
+                            <!-- Each tile -->
+                            <Border
+                                Padding="4"
+                                Margin="2"
+                                BackgroundColor="White"
+                                Stroke="Black"
+                                StrokeThickness="1"
+                                ToolTipProperties.Text="{Binding Value.Name}">
+                                <Grid WidthRequest="32"
+                                      HeightRequest="32"
+                                      BackgroundColor="LightGray">
 
-                                <!-- Tile visual -->
-                                <Image Source="{Binding PreviewImage}"
-                                       Aspect="AspectFill"
-                                       WidthRequest="32"
-                                       HeightRequest="32" />
+                                    <!-- Tile visual -->
+                                    <Image Source="{Binding PreviewImage}"
+                                           Aspect="AspectFill"
+                                           WidthRequest="32"
+                                           HeightRequest="32" />
 
-                                <!-- Name overlay (optional) -->
-                                <Label Text="{Binding Value.Name}"
-                                       FontSize="10"
-                                       HorizontalOptions="Center"
-                                       VerticalOptions="Center"
-                                       LineBreakMode="TailTruncation"
-                                       TextColor="Black"
-                                       BackgroundColor="#80FFFFFF" />
-                            </Grid>
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding BindingContext.SelectTileCommand, Source={x:Reference Name=TilePage}}"
-                                                      CommandParameter="{Binding .}" />
-                            </Border.GestureRecognizers>
-                        </Border>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </FlexLayout>
+                                    <!-- Name overlay (optional) -->
+                                    <Label Text="{Binding Value.Name}"
+                                           FontSize="10"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center"
+                                           LineBreakMode="TailTruncation"
+                                           TextColor="Black"
+                                           BackgroundColor="#80FFFFFF" />
+                                </Grid>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding BindingContext.SelectTileCommand, Source={x:Reference Name=TilePage}}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+
+                <Button
+                    Text="Add Tile"
+                    Command="{Binding AddTileCommand}" />
+
+                <Button
+                    Text="Fill Tiles"
+                    Command="{Binding FillTilesCommand}" />
+
+
+            </VerticalStackLayout>
         </ScrollView>
     </Grid>
 </ContentPage>

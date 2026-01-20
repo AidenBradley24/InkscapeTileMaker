@@ -128,6 +128,14 @@ namespace InkscapeTileMaker.ViewModels
 			});
 		}
 
+		public void PreSave() 
+		{
+			foreach (var tileWrapper in Tiles)
+			{
+				tileWrapper.Sync();
+			}
+		}
+
 		public void RenderCanvas(SKCanvas canvas, int width, int height) // note that this must run synchronously
 		{
 			DrawTransparentBackground(canvas, width, height);
@@ -450,6 +458,7 @@ namespace InkscapeTileMaker.ViewModels
 		[RelayCommand]
 		public async Task SaveDesign()
 		{
+			PreSave();
 			var svgFile = _svgConnectionService.SvgFile;
 			if (svgFile == null) return;
 			_svgConnectionService.SaveSvg(svgFile);
@@ -458,6 +467,7 @@ namespace InkscapeTileMaker.ViewModels
 		[RelayCommand]
 		public async Task SaveDesignAs()
 		{
+			PreSave();
 			var svgFile = _svgConnectionService.SvgFile;
 			if (svgFile == null) return;
 
@@ -486,6 +496,19 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			SelectedTile = tvm.Value;
 		}
+
+		[RelayCommand]
+		public void AddNewTile((int row, int col) position)
+		{
+			_svgConnectionService.AddTile(new Tile { Row = position.row, Column = position.col });
+		}
+
+		[RelayCommand]
+		public void FillTiles()
+		{
+			_svgConnectionService.FillTiles();
+		}
+
 		#endregion
 	}
 }

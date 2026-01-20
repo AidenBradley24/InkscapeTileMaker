@@ -1,5 +1,8 @@
-﻿using InkscapeTileMaker.ViewModels;
+﻿using InkscapeTileMaker.Models;
+using InkscapeTileMaker.ViewModels;
+using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 
 namespace InkscapeTileMaker.Services;
 
@@ -51,6 +54,13 @@ public partial class SvgConnectionService : IDisposable
 		Document = null;
 	}
 
+	public void SaveSvg()
+	{
+		if (_svgFile is null || Document is null) return;
+		Document.Save(_svgFile.FullName);
+		DocumentLoaded.Invoke(Document);
+	}
+
 	public void SaveSvg(FileInfo saveLocation)
 	{
 		if (_svgFile is null || Document is null) return;
@@ -82,19 +92,21 @@ public partial class SvgConnectionService : IDisposable
 		return collectionElement;
 	}
 
-	public TileViewModel GetTile(int x, int y)
+	private XElement? GetTileElement(int row, int col)
 	{
 		if (Document is null) throw new InvalidOperationException("SVG Document is not loaded.");
 
 		XElement collectionElement = GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
-		XElement? tileElement = collectionElement.Element(XName.Get($"tile-{x}-{y}", appNamespace.NamespaceName));
-		if (tileElement is null)
-		{
-			tileElement = new XElement(XName.Get($"tile-{x}-{y}", appNamespace.NamespaceName));
-			collectionElement.Add(tileElement);
-		}
-		var tileWrapper = new TileViewModel(tileElement, collectionElement);
-		return tileWrapper;
+		return collectionElement.Elements(XName.Get($"tile", appNamespace.NamespaceName))
+			.FirstOrDefault(t => t.Attribute(XName.Get("row"))?.Value == row.ToString() && t.Attribute(XName.Get("column"))?.Value == col.ToString()); ;
+	}
+
+	public TileViewModel? GetTile(int row, int col)
+	{
+		var element = GetTileElement(row, col);
+		if (element is null) return null;
+		XElement collectionElement = GetOrCreateTileCollectionElement()!;
+		return new TileViewModel(element, collectionElement);
 	}
 
 	public IEnumerable<TileViewModel> GetAllTiles()
@@ -104,5 +116,86 @@ public partial class SvgConnectionService : IDisposable
 		return collectionElement
 			.Elements(XName.Get("tile", appNamespace.NamespaceName))
 			.Select(tileElement => new TileViewModel(tileElement, collectionElement));
+	}
+
+	public bool AddTile(Tile tile)
+	{
+		if (Document is null) throw new InvalidOperationException("SVG Document is not loaded.");
+		XElement collectionElement = GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
+		var element = GetTileElement(tile.Row, tile.Column);
+		if (element is not null)
+		{
+			// Tile already exists
+			return false;
+		}
+		XmlSerializer serializer = new(typeof(Tile));
+		using (var writer = new StringWriter())
+		{
+			serializer.Serialize(writer, tile);
+			element = XElement.Parse(writer.ToString());
+		}
+		collectionElement.Add(element);
+		DocumentLoaded.Invoke(Document);
+		return true;
+	}
+
+	public bool RemoveTile(int row, int col)
+	{
+		if (Document is null) throw new InvalidOperationException("SVG Document is not loaded.");
+		XElement collectionElement = GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
+		var element = collectionElement.Element(XName.Get($"tile", appNamespace.NamespaceName));
+		if (element is null)
+		{
+			// Tile does not exist
+			return false;
+		}
+		element.Remove();
+		DocumentLoaded.Invoke(Document);
+		return true;
+	}
+
+	public void FillTiles()
+	{
+		if (Document is null) throw new InvalidOperationException("SVG Document is not loaded.");
+		XElement collectionElement = GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
+		if (TileSize is null) throw new InvalidOperationException("Tile size is not defined in the SVG grid.");
+
+		int svgWidth = Convert.ToInt32(SvgRoot?.Attribute(XName.Get("width"))?.Value ?? "0");
+		int svgHeight = Convert.ToInt32(SvgRoot?.Attribute(XName.Get("height"))?.Value ?? "0");
+		if (svgWidth <= 0 || svgHeight <= 0) throw new InvalidOperationException("SVG width or height is not defined.");
+
+		int maxRow = svgWidth / TileSize.Value.height - 1;
+		int maxCol = svgHeight / TileSize.Value.width - 1;
+
+		foreach (var tileElement in collectionElement.Elements(XName.Get("tile", appNamespace.NamespaceName)))
+		{
+			var serializer = new XmlSerializer(typeof(Tile));
+			using var reader = tileElement.CreateReader();
+			var tile = (Tile)serializer.Deserialize(reader)!;
+			if (tile.Row > maxRow) maxRow = tile.Row;
+			if (tile.Column > maxCol) maxCol = tile.Column;
+		}
+
+		// Fill in missing tiles
+		for (int row = 0; row <= maxRow; row++)
+		{
+			for (int col = 0; col <= maxCol; col++)
+			{
+				var element = GetTileElement(row, col);
+				if (element is null)
+				{
+					var newTile = new Tile
+					{
+						Name = $"Tile {col},{row}",
+						Type = TileType.Singular,
+						Rotation = RotationAlignment.None,
+						Row = row,
+						Column = col
+					};
+					AddTile(newTile);
+				}
+			}
+		}
+		DocumentLoaded.Invoke(Document);
 	}
 }
