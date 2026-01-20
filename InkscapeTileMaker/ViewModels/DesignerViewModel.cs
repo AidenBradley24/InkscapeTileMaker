@@ -42,7 +42,7 @@ namespace InkscapeTileMaker.ViewModels
 		public partial PointF PreviewOffset { get; set; }
 
 		[ObservableProperty]
-		public partial Tile? SelectedTile { get; set; }
+		public partial TileViewModel? SelectedTile { get; set; }
 
 		[ObservableProperty]
 		public partial (int x, int y) TileSize { get; set; }
@@ -91,8 +91,8 @@ namespace InkscapeTileMaker.ViewModels
 			{
 				if (SelectedTile != null)
 				{
-					var matchingTile = newTiles.FirstOrDefault(t => t.Value.Row == SelectedTile.Row && t.Value.Column == SelectedTile.Column);
-					SelectedTile = matchingTile?.Value;
+					var matchingTile = newTiles.FirstOrDefault(t => t.Value.Row == SelectedTile.Value.Row && t.Value.Column == SelectedTile.Value.Column);
+					SelectedTile = matchingTile;
 				}
 			}
 
@@ -194,7 +194,7 @@ namespace InkscapeTileMaker.ViewModels
 
 			if (SelectedTile != null)
 			{
-				var tileRect = GetTileRect(SelectedTile.Row, SelectedTile.Column);
+				var tileRect = GetTileRect(SelectedTile.Value.Row, SelectedTile.Value.Column);
 				DrawSelectionOutline(canvas, tileRect, SKColors.Blue);
 			}
 		}
@@ -239,7 +239,7 @@ namespace InkscapeTileMaker.ViewModels
 			CanvasNeedsRedraw.Invoke();
 		}
 
-		partial void OnSelectedTileChanged(Tile? value)
+		partial void OnSelectedTileChanged(TileViewModel? value)
 		{
 			CanvasNeedsRedraw.Invoke();
 		}
@@ -488,13 +488,13 @@ namespace InkscapeTileMaker.ViewModels
 		public void SelectTileAt(int row, int column)
 		{
 			var tile = Tiles.FirstOrDefault(t => t.Value.Row == row && t.Value.Column == column);
-			SelectedTile = tile?.Value;
+			SelectedTile = tile;
 		}
 
 		[RelayCommand]
 		public void SelectTile(TileViewModel tvm)
 		{
-			SelectedTile = tvm.Value;
+			SelectedTile = tvm;
 		}
 
 		[RelayCommand]

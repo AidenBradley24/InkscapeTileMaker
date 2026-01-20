@@ -10,10 +10,10 @@
 
     <Grid BackgroundColor="Gray"
           Padding="12"
-          RowDefinitions="Auto,*">
+          RowDefinitions="Auto,Auto,*">
 
         <!-- Top details section -->
-        <Grid Row="0"
+        <Grid Grid.Row="0"
               ColumnDefinitions="Auto,*"
               RowDefinitions="Auto,Auto"
               Padding="0,0,0,12">
@@ -43,8 +43,50 @@
                    Margin="0,4,0,0" />
         </Grid>
 
+        <!-- Selected tile details section -->
+        <Border Grid.Row="1"
+                Padding="8"
+                Margin="0,0,0,12"
+                BackgroundColor="#303030"
+                Stroke="Black"
+                StrokeThickness="1">
+            <Grid ColumnDefinitions="Auto,*"
+                  RowDefinitions="Auto,Auto"
+                  ColumnSpacing="8"
+                  RowSpacing="4">
+                <!-- Preview -->
+                <Grid Grid.RowSpan="2"
+                      Grid.Column="0"
+                      WidthRequest="64"
+                      HeightRequest="64"
+                      BackgroundColor="LightGray">
+                    <Image Source="{Binding SelectedTile.PreviewImage}"
+                           Aspect="AspectFill"
+                           WidthRequest="64"
+                           HeightRequest="64" />
+                </Grid>
+
+                <!-- Name -->
+                <Label Grid.Row="0"
+                       Grid.Column="1"
+                       Text="{Binding SelectedTile.Value.Name}"
+                       FontAttributes="Bold"
+                       TextColor="White"
+                       LineBreakMode="TailTruncation" />
+
+            </Grid>
+            <Border.Triggers>
+                <!-- Hide when there is no selection -->
+                <DataTrigger TargetType="Border"
+                             Binding="{Binding SelectedTile}"
+                             Value="{x:Null}">
+                    <Setter Property="IsVisible" Value="False" />
+                </DataTrigger>
+            </Border.Triggers>
+        </Border>
+
         <!-- Tiles flex layout -->
-        <ScrollView Grid.Row="1">
+        <ScrollView Grid.Row="2">
             <VerticalStackLayout Spacing="8">
 
                 <!-- Tiles flex layout -->
@@ -102,7 +144,6 @@
                 <Button
                     Text="Fill Tiles"
                     Command="{Binding FillTilesCommand}" />
-
 
             </VerticalStackLayout>
         </ScrollView>
