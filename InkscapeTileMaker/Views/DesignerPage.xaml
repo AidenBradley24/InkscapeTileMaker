@@ -24,6 +24,8 @@
                 <vms:DesignerMode>SingleTile</vms:DesignerMode>
             </toolkit:EnumToBoolConverter.TrueValues>
         </toolkit:EnumToBoolConverter>
+        <conv:EnumToItemsSourceConverter x:Key="EnumToItemsSourceConverter" />
+        <conv:EnumToStringConverter x:Key="EnumToStringConverter" />
     </ContentPage.Resources>
 
     <ContentPage.MenuBarItems>
@@ -50,11 +52,11 @@
                 toolkit:DockLayout.DockPosition="Left">
             <Grid ColumnDefinitions="*">
                 <views:TileSetView BindingContext="{Binding .}" 
-                                   IsVisible="{Binding Mode, Converter={StaticResource ShowTileSetConverter}}" 
+                                   IsVisible="{Binding SelectedDesignerMode, Converter={StaticResource ShowTileSetConverter}}" 
                                    toolkit:DockLayout.DockPosition="Left"
                                    Grid.Column="0"/>
                 <views:IndividualTileView BindingContext="{Binding .}" 
-                                          IsVisible="{Binding Mode, Converter={StaticResource ShowIndividualTileConverter}}" 
+                                          IsVisible="{Binding SelectedDesignerMode, Converter={StaticResource ShowIndividualTileConverter}}" 
                                           toolkit:DockLayout.DockPosition="Left"
                                           Grid.Column="0"/>
             </Grid>
@@ -65,23 +67,35 @@
         <Grid toolkit:DockLayout.DockPosition="None"
               Margin="10"
               RowDefinitions="75, *">
-            <HorizontalStackLayout Grid.Row="0"
-                                   Grid.RowSpan="1">
-                <Picker Title="Zoom"
-                    HorizontalOptions="End"
-                    VerticalOptions="Start"
-                    FontSize="Micro"
-                    Margin="0"
-                    ItemsSource="{Binding ZoomLevels}"
-                    ItemDisplayBinding="{Binding Converter={StaticResource DecimalToPercentageConverter}}"
-                    SelectedItem="{Binding SelectedZoomLevel, Mode=TwoWay}" />
-                <Button Text="Reset View"
-                    HorizontalOptions="End"
-                    VerticalOptions="Start"
-                    FontSize="Micro"
-                    Margin="5,0,0,0"
-                    Command="{Binding ResetViewCommand}" />
-            </HorizontalStackLayout>
+            <Grid Grid.Row="0"
+                  Grid.RowSpan="1"
+                  ColumnDefinitions="Auto, *">
+                <HorizontalStackLayout Grid.Column="0"
+                                       HorizontalOptions="Start">
+                    <Picker Title="Preview Mode"
+                        VerticalOptions="Start"
+                        FontSize="Micro"
+                        Margin="5,0,0,0"
+                        ItemsSource="{Binding SelectedPreviewMode, Converter={StaticResource EnumToItemsSourceConverter}}"
+                        SelectedItem="{Binding SelectedPreviewMode, Mode=TwoWay}"
+                        ItemDisplayBinding="{Binding Converter={StaticResource EnumToStringConverter}}"/>
+                    <Picker Title="Zoom"
+                        VerticalOptions="Start"
+                        FontSize="Micro"
+                        Margin="0"
+                        ItemsSource="{Binding ZoomLevels}"
+                        ItemDisplayBinding="{Binding Converter={StaticResource DecimalToPercentageConverter}}"
+                        SelectedItem="{Binding SelectedZoomLevel, Mode=TwoWay}" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Grid.Column="1"
+                                       HorizontalOptions="End">
+                    <Button Text="Reset View"
+                        VerticalOptions="Start"
+                        FontSize="Micro"
+                        Margin="5,0,0,0"
+                        Command="{Binding ResetViewCommand}" />
+                </HorizontalStackLayout>
+            </Grid>
             <ska:SKCanvasView
                 x:Name="PreviewCanvasView"
                 PaintSurface="OnPreviewCanvasViewPaintSurface"

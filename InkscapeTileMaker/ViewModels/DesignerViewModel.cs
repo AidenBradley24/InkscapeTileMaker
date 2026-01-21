@@ -5,6 +5,7 @@ using InkscapeTileMaker.Models;
 using InkscapeTileMaker.Services;
 using SkiaSharp;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Xml.Linq;
 
 namespace InkscapeTileMaker.ViewModels
@@ -59,7 +60,10 @@ namespace InkscapeTileMaker.ViewModels
 		public partial bool HasUnsavedChanges { get; set; } = false;
 
 		[ObservableProperty]
-		public partial DesignerMode Mode { get; set; } = DesignerMode.TileSet;
+		public partial DesignerMode SelectedDesignerMode { get; set; } = DesignerMode.TileSet;
+
+		[ObservableProperty]
+		public partial PreviewMode SelectedPreviewMode { get; set; } = PreviewMode.Image;
 
 		public string Title => FileName != null ? $"Inkscape Tile Maker - {FileName}" + (HasUnsavedChanges ? " *" : "") : "Inkscape Tile Maker";
 
@@ -251,7 +255,7 @@ namespace InkscapeTileMaker.ViewModels
 
 		partial void OnSelectedTileChanged(TileViewModel? value)
 		{
-			Mode = value == null ? DesignerMode.TileSet : DesignerMode.SingleTile;
+			SelectedDesignerMode = value == null ? DesignerMode.TileSet : DesignerMode.SingleTile;
 			CanvasNeedsRedraw.Invoke();
 		}
 
@@ -260,7 +264,12 @@ namespace InkscapeTileMaker.ViewModels
 			CanvasNeedsRedraw.Invoke();
 		}
 
-		partial void OnModeChanged(DesignerMode value)
+		partial void OnSelectedDesignerModeChanged(DesignerMode value)
+		{
+			CanvasNeedsRedraw.Invoke();
+		}
+
+		partial void OnSelectedPreviewModeChanged(PreviewMode value)
 		{
 			CanvasNeedsRedraw.Invoke();
 		}
@@ -542,5 +551,11 @@ namespace InkscapeTileMaker.ViewModels
 	{
 		TileSet,
 		SingleTile
+	}
+
+	public enum PreviewMode
+	{
+		Image,
+		MaterialInContext,
 	}
 }
