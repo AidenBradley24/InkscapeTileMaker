@@ -1,4 +1,3 @@
-using InkscapeTileMaker.Pages;
 using InkscapeTileMaker.ViewModels;
 
 namespace InkscapeTileMaker.Views;

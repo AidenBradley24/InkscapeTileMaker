@@ -1,6 +1,6 @@
 using InkscapeTileMaker.ViewModels;
 
-namespace InkscapeTileMaker.Pages;
+namespace InkscapeTileMaker.Views;
 
 public partial class LandingPage : ContentPage
 {

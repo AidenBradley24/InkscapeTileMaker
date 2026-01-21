@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Storage;
-using InkscapeTileMaker.Pages;
 using InkscapeTileMaker.Services;
 using InkscapeTileMaker.ViewModels;
 using InkscapeTileMaker.Views;

@@ -1,7 +1,7 @@
 using InkscapeTileMaker.ViewModels;
 using SkiaSharp.Views.Maui;
 
-namespace InkscapeTileMaker.Pages
+namespace InkscapeTileMaker.Views
 {
 	public partial class DesignerPage : ContentPage
 	{

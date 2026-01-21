@@ -1,10 +1,10 @@
 using InkscapeTileMaker.ViewModels;
 
-namespace InkscapeTileMaker.Pages;
+namespace InkscapeTileMaker.Views;
 
-public partial class TileSetPage : ContentPage
+public partial class TileSetView : ContentView
 {
-	public TileSetPage()
+	public TileSetView()
 	{
 		InitializeComponent();
 	}
