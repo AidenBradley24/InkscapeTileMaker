@@ -58,6 +58,9 @@ namespace InkscapeTileMaker.ViewModels
 		[NotifyPropertyChangedFor(nameof(Title))]
 		public partial bool HasUnsavedChanges { get; set; } = false;
 
+		[ObservableProperty]
+		public partial DesignerMode Mode { get; set; } = DesignerMode.TileSet;
+
 		public string Title => FileName != null ? $"Inkscape Tile Maker - {FileName}" + (HasUnsavedChanges ? " *" : "") : "Inkscape Tile Maker";
 
 		private SKBitmap? _renderedBitmap;
@@ -248,10 +251,16 @@ namespace InkscapeTileMaker.ViewModels
 
 		partial void OnSelectedTileChanged(TileViewModel? value)
 		{
+			Mode = value == null ? DesignerMode.TileSet : DesignerMode.SingleTile;
 			CanvasNeedsRedraw.Invoke();
 		}
 
 		partial void OnHoveredTileChanged((int row, int col)? value)
+		{
+			CanvasNeedsRedraw.Invoke();
+		}
+
+		partial void OnModeChanged(DesignerMode value)
 		{
 			CanvasNeedsRedraw.Invoke();
 		}
@@ -519,6 +528,19 @@ namespace InkscapeTileMaker.ViewModels
 			HasUnsavedChanges = true;
 		}
 
+		[RelayCommand]
+		public void ReturnToTileSet()
+		{
+			if (SelectedTile == null) return;
+			SelectedTile = null;
+		}
+
 		#endregion
+	}
+
+	public enum DesignerMode
+	{
+		TileSet,
+		SingleTile
 	}
 }

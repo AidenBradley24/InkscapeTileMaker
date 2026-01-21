@@ -18,8 +18,10 @@ namespace InkscapeTileMaker.ViewModels
 
 		[ObservableProperty]
 		public partial string Name { get; set; }
+
+
 		[ObservableProperty]
-		public partial bool IsEditingSelectedTileName { get; set; }
+		public partial (int row, int col) Position { get; set; }
 
 		public Tile Value => _tile;
 
@@ -33,6 +35,7 @@ namespace InkscapeTileMaker.ViewModels
 			_designerViewModel = designerViewModel;
 
 			Name = _tile.Name;
+			Position = (_tile.Row, _tile.Column);
 		}
 
 		public void Sync()
@@ -57,10 +60,11 @@ namespace InkscapeTileMaker.ViewModels
 			_tile.Name = value;
 		}
 
-		[RelayCommand]
-		public void EditSelectedTileName()
+		partial void OnPositionChanged((int row, int col) value)
 		{
-			IsEditingSelectedTileName = true;
+			_designerViewModel.HasUnsavedChanges |= _tile.Row != value.row || _tile.Column != value.col;
+			_tile.Row = value.row;
+			_tile.Column = value.col;
 		}
 	}
 }

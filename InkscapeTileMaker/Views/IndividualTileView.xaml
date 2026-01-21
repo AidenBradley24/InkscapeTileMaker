@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="InkscapeTileMaker.Views.IndividualTileView"
+             xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels"
+             xmlns:models="clr-namespace:InkscapeTileMaker.Models"
+             x:DataType="vms:DesignerViewModel"
+             xmlns:ctrls="clr-namespace:InkscapeTileMaker.Controls">
+
+    <Grid Padding="12"
+          ColumnDefinitions="Auto, *"
+          RowDefinitions="75, Auto, Auto">
+
+        <Button Grid.Row="0"
+                Grid.Column="0"
+                Text="Return to Tileset"
+                Command="{Binding ReturnToTileSetCommand}"
+                HorizontalOptions="Start"
+                Margin="0,0,0,8"
+                HeightRequest="50"/>
+
+        <Label Grid.Row="1"
+               Grid.Column="0"
+               Text="Name:"
+               FontAttributes="Bold"
+               VerticalTextAlignment="Center"
+               Margin="0,0,8,0" />
+        <ctrls:EditableLabel Grid.Row="1"
+               Grid.Column="1"
+               Text="{Binding SelectedTile.Name, Mode=TwoWay}"/>
+
+        <Label Grid.Row="2"
+               Grid.Column="0"
+               Text="Position:"
+               FontAttributes="Bold"
+               VerticalTextAlignment="Center"
+               Margin="0,4,8,0" />
+        <Label Grid.Row="2"
+               Grid.Column="1"
+               Text="{Binding SelectedTile.Position, StringFormat='{}{0.col}, {0.row}'}"
+               VerticalTextAlignment="Center"
+               Margin="0,4,0,0" />
+
+    </Grid>
+</ContentView>

@@ -14,6 +14,16 @@
             
     <ContentPage.Resources>
         <conv:DecimalToPercentageConverter x:Key="DecimalToPercentageConverter" />
+        <toolkit:EnumToBoolConverter x:Key="ShowTileSetConverter">
+            <toolkit:EnumToBoolConverter.TrueValues>
+                <vms:DesignerMode>TileSet</vms:DesignerMode>
+            </toolkit:EnumToBoolConverter.TrueValues>
+        </toolkit:EnumToBoolConverter>
+        <toolkit:EnumToBoolConverter x:Key="ShowIndividualTileConverter">
+            <toolkit:EnumToBoolConverter.TrueValues>
+                <vms:DesignerMode>SingleTile</vms:DesignerMode>
+            </toolkit:EnumToBoolConverter.TrueValues>
+        </toolkit:EnumToBoolConverter>
     </ContentPage.Resources>
 
     <ContentPage.MenuBarItems>
@@ -33,10 +43,25 @@
     </ContentPage.MenuBarItems>
 
     <toolkit:DockLayout ShouldExpandLastChild="True">
-        <views:TileSetView BindingContext="{Binding .}" IsVisible="True" 
-                           toolkit:DockLayout.DockPosition="Left" 
-                           WidthRequest="400"
-                           Margin="10"/>
+
+        <Border WidthRequest="400"
+                Margin="10"
+                Stroke="LightGray"
+                toolkit:DockLayout.DockPosition="Left">
+            <Grid ColumnDefinitions="*">
+                <views:TileSetView BindingContext="{Binding .}" 
+                                   IsVisible="{Binding Mode, Converter={StaticResource ShowTileSetConverter}}" 
+                                   toolkit:DockLayout.DockPosition="Left"
+                                   Grid.Column="0"/>
+                <views:IndividualTileView BindingContext="{Binding .}" 
+                                          IsVisible="{Binding Mode, Converter={StaticResource ShowIndividualTileConverter}}" 
+                                          toolkit:DockLayout.DockPosition="Left"
+                                          Grid.Column="0"/>
+            </Grid>
+        </Border>
+
+
+
         <Grid toolkit:DockLayout.DockPosition="None"
               Margin="10"
               RowDefinitions="75, *">

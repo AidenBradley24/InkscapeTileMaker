@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="InkscapeTileMaker.Controls.EditableLabel"
+             x:Name="Root">
+    <ContentView.Resources>
+        <ResourceDictionary>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        </ResourceDictionary>
+    </ContentView.Resources>
+
+    <Grid ColumnDefinitions="*">
+        <Border Stroke="LightGray"
+                StrokeThickness="1"
+                StrokeShape="Rectangle"
+                Padding="4"
+                Grid.Column="0"
+                VerticalOptions="Center"
+                HorizontalOptions="Start"
+                MinimumWidthRequest="50"
+                IsVisible="{Binding IsEditing, Source={x:Reference Root}, Converter={StaticResource InvertedBoolConverter}}">
+            <Label Text="{Binding Text, Source={x:Reference Root}}"
+                   VerticalTextAlignment="Center">
+            </Label>
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="TapGestureRecognizer_Tapped" />
+            </Border.GestureRecognizers>
+        </Border>
+
+        <Entry x:Name="TextEntry"
+               Placeholder="{Binding TextPlaceholder, Source={x:Reference Root}}"
+               Grid.Column="0"
+               IsVisible="{Binding IsEditing, Source={x:Reference Root}}"
+               Completed="TextEntry_Completed"
+               Unfocused="TextEntry_Unfocused"
+               Text="{Binding Text, Source={x:Reference Root}}"/>
+    </Grid>
+</ContentView>
