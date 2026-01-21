@@ -19,9 +19,17 @@ namespace InkscapeTileMaker.ViewModels
 		[ObservableProperty]
 		public partial string Name { get; set; }
 
-
 		[ObservableProperty]
 		public partial (int row, int col) Position { get; set; }
+
+		[ObservableProperty]
+		public partial TileType Type { get; set; }
+
+		[ObservableProperty]
+		public partial RotationAlignment Rotation { get; set; }
+
+		[ObservableProperty]
+		public partial string MaterialName { get; set; }
 
 		public Tile Value => _tile;
 
@@ -36,6 +44,9 @@ namespace InkscapeTileMaker.ViewModels
 
 			Name = _tile.Name;
 			Position = (_tile.Row, _tile.Column);
+			Type = _tile.Type;
+			Rotation = _tile.Rotation;
+			MaterialName = _tile.MaterialName;
 		}
 
 		public void Sync()
@@ -65,6 +76,24 @@ namespace InkscapeTileMaker.ViewModels
 			_designerViewModel.HasUnsavedChanges |= _tile.Row != value.row || _tile.Column != value.col;
 			_tile.Row = value.row;
 			_tile.Column = value.col;
+		}
+
+		partial void OnTypeChanged(TileType value)
+		{
+			_designerViewModel.HasUnsavedChanges |= _tile.Type != value;
+			_tile.Type = value;
+		}
+
+		partial void OnRotationChanged(RotationAlignment value)
+		{
+			_designerViewModel.HasUnsavedChanges |= _tile.Rotation != value;
+			_tile.Rotation = value;
+		}
+
+		partial void OnMaterialNameChanged(string value)
+		{
+			_designerViewModel.HasUnsavedChanges |= _tile.MaterialName != value;
+			_tile.MaterialName = value;
 		}
 	}
 }

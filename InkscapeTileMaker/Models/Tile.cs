@@ -20,6 +20,9 @@ public class Tile : IComparable<Tile>
 	[XmlAttribute("column")]
 	public int Column { get; set; }
 
+	[XmlAttribute("materialName")]
+	public string MaterialName { get; set; } = "";
+
 	public int CompareTo(Tile? other)
 	{
 		if (other == null) return 1;
