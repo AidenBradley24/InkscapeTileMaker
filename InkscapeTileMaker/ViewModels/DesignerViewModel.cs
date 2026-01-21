@@ -17,6 +17,7 @@ namespace InkscapeTileMaker.ViewModels
 		private readonly IFileSaver _fileSaver;
 
 		[ObservableProperty]
+		[NotifyPropertyChangedFor(nameof(Title))]
 		public partial string? FileName { get; set; }
 
 		[ObservableProperty]
@@ -53,6 +54,12 @@ namespace InkscapeTileMaker.ViewModels
 		[ObservableProperty]
 		public partial (int row, int col)? HoveredTile { get; set; }
 
+		[ObservableProperty]
+		[NotifyPropertyChangedFor(nameof(Title))]
+		public partial bool HasUnsavedChanges { get; set; } = false;
+
+		public string Title => FileName != null ? $"Inkscape Tile Maker - {FileName}" + (HasUnsavedChanges ? " *" : "") : "Inkscape Tile Maker";
+
 		private SKBitmap? _renderedBitmap;
 
 		public SvgConnectionService SvgConnectionService => _svgConnectionService;
@@ -86,7 +93,7 @@ namespace InkscapeTileMaker.ViewModels
 
 			TileSize = _svgConnectionService.TileSize ?? (0, 0);
 
-			var newTiles = _svgConnectionService.GetAllTiles().ToArray();
+			var newTiles = _svgConnectionService.GetAllTiles(this).ToArray();
 			if (Tiles.Count > 0)
 			{
 				if (SelectedTile != null)
@@ -462,6 +469,7 @@ namespace InkscapeTileMaker.ViewModels
 			var svgFile = _svgConnectionService.SvgFile;
 			if (svgFile == null) return;
 			_svgConnectionService.SaveSvg(svgFile);
+			HasUnsavedChanges = false;
 		}
 
 		[RelayCommand]
@@ -501,12 +509,14 @@ namespace InkscapeTileMaker.ViewModels
 		public void AddNewTile((int row, int col) position)
 		{
 			_svgConnectionService.AddTile(new Tile { Row = position.row, Column = position.col });
+			HasUnsavedChanges = true;
 		}
 
 		[RelayCommand]
 		public void FillTiles()
 		{
 			_svgConnectionService.FillTiles();
+			HasUnsavedChanges = true;
 		}
 
 		#endregion

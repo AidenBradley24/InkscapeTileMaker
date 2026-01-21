@@ -101,21 +101,21 @@ public partial class SvgConnectionService : IDisposable
 			.FirstOrDefault(t => t.Attribute(XName.Get("row"))?.Value == row.ToString() && t.Attribute(XName.Get("column"))?.Value == col.ToString()); ;
 	}
 
-	public TileViewModel? GetTile(int row, int col)
+	public TileViewModel? GetTile(int row, int col, DesignerViewModel designerViewModel)
 	{
 		var element = GetTileElement(row, col);
 		if (element is null) return null;
 		XElement collectionElement = GetOrCreateTileCollectionElement()!;
-		return new TileViewModel(element, collectionElement);
+		return new TileViewModel(element, collectionElement, designerViewModel);
 	}
 
-	public IEnumerable<TileViewModel> GetAllTiles()
+	public IEnumerable<TileViewModel> GetAllTiles(DesignerViewModel designerViewModel)
 	{
 		if (Document is null) throw new InvalidOperationException("SVG Document is not loaded.");
 		XElement collectionElement = GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
 		return collectionElement
 			.Elements(XName.Get("tile", appNamespace.NamespaceName))
-			.Select(tileElement => new TileViewModel(tileElement, collectionElement));
+			.Select(tileElement => new TileViewModel(tileElement, collectionElement, designerViewModel));
 	}
 
 	public bool AddTile(Tile tile)

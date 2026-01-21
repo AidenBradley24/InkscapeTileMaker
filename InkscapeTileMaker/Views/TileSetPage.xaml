@@ -67,12 +67,44 @@
                 </Grid>
 
                 <!-- Name -->
-                <Label Grid.Row="0"
-                       Grid.Column="1"
-                       Text="{Binding SelectedTile.Value.Name}"
-                       FontAttributes="Bold"
-                       TextColor="White"
-                       LineBreakMode="TailTruncation" />
+                <Grid Grid.Row="0"
+                      Grid.Column="1">
+                    <!-- Read-only label -->
+                    <Label
+                        Text="{Binding SelectedTile.Name}"
+                        FontAttributes="Bold"
+                        TextColor="White"
+                        LineBreakMode="TailTruncation">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding SelectedTile.EditSelectedTileNameCommand}" />
+                        </Label.GestureRecognizers>
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label"
+                                         Binding="{Binding SelectedTile.IsEditingSelectedTileName}"
+                                         Value="True">
+                                <Setter Property="IsVisible" Value="False" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+
+                    <!-- Editable entry -->
+                    <Entry
+                        Text="{Binding SelectedTile.Name, Mode=TwoWay}"
+                        FontAttributes="Bold"
+                        TextColor="White"
+                        BackgroundColor="#404040"
+                        IsVisible="False"
+                        Completed="OnSelectedTileNameCompleted">
+                        <Entry.Triggers>
+                            <DataTrigger TargetType="Entry"
+                                         Binding="{Binding SelectedTile.IsEditingSelectedTileName}"
+                                         Value="True">
+                                <Setter Property="IsVisible" Value="True" />
+                            </DataTrigger>
+                        </Entry.Triggers>
+                    </Entry>
+                </Grid>
 
             </Grid>
             <Border.Triggers>

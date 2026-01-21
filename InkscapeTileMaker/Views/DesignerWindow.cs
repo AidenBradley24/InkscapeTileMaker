@@ -10,11 +10,8 @@ public partial class DesignerWindow : Window
 		Page = new NavigationPage(new DesignerPage(vm));
 		BindingContext = vm;
 
-		TitleBar = new TitleBar
-		{
-			Title = "Inkscape Tile Maker - Designer",
-		};
-
-
+		var titleBar = new TitleBar();
+		TitleBar = titleBar;
+		titleBar.SetBinding(Microsoft.Maui.Controls.TitleBar.TitleProperty, new Binding(nameof(vm.Title)));
 	}
 }

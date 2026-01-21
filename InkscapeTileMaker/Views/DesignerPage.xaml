@@ -11,7 +11,7 @@
              
              xmlns:pages="clr-namespace:InkscapeTileMaker.Pages"
              xmlns:conv="clr-namespace:InkscapeTileMaker.Converters">
-
+            
     <ContentPage.Resources>
         <conv:DecimalToPercentageConverter x:Key="DecimalToPercentageConverter" />
     </ContentPage.Resources>
