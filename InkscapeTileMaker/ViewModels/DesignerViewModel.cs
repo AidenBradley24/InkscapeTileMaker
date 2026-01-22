@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Models;
 using InkscapeTileMaker.Services;
 using SkiaSharp;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Xml.Linq;
@@ -68,6 +69,7 @@ namespace InkscapeTileMaker.ViewModels
 		public string Title => FileName != null ? $"Inkscape Tile Maker - {FileName}" + (HasUnsavedChanges ? " *" : "") : "Inkscape Tile Maker";
 
 		private SKBitmap? _renderedBitmap;
+		private readonly ConcurrentDictionary<(int row, int col), SKBitmap> _tileBitmaps = [];
 
 		public SvgConnectionService SvgConnectionService => _svgConnectionService;
 
@@ -89,10 +91,51 @@ namespace InkscapeTileMaker.ViewModels
 			_svgConnectionService.DocumentLoaded -= OnDocumentLoaded;
 		}
 
+		#region Value Changed Handlers
+
+		partial void OnSelectedZoomLevelChanged(decimal value)
+		{
+			CanvasNeedsRedraw.Invoke();
+		}
+
+		partial void OnPreviewOffsetChanged(PointF value)
+		{
+			CanvasNeedsRedraw.Invoke();
+		}
+
+		partial void OnSelectedTileChanged(TileViewModel? value)
+		{
+			SelectedDesignerMode = value == null ? DesignerMode.TileSet : DesignerMode.SingleTile;
+			CanvasNeedsRedraw.Invoke();
+		}
+
+		partial void OnHoveredTileChanged((int row, int col)? value)
+		{
+			CanvasNeedsRedraw.Invoke();
+		}
+
+		partial void OnSelectedDesignerModeChanged(DesignerMode value)
+		{
+			CanvasNeedsRedraw.Invoke();
+		}
+
+		partial void OnSelectedPreviewModeChanged(PreviewMode value)
+		{
+			CanvasNeedsRedraw.Invoke();
+		}
+
+		#endregion
+
 		private void OnDocumentLoaded(XDocument obj)
 		{
 			_renderedBitmap?.Dispose();
 			_renderedBitmap = null;
+
+			foreach (var tileBitmap in _tileBitmaps.Values)
+			{
+				tileBitmap.Dispose();
+			}
+			_tileBitmaps.Clear();
 
 			var svgFile = _svgConnectionService.SvgFile;
 			FileName = svgFile?.Name;
@@ -142,14 +185,6 @@ namespace InkscapeTileMaker.ViewModels
 			});
 		}
 
-		public void PreSave() 
-		{
-			foreach (var tileWrapper in Tiles)
-			{
-				tileWrapper.Sync();
-			}
-		}
-
 		public void RenderCanvas(SKCanvas canvas, int width, int height) // note that this must run synchronously
 		{
 			DrawTransparentBackground(canvas, width, height);
@@ -188,7 +223,24 @@ namespace InkscapeTileMaker.ViewModels
 				return;
 			}
 
-			var previewRect = GetPreviewRect()!.Value;
+			switch (SelectedPreviewMode)
+			{
+				case PreviewMode.Image:
+					DrawImagePreview(canvas);
+					break;
+				case PreviewMode.InContext:
+					DrawInContextPreview(canvas);
+					break;
+			}
+		}
+
+		#region Preview Canvas Methods
+
+		private void DrawImagePreview(SKCanvas canvas)
+		{
+			if (_renderedBitmap == null) return;
+
+			var previewRect = GetImageRect()!.Value;
 			canvas.DrawBitmap(_renderedBitmap, previewRect);
 
 			if (_svgConnectionService.Document != null)
@@ -204,6 +256,8 @@ namespace InkscapeTileMaker.ViewModels
 			{
 				var tileRect = GetTileRect(HoveredTile.Value.row, HoveredTile.Value.col);
 				DrawSelectionOutline(canvas, tileRect, SKColors.DarkGreen.WithAlpha(128));
+				var hoveredTile = Tiles.FirstOrDefault(t => t.Value.Row == HoveredTile.Value.row && t.Value.Column == HoveredTile.Value.col);
+				if (hoveredTile != null) DrawTileLabel(canvas, hoveredTile.Value.Name, tileRect);
 			}
 
 			if (SelectedTile != null)
@@ -213,7 +267,19 @@ namespace InkscapeTileMaker.ViewModels
 			}
 		}
 
-		public SKRect? GetPreviewRect()
+		private void DrawInContextPreview(SKCanvas canvas)
+		{
+			if (_renderedBitmap == null) return;
+			var previewRect = GetInContextRect()!.Value;
+
+
+		}
+
+		#endregion
+
+		#region Drawing Methods
+
+		public SKRect? GetImageRect()
 		{
 			if (_renderedBitmap == null) return null;
 
@@ -228,13 +294,26 @@ namespace InkscapeTileMaker.ViewModels
 			};
 		}
 
+		public SKRect? GetInContextRect()
+		{
+			const int IN_CONTEXT_SIZE = 8;
+			if (TileSize == (0, 0)) return null;
+			var zoomFactor = (float)SelectedZoomLevel;
+			return new SKRect()
+			{
+				Top = PreviewOffset.Y * zoomFactor,
+				Left = PreviewOffset.X * zoomFactor,
+				Size = new SKSize(
+					IN_CONTEXT_SIZE * TileSize.x * zoomFactor,
+					IN_CONTEXT_SIZE * TileSize.y * zoomFactor),
+			};
+		}
+
 		public SKRect GetTileRect(int row, int column)
 		{
 			if (_svgConnectionService.TileSize == null) return SKRect.Empty;
-
 			float width = _svgConnectionService.TileSize!.Value.width * (float)SelectedZoomLevel;
 			float height = _svgConnectionService.TileSize!.Value.height * (float)SelectedZoomLevel;
-
 			float top = height * row + PreviewOffset.Y * (float)SelectedZoomLevel;
 			float left = width * column + PreviewOffset.X * (float)SelectedZoomLevel;
 			float right = left + width;
@@ -243,38 +322,17 @@ namespace InkscapeTileMaker.ViewModels
 			return new SKRect(left, top, right, bottom);
 		}
 
-		partial void OnSelectedZoomLevelChanged(decimal value)
+		public SKRectI GetUnscaledTileRect(int row, int column)
 		{
-			CanvasNeedsRedraw.Invoke();
+			if (_svgConnectionService.TileSize == null) return SKRectI.Empty;
+			int width = _svgConnectionService.TileSize!.Value.width;
+			int height = _svgConnectionService.TileSize!.Value.height;
+			int top = height * row;
+			int left = width * column;
+			int right = left + width;
+			int bottom = top + height;
+			return new SKRectI(left, top, right, bottom);
 		}
-
-		partial void OnPreviewOffsetChanged(PointF value)
-		{
-			CanvasNeedsRedraw.Invoke();
-		}
-
-		partial void OnSelectedTileChanged(TileViewModel? value)
-		{
-			SelectedDesignerMode = value == null ? DesignerMode.TileSet : DesignerMode.SingleTile;
-			CanvasNeedsRedraw.Invoke();
-		}
-
-		partial void OnHoveredTileChanged((int row, int col)? value)
-		{
-			CanvasNeedsRedraw.Invoke();
-		}
-
-		partial void OnSelectedDesignerModeChanged(DesignerMode value)
-		{
-			CanvasNeedsRedraw.Invoke();
-		}
-
-		partial void OnSelectedPreviewModeChanged(PreviewMode value)
-		{
-			CanvasNeedsRedraw.Invoke();
-		}
-
-		#region Drawing Methods
 
 		private void DrawTransparentBackground(SKCanvas canvas, int width, int height)
 		{
@@ -441,6 +499,28 @@ namespace InkscapeTileMaker.ViewModels
 			canvas.DrawRect(rect, outlinePaint);
 		}
 
+		private void DrawTileLabel(SKCanvas canvas, string label, SKRect rect)
+		{
+			using var textPaint = new SKPaint
+			{
+				Color = SKColors.Black,
+				IsAntialias = true,
+			};
+			using var font = SKTypeface.FromFamilyName("Arial");
+			using var skFont = new SKFont(font, 16);
+			var x = rect.MidX;
+			var y = rect.MidY;
+			canvas.DrawText(label, x, y, SKTextAlign.Center, skFont, textPaint);
+		}
+
+		private void DrawSingleTile(SKCanvas canvas, Tile tile, SKRect rect)
+		{
+			if (_renderedBitmap == null) return;
+			using var tileBitmap = new SKBitmap(TileSize.x, TileSize.y);
+			if (!_renderedBitmap.ExtractSubset(tileBitmap, GetUnscaledTileRect(tile.Row, tile.Column))) return;
+			canvas.DrawBitmap(tileBitmap, rect);
+		}
+
 		#endregion
 
 		#region Commands
@@ -505,16 +585,29 @@ namespace InkscapeTileMaker.ViewModels
 			}
 		}
 
+		public void PreSave()
+		{
+			foreach (var tileWrapper in Tiles)
+			{
+				tileWrapper.Sync();
+			}
+		}
+
 		[RelayCommand]
 		public void ResetView()
 		{
 			PreviewOffset = new PointF(0, 0);
 		}
 
-		public void SelectTileAt(int row, int column)
+		public void SelectTileFromPreviewAt(int row, int column)
 		{
-			var tile = Tiles.FirstOrDefault(t => t.Value.Row == row && t.Value.Column == column);
-			SelectedTile = tile;
+			switch (SelectedPreviewMode)
+			{
+				case PreviewMode.Image:
+					var tile = Tiles.FirstOrDefault(t => t.Value.Row == row && t.Value.Column == column);
+					SelectedTile = tile;
+					break;
+			}
 		}
 
 		[RelayCommand]
@@ -556,6 +649,6 @@ namespace InkscapeTileMaker.ViewModels
 	public enum PreviewMode
 	{
 		Image,
-		MaterialInContext,
+		InContext,
 	}
 }

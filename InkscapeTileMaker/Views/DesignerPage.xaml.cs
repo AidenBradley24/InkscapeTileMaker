@@ -90,10 +90,10 @@ namespace InkscapeTileMaker.Views
 			var pos = PointToPosition(e.GetPosition(PreviewCanvasView));
 			if (pos is null)
 			{
-				viewModel.SelectTileAt(-1, -1);
+				viewModel.SelectTileFromPreviewAt(-1, -1);
 				return;
 			}
-			viewModel.SelectTileAt(pos.Value.row, pos.Value.col);
+			viewModel.SelectTileFromPreviewAt(pos.Value.row, pos.Value.col);
 		}
 
 		private void OnCanvasViewPointerReleased(object sender, PointerEventArgs e)
@@ -112,7 +112,7 @@ namespace InkscapeTileMaker.Views
 			var tileSize = viewModel.SvgConnectionService.TileSize;
 			if (tileSize is null) return null;
 
-			var previewRect = viewModel.GetPreviewRect();
+			var previewRect = viewModel.GetImageRect();
 			if (previewRect is null) return null;
 			var rect = previewRect.Value;
 
@@ -140,6 +140,12 @@ namespace InkscapeTileMaker.Views
 			int row = (int)Math.Floor((logicalY - tileHeight / 2) / tileHeight);
 			int col = (int)Math.Floor((logicalX - tileWidth / 2) / tileWidth);
 			return (row, col);
+		}
+
+		private void PreviewModePickerChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+		{
+			if (BindingContext is not DesignerViewModel viewModel) return;
+			viewModel.ResetView();
 		}
 	}
 }

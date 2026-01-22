@@ -22,7 +22,7 @@
 
     <Grid Padding="12"
           ColumnDefinitions="Auto, *"
-          RowDefinitions="75, Auto, Auto, Auto, Auto, Auto"
+          RowDefinitions="75, 150, Auto, Auto, Auto, Auto, Auto"
           RowSpacing="12">
 
         <Button Grid.Row="0"
@@ -33,54 +33,71 @@
                 Margin="0,0,0,8"
                 HeightRequest="50"/>
 
-        <Label Grid.Row="1"
+        <!-- Tile preview -->
+        <Border Grid.Row="1"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Stroke="LightGray"
+                StrokeThickness="1"
+                Padding="4"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+            <Image Source="{Binding SelectedTile.PreviewImage}"
+                   Aspect="AspectFit"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center" />
+        </Border>
+
+        <Label Grid.Row="2"
                Grid.Column="0"
                Text="Name:"
                FontAttributes="Bold"
                VerticalTextAlignment="Center"
                Margin="0,0,8,0" />
-        <ctrls:EditableLabel Grid.Row="1"
-               Grid.Column="1"
-               Text="{Binding SelectedTile.Name, Mode=TwoWay}"/>
+        <ctrls:EditableLabel Grid.Row="2"
+                             Grid.Column="1"
+                             Text="{Binding SelectedTile.Name, Mode=TwoWay}" />
 
-        <Label Grid.Row="2"
+        <Label Grid.Row="3"
                Grid.Column="0"
                Text="Position:"
                FontAttributes="Bold"
                VerticalTextAlignment="Center"
                Margin="0,4,8,0" />
-        <Label Grid.Row="2"
+        <Label Grid.Row="3"
                Grid.Column="1"
                Text="{Binding SelectedTile.Position, StringFormat='{}{0.col}, {0.row}'}"
                VerticalTextAlignment="Center"
                Margin="0,4,0,0" />
 
-        <Picker Grid.Row="3"
+        <Picker Grid.Row="4"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
                 Title="Select Tile Type"
                 ItemsSource="{Binding SelectedTile.Type, Converter={StaticResource EnumToItemsSourceConverter}}"
                 SelectedItem="{Binding SelectedTile.Type, Mode=TwoWay}"
+                ItemDisplayBinding="{Binding Converter={StaticResource EnumToStringConverter}}"
                 Margin="0,12,0,0"/>
 
-        <Label Grid.Row="4"
+        <Label Grid.Row="5"
                Grid.Column="0"
                Text="Material Name:"
                FontAttributes="Bold"
                VerticalTextAlignment="Center"
                Margin="0,0,8,0"
                IsVisible="{Binding SelectedTile.Type, Converter={StaticResource UsingMaterialConverter}}"/>
-        <ctrls:EditableLabel Grid.Row="4"
-               Grid.Column="1"
-               Text="{Binding SelectedTile.MaterialName, Mode=TwoWay}"
-               IsVisible="{Binding SelectedTile.Type, Converter={StaticResource UsingMaterialConverter}}"/>
+        <ctrls:EditableLabel Grid.Row="5"
+                             Grid.Column="1"
+                             Text="{Binding SelectedTile.MaterialName, Mode=TwoWay}"
+                             IsVisible="{Binding SelectedTile.Type, Converter={StaticResource UsingMaterialConverter}}"/>
 
-        <Picker Grid.Row="5"
+        <Picker Grid.Row="6"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
                 Title="Select Rotation"
                 ItemsSource="{Binding SelectedTile.Rotation, Converter={StaticResource EnumToItemsSourceConverter}}"
                 SelectedItem="{Binding SelectedTile.Rotation, Mode=TwoWay}"
+                ItemDisplayBinding="{Binding Converter={StaticResource EnumToStringConverter}}"
                 Margin="0,12,0,0"
                 IsVisible="{Binding SelectedTile.Type, Converter={StaticResource UsingMaterialConverter}}"/>
 
