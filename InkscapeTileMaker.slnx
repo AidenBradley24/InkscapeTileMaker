@@ -2,5 +2,7 @@
   <Folder Name="/Solution Items/">
     <File Path="README.md" />
   </Folder>
+  <Project Path="InkscapeTileMaker.Models.Tests/InkscapeTileMaker.Models.Tests.csproj" Id="71849d7a-25bd-4197-9876-05f449b2b2d7" />
+  <Project Path="InkscapeTileMaker.Models/InkscapeTileMaker.Models.csproj" Id="c2edb7ac-f9c9-4744-9639-185d307786ce" />
   <Project Path="InkscapeTileMaker/InkscapeTileMaker.csproj" />
 </Solution>

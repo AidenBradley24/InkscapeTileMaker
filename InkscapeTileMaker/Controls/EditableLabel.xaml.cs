@@ -10,7 +10,7 @@ public partial class EditableLabel : ContentView
 	public string Text
 	{
 		get => (string)GetValue(TextProperty);
-		set 
+		set
 		{
 			SetValue(TextProperty, value);
 			OnPropertyChanged(nameof(Text));

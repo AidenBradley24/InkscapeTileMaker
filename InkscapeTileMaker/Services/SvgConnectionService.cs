@@ -1,6 +1,5 @@
 ﻿using InkscapeTileMaker.Models;
 using InkscapeTileMaker.ViewModels;
-using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 
@@ -188,7 +187,7 @@ public partial class SvgConnectionService : IDisposable
 					{
 						Name = $"Tile {col},{row}",
 						Type = TileType.Singular,
-						Rotation = RotationAlignment.None,
+						Allignment = TileAlignment.Core,
 						Row = row,
 						Column = col
 					};

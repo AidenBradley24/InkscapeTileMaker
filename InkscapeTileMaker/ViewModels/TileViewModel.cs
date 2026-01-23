@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Models;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -26,12 +25,14 @@ namespace InkscapeTileMaker.ViewModels
 		public partial TileType Type { get; set; }
 
 		[ObservableProperty]
-		public partial RotationAlignment Rotation { get; set; }
+		public partial TileAlignment Allignment { get; set; }
 
 		[ObservableProperty]
 		public partial string MaterialName { get; set; }
 
 		public Tile Value => _tile;
+
+		public bool IsMaterial => !string.IsNullOrEmpty(_tile.MaterialName) && (Type == TileType.MatCore || Type == TileType.MatEdge || Type == TileType.MatCorner);
 
 		public TileViewModel(XElement tileElement, XElement collectionElement, DesignerViewModel designerViewModel)
 		{
@@ -45,7 +46,7 @@ namespace InkscapeTileMaker.ViewModels
 			Name = _tile.Name;
 			Position = (_tile.Row, _tile.Column);
 			Type = _tile.Type;
-			Rotation = _tile.Rotation;
+			Allignment = _tile.Allignment;
 			MaterialName = _tile.MaterialName;
 		}
 
@@ -84,10 +85,10 @@ namespace InkscapeTileMaker.ViewModels
 			_tile.Type = value;
 		}
 
-		partial void OnRotationChanged(RotationAlignment value)
+		partial void OnAllignmentChanged(TileAlignment value)
 		{
-			_designerViewModel.HasUnsavedChanges |= _tile.Rotation != value;
-			_tile.Rotation = value;
+			_designerViewModel.HasUnsavedChanges |= _tile.Allignment != value;
+			_tile.Allignment = value;
 		}
 
 		partial void OnMaterialNameChanged(string value)

@@ -6,7 +6,6 @@ using InkscapeTileMaker.Services;
 using SkiaSharp;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Xml.Linq;
 
 namespace InkscapeTileMaker.ViewModels
@@ -246,10 +245,10 @@ namespace InkscapeTileMaker.ViewModels
 			if (_svgConnectionService.Document != null)
 			{
 				var gridElement = _svgConnectionService.Grid;
-				if (gridElement != null) DrawGrid(canvas, gridElement, previewRect, SelectedZoomLevel);
+				if (gridElement != null) DrawGrid(canvas, gridElement, previewRect);
 
 				var svgElement = _svgConnectionService.SvgRoot;
-				if (svgElement != null) DrawBorder(canvas, svgElement, PreviewOffset, SelectedZoomLevel);
+				if (svgElement != null) DrawBorder(canvas, previewRect);
 			}
 
 			if (HoveredTile != null)
@@ -270,9 +269,29 @@ namespace InkscapeTileMaker.ViewModels
 		private void DrawInContextPreview(SKCanvas canvas)
 		{
 			if (_renderedBitmap == null) return;
+			if (SelectedTile == null) return;
 			var previewRect = GetInContextRect()!.Value;
 
+			if (SelectedTile.Type == TileType.Singular)
+			{
+				for (int row = 0; row < 8; row++)
+				{
+					for (int col = 0; col < 8; col++)
+					{
+						var tileRect = GetTileRect(row, col);
+						DrawSingleTile(canvas, SelectedTile.Value, tileRect);
+					}
+				}
+			}
 
+			if (_svgConnectionService.Document != null)
+			{
+				var gridElement = _svgConnectionService.Grid;
+				if (gridElement != null) DrawGrid(canvas, gridElement, previewRect);
+
+				var svgElement = _svgConnectionService.SvgRoot;
+				if (svgElement != null) DrawBorder(canvas, previewRect);
+			}
 		}
 
 		#endregion
@@ -353,7 +372,7 @@ namespace InkscapeTileMaker.ViewModels
 			}
 		}
 
-		private void DrawGrid(SKCanvas canvas, XElement gridElement, SKRect rect, decimal scale)
+		private void DrawGrid(SKCanvas canvas, XElement gridElement, SKRect rect)
 		{
 			if (!((bool?)gridElement.Attribute("enabled") ?? true)) return;
 			if (gridElement.Attribute("units")?.Value != "px") return;
@@ -361,9 +380,9 @@ namespace InkscapeTileMaker.ViewModels
 			float spacingX = Convert.ToSingle(gridElement.Attribute("spacingx")?.Value);
 			float spacingY = Convert.ToSingle(gridElement.Attribute("spacingy")?.Value);
 			int empSpacing = Convert.ToInt32(gridElement.Attribute("empspacing")?.Value);
-			if (spacingX <= 0 || spacingY <= 0 || empSpacing <= 0 || scale <= 0) return;
-			spacingX *= (float)scale;
-			spacingY *= (float)scale;
+			if (spacingX <= 0 || spacingY <= 0 || empSpacing <= 0 || SelectedZoomLevel <= 0) return;
+			spacingX *= (float)SelectedZoomLevel;
+			spacingY *= (float)SelectedZoomLevel;
 
 			var color = SKColor.Parse(gridElement.Attribute("color")?.Value ?? "#0099e5");
 			var empColor = SKColor.Parse(gridElement.Attribute("empcolor")?.Value ?? "#e500a7");
@@ -405,31 +424,21 @@ namespace InkscapeTileMaker.ViewModels
 			}
 		}
 
-		private void DrawBorder(SKCanvas canvas, XElement svgElement, PointF offset, decimal zoom)
+		private void DrawBorder(SKCanvas canvas, SKRect interiorRect)
 		{
-			float width = Convert.ToSingle(svgElement.Attribute("width")?.Value);
-			float height = Convert.ToSingle(svgElement.Attribute("height")?.Value);
-			var namedViewElement = svgElement.Element(XName.Get("namedview", "sodipodi"));
-			SKColor borderColor = SKColor.Parse(namedViewElement?.Attribute("bordercolor")?.Value ?? "#ffffff");
-
-			if (width <= 0 || height <= 0 || zoom <= 0)
+			var svgElement = _svgConnectionService.SvgRoot;
+			if (svgElement == null) return;
+			if (interiorRect.Width <= 0 || interiorRect.Height <= 0 || SelectedZoomLevel <= 0)
 			{
 				return;
 			}
 
-			// Apply zoom (unit scale)
-			width *= (float)zoom;
-			height *= (float)zoom;
+			var namedViewElement = svgElement.Element(XName.Get("namedview", "sodipodi"));
+			SKColor borderColor = SKColor.Parse(namedViewElement?.Attribute("bordercolor")?.Value ?? "#ffffff");
 
 			// Canvas bounds
-			var canvasWidth = canvas.DeviceClipBounds.Width;
-			var canvasHeight = canvas.DeviceClipBounds.Height;
-
-			// Box position aligned to offset and zoom
-			var boxLeft = offset.X * (float)zoom;
-			var boxTop = offset.Y * (float)zoom;
-			var boxRight = boxLeft + width;
-			var boxBottom = boxTop + height;
+			int canvasWidth = canvas.DeviceClipBounds.Width;
+			int canvasHeight = canvas.DeviceClipBounds.Height;
 
 			using var borderPaint = new SKPaint
 			{
@@ -439,9 +448,9 @@ namespace InkscapeTileMaker.ViewModels
 			};
 
 			// Left area (to the left of the box, including top-left corner if in view)
-			if (boxLeft > 0)
+			if (interiorRect.Left > 0)
 			{
-				var leftRect = new SKRect(0, 0, Math.Min(boxLeft, canvasWidth), canvasHeight);
+				var leftRect = new SKRect(0, 0, Math.Min(interiorRect.Left, canvasWidth), canvasHeight);
 				if (!leftRect.IsEmpty)
 				{
 					canvas.DrawRect(leftRect, borderPaint);
@@ -449,9 +458,9 @@ namespace InkscapeTileMaker.ViewModels
 			}
 
 			// Right area (to the right of the box)
-			if (boxRight < canvasWidth)
+			if (interiorRect.Right < canvasWidth)
 			{
-				var rightRect = new SKRect(Math.Max(boxRight, 0), 0, canvasWidth, canvasHeight);
+				var rightRect = new SKRect(Math.Max(interiorRect.Right, 0), 0, canvasWidth, canvasHeight);
 				if (!rightRect.IsEmpty)
 				{
 					canvas.DrawRect(rightRect, borderPaint);
@@ -459,13 +468,13 @@ namespace InkscapeTileMaker.ViewModels
 			}
 
 			// Top area (above the box)
-			if (boxTop > 0)
+			if (interiorRect.Top > 0)
 			{
 				var topRect = new SKRect(
-					Math.Max(boxLeft, 0),
+					Math.Max(interiorRect.Left, 0),
 					0,
-					Math.Min(boxRight, canvasWidth),
-					Math.Min(boxTop, canvasHeight));
+					Math.Min(interiorRect.Right, canvasWidth),
+					Math.Min(interiorRect.Top, canvasHeight));
 				if (!topRect.IsEmpty)
 				{
 					canvas.DrawRect(topRect, borderPaint);
@@ -473,12 +482,12 @@ namespace InkscapeTileMaker.ViewModels
 			}
 
 			// Bottom area (below the box)
-			if (boxBottom < canvasHeight)
+			if (interiorRect.Bottom < canvasHeight)
 			{
 				var bottomRect = new SKRect(
-					Math.Max(boxLeft, 0),
-					Math.Max(boxBottom, 0),
-					Math.Min(boxRight, canvasWidth),
+					Math.Max(interiorRect.Left, 0),
+					Math.Max(interiorRect.Bottom, 0),
+					Math.Min(interiorRect.Right, canvasWidth),
 					canvasHeight);
 				if (!bottomRect.IsEmpty)
 				{
