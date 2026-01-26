@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using InkscapeTileMaker.Models;
+using InkscapeTileMaker.Utility;
 using System.Xml.Linq;
-using System.Xml.Serialization;
 
 namespace InkscapeTileMaker.ViewModels
 {
@@ -37,9 +37,7 @@ namespace InkscapeTileMaker.ViewModels
 
 		public TileViewModel(XElement tileElement, XElement collectionElement, DesignerViewModel designerViewModel)
 		{
-			var serializer = new XmlSerializer(typeof(Tile));
-			using var reader = tileElement.CreateReader();
-			_tile = (Tile)serializer.Deserialize(reader)!;
+			_tile = TileExtensions.GetTileFromXElement(tileElement);
 			_collection = collectionElement;
 			_element = tileElement;
 			_designerViewModel = designerViewModel;
@@ -54,16 +52,7 @@ namespace InkscapeTileMaker.ViewModels
 		public void Sync()
 		{
 			_element.Remove();
-
-			var serializer = new XmlSerializer(typeof(Tile));
-			XElement tileElement;
-
-			using (var writer = new StringWriter())
-			{
-				serializer.Serialize(writer, _tile);
-				tileElement = XElement.Parse(writer.ToString());
-			}
-
+			XElement tileElement = _tile.ToXElement();
 			_collection.Add(tileElement);
 		}
 

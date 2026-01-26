@@ -1,14 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
-<svg:svg width="1024" height="1024" viewBox="0 0 1024 1024" version="1.1" id="svg1" inkscape:version="1.4 (86a8ad7, 2024-10-11)" sodipodi:docname="Layout Test.svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+<svg:svg width="1024" height="1024" viewBox="0 0 1024 1024" version="1.1" id="svg1" inkscape:version="1.4 (86a8ad7, 2024-10-11)" sodipodi:docname="Layout Test.svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:tilemaker="https://github.com/AidenBradley24/InkscapeTileMaker">
   <sodipodi:namedview id="namedview1" pagecolor="#505050" bordercolor="#ffffff" borderopacity="1" inkscape:showpageshadow="0" inkscape:pageopacity="0" inkscape:pagecheckerboard="1" inkscape:deskcolor="#000000" inkscape:document-units="px" showgrid="true" inkscape:zoom="2.04" inkscape:cx="431.61765" inkscape:cy="345.09804" inkscape:window-width="3840" inkscape:window-height="2036" inkscape:window-x="-12" inkscape:window-y="-12" inkscape:window-maximized="1" inkscape:current-layer="layer1" inkscape:clip-to-page="true">
     <inkscape:grid id="grid1" units="px" originx="0" originy="0" spacingx="128" spacingy="128" empcolor="#e500a7" empopacity="0.30196078" color="#0099e5" opacity="0.14901961" empspacing="2" enabled="true" visible="true" />
   </sodipodi:namedview>
   <svg:defs id="defs1">
-    <tilemaker xmlns="https://github.com/AidenBradley24/InkscapeTileMaker">
-      <tiles>
-        <tile name="Test Tile" row="0" column="0"/>
-      </tiles>
-    </tilemaker>
+    <tilemaker:tilemakerdefs>
+      <tilemaker:tiles>
+      </tilemaker:tiles>
+    </tilemaker:tilemakerdefs>
   </svg:defs>
   <svg:g inkscape:label="Tiles" inkscape:groupmode="layer" id="layer1">
     <svg:rect style="fill:none;fill-opacity:1;stroke:#00fbe9;stroke-width:47.6723;stroke-linecap:butt;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke" id="rect1" width="976.32776" height="976.32776" x="23.836126" y="23.836126" />
