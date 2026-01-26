@@ -7,7 +7,7 @@
 			new Tile { Name = "CoreTile", MaterialName = "Brick", Type = TileType.MatCore, Row = 0, Column = 0, Allignment = TileAlignment.Core, Priority = 1 },
 			new Tile { Name = "EdgeTile", MaterialName = "Brick", Type = TileType.MatEdge, Row = 0, Column = 1, Allignment = TileAlignment.RightEdge, Priority = 1 },
 			new Tile { Name = "EdgeTile2", MaterialName = "Brick", Type = TileType.MatEdge, Row = 0, Column = 1, Allignment = TileAlignment.BottomEdge, Priority = 2 },
-			new Tile { Name = "CornerTile", MaterialName = "Brick", Type = TileType.MatCorner, Row = 0, Column = 2, Allignment = TileAlignment.TopLeftCorner, Priority = 1 },
+			new Tile { Name = "CornerTile", MaterialName = "Brick", Type = TileType.MatOuterCorner, Row = 0, Column = 2, Allignment = TileAlignment.TopLeftOuterCorner, Priority = 1 },
 			new Tile { Name = "SingularTile", MaterialName = "Wood", Type = TileType.Singular, Row = 1, Column = 0, Priority = 1 },
 			new Tile { Name = "NoMaterialTile", MaterialName = string.Empty, Type = TileType.MatCore, Row = 2, Column = 0, Priority = 1 },
 			new Tile { Name = "NullMaterialTile", MaterialName = null, Type = TileType.MatCore, Row = 2, Column = 1, Priority = 1 },
@@ -173,7 +173,7 @@
 			// Assert
 			Assert.Single(tilesOnDuelGrid);
 			Assert.Equal("CornerTile", tilesOnDuelGrid[0].tile.Name);
-			Assert.Equal(TileType.MatCorner, tilesOnDuelGrid[0].tile.Type);
+			Assert.Equal(TileType.MatOuterCorner, tilesOnDuelGrid[0].tile.Type);
 		}
 
 		[Fact]

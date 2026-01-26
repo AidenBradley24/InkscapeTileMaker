@@ -74,7 +74,82 @@ namespace InkscapeTileMaker.Models
 				}
 			}
 
-			// 2. If a material is present in two adjacent corners, and that material has a tile of MatEdge tile type for that edge, draw it.
+			// 2. If a material is present in three corners, and that material has a tile of MatInnerCorner tile type for the inner corner, draw it.
+
+			// Top-right corner filled (missing bottom-left)
+			if (!topRightUsed && !topLeftUsed && !bottomRightUsed && topRight != null && topLeft != null && bottomRight != null &&
+				topRight.Equals(topLeft) && topRight.Equals(bottomRight))
+			{
+				if (topRight.TryGetTileData(TileType.MatInnerCorner, TileAlignment.TopRightInnerCorner, out var tileData))
+				{
+					tiles.Add(tileData.Value);
+					topRightUsed = true;
+					topLeftUsed = true;
+					bottomRightUsed = true;
+					bottomLeftUsed = true;
+				}
+			}
+			// Top-left corner filled (missing bottom-right)
+			if (!topRightUsed && !topLeftUsed && !bottomLeftUsed && topLeft != null && topRight != null && bottomLeft != null &&
+				topLeft.Equals(topRight) && topLeft.Equals(bottomLeft))
+			{
+				if (topLeft.TryGetTileData(TileType.MatInnerCorner, TileAlignment.TopLeftInnerCorner, out var tileData))
+				{
+					tiles.Add(tileData.Value);
+					topRightUsed = true;
+					topLeftUsed = true;
+					bottomRightUsed = true;
+					bottomLeftUsed = true;
+				}
+			}
+			// Bottom-right corner filled (missing top-left)
+			if (!topLeftUsed && !bottomRightUsed && !bottomLeftUsed && bottomRight != null && topRight != null && bottomLeft != null &&
+				bottomRight.Equals(topRight) && bottomRight.Equals(bottomLeft))
+			{
+				if (bottomRight.TryGetTileData(TileType.MatInnerCorner, TileAlignment.BottomRightInnerCorner, out var tileData))
+				{
+					tiles.Add(tileData.Value);
+					topRightUsed = true;
+					topLeftUsed = true;
+					bottomRightUsed = true;
+					bottomLeftUsed = true;
+				}
+			}
+			// Bottom-left corner filled (missing top-right)
+			if (!topRightUsed && !bottomRightUsed && !bottomLeftUsed && bottomLeft != null && topLeft != null && bottomRight != null &&
+				bottomLeft.Equals(topLeft) && bottomLeft.Equals(bottomRight))
+			{
+				if (bottomLeft.TryGetTileData(TileType.MatInnerCorner, TileAlignment.BottomLeftInnerCorner, out var tileData))
+				{
+					tiles.Add(tileData.Value);
+					topRightUsed = true;
+					topLeftUsed = true;
+					bottomRightUsed = true;
+					bottomLeftUsed = true;
+				}
+			}
+
+			// 3. If a material is present in two diagonally opposite corners, and that material has a tile of MatDiagonal tile type for that diagonal, draw it.
+			if (!topRightUsed && !bottomLeftUsed && topRight != null && bottomLeft != null && topRight.Equals(bottomLeft))
+			{
+				if (topRight.TryGetTileData(TileType.MatDiagonal, TileAlignment.DiagonalTopLeftToBottomRight, out var tileData))
+				{
+					tiles.Add(tileData.Value);
+					topRightUsed = true;
+					bottomLeftUsed = true;
+				}
+			}
+			if (!topLeftUsed && !bottomRightUsed && topLeft != null && bottomRight != null && topLeft.Equals(bottomRight))
+			{
+				if (topLeft.TryGetTileData(TileType.MatDiagonal, TileAlignment.DiagonalTopRightToBottomLeft, out var tileData))
+				{
+					tiles.Add(tileData.Value);
+					topLeftUsed = true;
+					bottomRightUsed = true;
+				}
+			}
+
+			// 4. If a material is present in two adjacent corners, and that material has a tile of MatEdge tile type for that edge, draw it.
 
 			// Top edge: TopLeft + TopRight
 			if (!topRightUsed && !topLeftUsed && topRight != null && topLeft != null && topRight.Equals(topLeft))
@@ -120,31 +195,31 @@ namespace InkscapeTileMaker.Models
 				}
 			}
 
-			// 3. If a material is present in a single corner, and that material has a tile of MatCorner tile type for that corner, draw it.
+			// 5. If a material is present in a single corner, and that material has a tile of MatOuterCorner tile type for that corner, draw it.
 
 			// Top-right corner
-			if (!topRightUsed && topRight != null && topRight.TryGetTileData(TileType.MatCorner, TileAlignment.TopRightCorner, out var topRightCornerTileData))
+			if (!topRightUsed && topRight != null && topRight.TryGetTileData(TileType.MatOuterCorner, TileAlignment.TopRightOuterCorner, out var topRightCornerTileData))
 			{
 				tiles.Add(topRightCornerTileData.Value);
 				topRightUsed = true;
 			}
 
 			// Top-left corner
-			if (!topLeftUsed && topLeft != null && topLeft.TryGetTileData(TileType.MatCorner, TileAlignment.TopLeftCorner, out var topLeftCornerTileData))
+			if (!topLeftUsed && topLeft != null && topLeft.TryGetTileData(TileType.MatOuterCorner, TileAlignment.TopLeftOuterCorner, out var topLeftCornerTileData))
 			{
 				tiles.Add(topLeftCornerTileData.Value);
 				topLeftUsed = true;
 			}
 
 			// Bottom-right corner
-			if (!bottomRightUsed && bottomRight != null && bottomRight.TryGetTileData(TileType.MatCorner, TileAlignment.BottomRightCorner, out var bottomRightCornerTileData))
+			if (!bottomRightUsed && bottomRight != null && bottomRight.TryGetTileData(TileType.MatOuterCorner, TileAlignment.BottomRightOuterCorner, out var bottomRightCornerTileData))
 			{
 				tiles.Add(bottomRightCornerTileData.Value);
 				bottomRightUsed = true;
 			}
 
 			// Bottom-left corner
-			if (!bottomLeftUsed && bottomLeft != null && bottomLeft.TryGetTileData(TileType.MatCorner, TileAlignment.BottomLeftCorner, out var bottomLeftCornerTileData))
+			if (!bottomLeftUsed && bottomLeft != null && bottomLeft.TryGetTileData(TileType.MatOuterCorner, TileAlignment.BottomLeftOuterCorner, out var bottomLeftCornerTileData))
 			{
 				tiles.Add(bottomLeftCornerTileData.Value);
 				bottomLeftUsed = true;
@@ -167,6 +242,11 @@ namespace InkscapeTileMaker.Models
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return GetEnumerator();
+		}
+
+		public void AddMaterialSample(int x, int y, Material material)
+		{
+			this[x, y] = material;
 		}
 	}
 }

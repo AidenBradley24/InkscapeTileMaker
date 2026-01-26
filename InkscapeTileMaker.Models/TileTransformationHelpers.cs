@@ -45,14 +45,30 @@
 				case TileAlignment.LeftEdge:
 					return (-1, 0);
 
-				case TileAlignment.TopLeftCorner:
+				case TileAlignment.TopLeftOuterCorner:
 					return (-1, -1);
-				case TileAlignment.TopRightCorner:
+				case TileAlignment.TopRightOuterCorner:
 					return (1, -1);
-				case TileAlignment.BottomRightCorner:
+				case TileAlignment.BottomRightOuterCorner:
 					return (1, 1);
-				case TileAlignment.BottomLeftCorner:
+				case TileAlignment.BottomLeftOuterCorner:
 					return (-1, 1);
+
+				// Inner corners: pointing into the tile (opposite of their outer-corner counterparts)
+				case TileAlignment.TopLeftInnerCorner:
+					return (1, 1);   // into the tile from top-left
+				case TileAlignment.TopRightInnerCorner:
+					return (-1, 1);  // into the tile from top-right
+				case TileAlignment.BottomRightInnerCorner:
+					return (-1, -1); // into the tile from bottom-right
+				case TileAlignment.BottomLeftInnerCorner:
+					return (1, -1);  // into the tile from bottom-left
+
+				// Diagonals between edges
+				case TileAlignment.DiagonalTopLeftToBottomRight:
+					return (1, -1);
+				case TileAlignment.DiagonalTopRightToBottomLeft:
+					return (-1, -1);
 
 				case TileAlignment.Core:
 				default:

@@ -3,8 +3,10 @@
 	public enum TileType
 	{
 		Singular,
-		MatCorner,
+		MatOuterCorner,
+		MatInnerCorner,
 		MatEdge,
-		MatCore
+		MatCore,
+		MatDiagonal
 	}
 }

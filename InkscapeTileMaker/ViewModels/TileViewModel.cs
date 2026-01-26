@@ -32,7 +32,8 @@ namespace InkscapeTileMaker.ViewModels
 
 		public Tile Value => _tile;
 
-		public bool IsMaterial => !string.IsNullOrEmpty(_tile.MaterialName) && (Type == TileType.MatCore || Type == TileType.MatEdge || Type == TileType.MatCorner);
+		public bool IsMaterial => !string.IsNullOrEmpty(_tile.MaterialName) &&
+			(Type == TileType.MatCore || Type == TileType.MatEdge || Type == TileType.MatOuterCorner || Type == TileType.MatInnerCorner || Type == TileType.MatDiagonal);
 
 		public TileViewModel(XElement tileElement, XElement collectionElement, DesignerViewModel designerViewModel)
 		{

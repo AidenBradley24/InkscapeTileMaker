@@ -9,9 +9,17 @@
 		BottomEdge,
 		LeftEdge,
 
-		TopLeftCorner,
-		TopRightCorner,
-		BottomRightCorner,
-		BottomLeftCorner
+		TopLeftOuterCorner,
+		TopRightOuterCorner,
+		BottomRightOuterCorner,
+		BottomLeftOuterCorner,
+
+		TopLeftInnerCorner,
+		TopRightInnerCorner,
+		BottomRightInnerCorner,
+		BottomLeftInnerCorner,
+
+		DiagonalTopLeftToBottomRight,
+		DiagonalTopRightToBottomLeft,
 	}
 }
