@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace InkscapeTileMaker.Services
 {
-	public class SvgRenderingService : ISvgRenderingService
+	public class SvgRenderingService : ITilesetRenderingService
 	{
 		private readonly IInkscapeService _inkscapeService;
 		private readonly ITempDirectoryService _tempDirService;
@@ -22,7 +22,7 @@ namespace InkscapeTileMaker.Services
 			_cacheUpdates = new Dictionary<string, DateTime>();
 		}
 
-		public async Task<Stream> RenderSvgFile(FileInfo svgFile, CancellationToken cancellationToken)
+		public async Task<Stream> RenderFile(FileInfo svgFile, CancellationToken cancellationToken)
 		{
 			var requestHash = HashCode.Combine(svgFile.FullName, svgFile.LastWriteTimeUtc);
 			CheckAndAddToCache(svgFile, requestHash);
@@ -57,7 +57,7 @@ namespace InkscapeTileMaker.Services
 			return exportFile.OpenRead();
 		}
 
-		public async Task<Stream> RenderSvgSegment(FileInfo svgFile, int left, int top, int right, int bottom, CancellationToken cancellationToken)
+		public async Task<Stream> RenderSegment(FileInfo svgFile, int left, int top, int right, int bottom, CancellationToken cancellationToken)
 		{
 			var requestHash = HashCode.Combine(svgFile.FullName, left, top, right, bottom, svgFile.LastWriteTimeUtc);
 			CheckAndAddToCache(svgFile, requestHash);

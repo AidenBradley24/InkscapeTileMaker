@@ -42,7 +42,7 @@ namespace InkscapeTileMaker.Utility
 		public static Tile GetTileFromXElement(XElement element)
 		{
 			ArgumentNullException.ThrowIfNull(element);
-			if (element.Name != SvgConnectionService.tileName) throw new ArgumentException("Invalid element name", nameof(element));
+			if (element.Name != InkscapeSvgConnectionService.tileName) throw new ArgumentException("Invalid element name", nameof(element));
 			return new Tile
 			{
 				Name = (string?)element.Attribute("name") ?? "",
@@ -57,7 +57,7 @@ namespace InkscapeTileMaker.Utility
 
 		public static XElement ToXElement(this Tile tile)
 		{
-			return new XElement(SvgConnectionService.tileName,
+			return new XElement(InkscapeSvgConnectionService.tileName,
 				new XAttribute("name", tile.Name),
 				new XAttribute("type", tile.Type.ToString()),
 				new XAttribute("allignment", tile.Allignment.ToString()),

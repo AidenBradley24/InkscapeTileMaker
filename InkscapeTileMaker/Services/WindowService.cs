@@ -20,16 +20,28 @@ public class WindowService : IWindowService
 		// TODO implement
 	}
 
-	public void OpenDesignerWindow(FileInfo? svgFile = null)
+	public void OpenDesignerWindow(FileInfo? file = null)
 	{
 		var app = Application.Current;
 		if (app is null) return;
 		var designerWindow = _services.GetRequiredService<DesignerWindow>();
 		app.OpenWindow(designerWindow);
-		if (svgFile is not null)
+		if (file is not null)
 		{
 			var newViewModel = (DesignerViewModel)designerWindow!.BindingContext;
-			newViewModel!.SvgConnectionService.LoadSvg(svgFile);
+			ITilesetConnection connection;
+			if (file.Extension.Equals(".svg", StringComparison.OrdinalIgnoreCase))
+			{
+				connection = new InkscapeSvgConnectionService(_services);
+			}
+			else
+			{
+				// Unsupported file type
+				return;
+			}
+
+			connection.Load(file);
+			newViewModel.SetTilesetConnection(connection);
 		}
 	}
 }

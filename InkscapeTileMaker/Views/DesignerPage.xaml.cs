@@ -103,8 +103,7 @@ namespace InkscapeTileMaker.Views
 		{
 			if (BindingContext is not DesignerViewModel viewModel) return null;
 			if (point is null) return null;
-			var tileSize = viewModel.SvgConnectionService.TileSize;
-			if (tileSize is null) return null;
+			var tileSize = viewModel.TileSize;
 
 			var previewRect = viewModel.GetPreviewRect();
 			if (previewRect is null) return null;
@@ -129,8 +128,8 @@ namespace InkscapeTileMaker.Views
 			double logicalX = px * previewRect.Value.Width / zoom;
 			double logicalY = py * previewRect.Value.Height / zoom;
 
-			var tileWidth = (double)tileSize.Value.width;
-			var tileHeight = (double)tileSize.Value.height;
+			var tileWidth = (double)tileSize.width;
+			var tileHeight = (double)tileSize.height;
 
 			int row = (int)Math.Round((logicalY - tileHeight / 2) / tileHeight);
 			int col = (int)Math.Round((logicalX - tileWidth / 2) / tileWidth);

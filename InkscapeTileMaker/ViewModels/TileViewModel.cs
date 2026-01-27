@@ -1,16 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using InkscapeTileMaker.Models;
-using InkscapeTileMaker.Utility;
-using System.Xml.Linq;
 
 namespace InkscapeTileMaker.ViewModels
 {
 	public partial class TileViewModel : ObservableObject
 	{
 		private readonly Tile _tile;
-		private readonly XElement _element;
-		private readonly XElement _collection;
 		private readonly DesignerViewModel _designerViewModel;
+		private readonly Action<Tile> _syncFunction;
 
 		[ObservableProperty]
 		public partial ImageSource? PreviewImage { get; set; }
@@ -35,12 +32,11 @@ namespace InkscapeTileMaker.ViewModels
 		public bool IsMaterial => !string.IsNullOrEmpty(_tile.MaterialName) &&
 			(Type == TileType.MatCore || Type == TileType.MatEdge || Type == TileType.MatOuterCorner || Type == TileType.MatInnerCorner || Type == TileType.MatDiagonal);
 
-		public TileViewModel(XElement tileElement, XElement collectionElement, DesignerViewModel designerViewModel)
+		public TileViewModel(Tile tile, DesignerViewModel designerViewModel, Action<Tile> syncFunction)
 		{
-			_tile = TileExtensions.GetTileFromXElement(tileElement);
-			_collection = collectionElement;
-			_element = tileElement;
+			_tile = tile;
 			_designerViewModel = designerViewModel;
+			_syncFunction = syncFunction;
 
 			Name = _tile.Name;
 			Position = (_tile.Row, _tile.Column);
@@ -51,9 +47,7 @@ namespace InkscapeTileMaker.ViewModels
 
 		public void Sync()
 		{
-			_element.Remove();
-			XElement tileElement = _tile.ToXElement();
-			_collection.Add(tileElement);
+			_syncFunction.Invoke(_tile);
 		}
 
 		partial void OnNameChanged(string value)
