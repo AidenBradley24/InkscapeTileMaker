@@ -308,10 +308,29 @@ namespace InkscapeTileMaker.ViewModels
 
 		#region Drawing Methods
 
+		public SKRect? GetPreviewRect()
+		{
+			return SelectedPreviewMode switch
+			{
+				PreviewMode.Image => GetImageRect(),
+				PreviewMode.InContext => GetInContextRect(8),
+				_ => null,
+			};
+		}
+
+		public SKRectI? GetUnscaledPreviewRect()
+		{
+			return SelectedPreviewMode switch
+			{
+				PreviewMode.Image => GetUnscaledImageRect(),
+				PreviewMode.InContext => new SKRectI(0, 0, TileSize.x * 8, TileSize.y * 8),
+				_ => null,
+			};
+		}
+
 		public SKRect? GetImageRect()
 		{
 			if (_renderedBitmap == null) return null;
-
 			var zoomFactor = (float)SelectedZoomLevel;
 			return new SKRect()
 			{
@@ -321,6 +340,12 @@ namespace InkscapeTileMaker.ViewModels
 					_renderedBitmap.Width * zoomFactor,
 					_renderedBitmap.Height * zoomFactor),
 			};
+		}
+
+		public SKRectI? GetUnscaledImageRect()
+		{
+			if (_renderedBitmap == null) return null;
+			return new SKRectI(0, 0, _renderedBitmap.Width, _renderedBitmap.Height);
 		}
 
 		public SKRect? GetInContextRect(int size)

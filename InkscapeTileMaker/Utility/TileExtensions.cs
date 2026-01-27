@@ -58,7 +58,7 @@ namespace InkscapeTileMaker.Utility
 		public static XElement ToXElement(this Tile tile)
 		{
 			return new XElement(SvgConnectionService.tileName,
-				new XAttribute("name", tile),
+				new XAttribute("name", tile.Name),
 				new XAttribute("type", tile.Type.ToString()),
 				new XAttribute("allignment", tile.Allignment.ToString()),
 				new XAttribute("priority", tile.Priority),
