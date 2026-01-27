@@ -255,15 +255,23 @@ namespace InkscapeTileMaker.ViewModels
 			if (HoveredTile != null)
 			{
 				var tileRect = GetTileRect(HoveredTile.Value.row, HoveredTile.Value.col);
-				DrawSelectionOutline(canvas, tileRect, SKColors.DarkGreen.WithAlpha(128));
-				var hoveredTile = Tiles.FirstOrDefault(t => t.Value.Row == HoveredTile.Value.row && t.Value.Column == HoveredTile.Value.col);
-				if (hoveredTile != null) DrawTileLabel(canvas, hoveredTile.Value.Name, tileRect);
+				var hoveredTileModel = Tiles.FirstOrDefault(t => t.Value.Row == HoveredTile.Value.row && t.Value.Column == HoveredTile.Value.col);
+				if (hoveredTileModel == null)
+				{
+					DrawTileX(canvas, tileRect, SKColors.Red.WithAlpha(128));
+					DrawTileOutline(canvas, tileRect, SKColors.Red.WithAlpha(128));
+				}
+				else
+				{
+					DrawTileOutline(canvas, tileRect, SKColors.DarkGreen.WithAlpha(128));
+					DrawTileLabel(canvas, hoveredTileModel.Value.Name, tileRect);
+				}
 			}
 
 			if (SelectedTile != null)
 			{
 				var tileRect = GetTileRect(SelectedTile.Value.Row, SelectedTile.Value.Column);
-				DrawSelectionOutline(canvas, tileRect, SKColors.Blue);
+				DrawTileOutline(canvas, tileRect, SKColors.Blue);
 			}
 		}
 
@@ -530,16 +538,29 @@ namespace InkscapeTileMaker.ViewModels
 			}
 		}
 
-		private void DrawSelectionOutline(SKCanvas canvas, SKRect rect, SKColor color)
+		private void DrawTileOutline(SKCanvas canvas, SKRect rect, SKColor color)
 		{
-			using var outlinePaint = new SKPaint
+			using var paint = new SKPaint
+			{
+				Color = color,
+				Style = SKPaintStyle.Stroke,
+				StrokeWidth = 2,
+				IsAntialias = false
+			};
+			canvas.DrawRect(rect, paint);
+		}
+
+		private void DrawTileX(SKCanvas canvas, SKRect rect, SKColor color)
+		{
+			using var paint = new SKPaint
 			{
 				Color = color,
 				Style = SKPaintStyle.Stroke,
 				StrokeWidth = 2,
 				IsAntialias = true
 			};
-			canvas.DrawRect(rect, outlinePaint);
+			canvas.DrawLine(rect.Left, rect.Top, rect.Right, rect.Bottom, paint);
+			canvas.DrawLine(rect.Right, rect.Top, rect.Left, rect.Bottom, paint);
 		}
 
 		private void DrawTileLabel(SKCanvas canvas, string label, SKRect rect)
