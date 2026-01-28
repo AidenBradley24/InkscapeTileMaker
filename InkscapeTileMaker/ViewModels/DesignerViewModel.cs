@@ -72,6 +72,8 @@ namespace InkscapeTileMaker.ViewModels
 
 		public event Action CanvasNeedsRedraw = delegate { };
 
+		public event Action CloseRequested = delegate { };
+
 		public DesignerViewModel(IWindowService windowService, ITilesetRenderingService renderingService, IFileSaver fileSaver)
 		{
 			_windowService = windowService;
@@ -698,6 +700,12 @@ namespace InkscapeTileMaker.ViewModels
 			{
 				tileWrapper.Sync();
 			}
+		}
+
+		[RelayCommand]
+		public async Task Exit()
+		{
+			CloseRequested.Invoke();
 		}
 
 		[RelayCommand]
