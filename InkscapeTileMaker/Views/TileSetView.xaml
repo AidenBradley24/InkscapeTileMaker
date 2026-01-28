@@ -3,105 +3,132 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="InkscapeTileMaker.Views.TileSetView"
              xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels"
-             xmlns:models="clr-namespace:InkscapeTileMaker.Models"
+             xmlns:models="clr-namespace:InkscapeTileMaker.Models;assembly=InkscapeTileMaker.Models"
              x:DataType="vms:DesignerViewModel"
              x:Name="TileSet">
 
     <Grid Padding="12"
-          RowDefinitions="Auto,Auto,*">
+          RowDefinitions="Auto,Auto,*,Auto">
 
         <!-- Top details section -->
         <Grid Grid.Row="0"
-          ColumnDefinitions="Auto,*"
-          RowDefinitions="Auto,Auto"
-          Padding="0,0,0,12">
+              ColumnDefinitions="Auto,*"
+              RowDefinitions="Auto,Auto"
+              Padding="0,0,0,12">
             <Label Grid.Row="0"
-               Grid.Column="0"
-               Text="Tileset:"
-               FontAttributes="Bold"
-               VerticalTextAlignment="Center"
-               Margin="0,0,8,0" />
+                   Grid.Column="0"
+                   Text="Tileset:"
+                   FontAttributes="Bold"
+                   VerticalTextAlignment="Center"
+                   Margin="0,0,8,0" />
 
             <Label Grid.Row="0"
-               Grid.Column="1"
-               Text="{Binding FileName}"
-               VerticalTextAlignment="Center" />
+                   Grid.Column="1"
+                   Text="{Binding FileName}"
+                   VerticalTextAlignment="Center" />
 
             <Label Grid.Row="1"
-               Grid.Column="0"
-               Text="Tile Size:"
-               FontAttributes="Bold"
-               VerticalTextAlignment="Center"
-               Margin="0,4,8,0" />
+                   Grid.Column="0"
+                   Text="Tile Size:"
+                   FontAttributes="Bold"
+                   VerticalTextAlignment="Center"
+                   Margin="0,4,8,0" />
 
             <Label Grid.Row="1"
-               Grid.Column="1"
-               Text="{Binding TileSize, StringFormat='{}{0.x} x {0.y}'}"
-               VerticalTextAlignment="Center"
-               Margin="0,4,0,0" />
+                   Grid.Column="1"
+                   Text="{Binding TileSize, StringFormat='{}{0.x} x {0.y}'}"
+                   VerticalTextAlignment="Center"
+                   Margin="0,4,0,0" />
         </Grid>
 
         <!-- Tiles flex layout -->
         <ScrollView Grid.Row="2">
             <VerticalStackLayout Spacing="8">
-
-                <!-- Tiles flex layout -->
                 <FlexLayout
-                Direction="Row"
-                Wrap="Wrap"
-                AlignItems="Start"
-                AlignContent="Start"
-                JustifyContent="Start"
-                Margin="0"
-                BindableLayout.ItemsSource="{Binding Tiles}">
+                    Direction="Row"
+                    Wrap="Wrap"
+                    AlignItems="Start"
+                    AlignContent="Start"
+                    JustifyContent="Start"
+                    Margin="0"
+                    BindableLayout.ItemsSource="{Binding Tiles}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="vms:TileViewModel">
-                            <!-- Each tile -->
                             <Border
-                            Padding="4"
-                            Margin="2"
-                            BackgroundColor="White"
-                            Stroke="Black"
-                            StrokeThickness="1"
-                            ToolTipProperties.Text="{Binding Value.Name}">
+                                Padding="4"
+                                Margin="2"
+                                BackgroundColor="White"
+                                Stroke="Black"
+                                StrokeThickness="1"
+                                ToolTipProperties.Text="{Binding Name}">
                                 <Grid WidthRequest="32"
-                                  HeightRequest="32"
-                                  BackgroundColor="LightGray">
-
-                                    <!-- Tile visual -->
+                                      HeightRequest="32"
+                                      BackgroundColor="LightGray">
                                     <Image Source="{Binding PreviewImage}"
-                                       Aspect="AspectFill"
-                                       WidthRequest="32"
-                                       HeightRequest="32" />
-
-                                    <!-- Name overlay (optional) -->
-                                    <Label Text="{Binding Value.Name}"
-                                       FontSize="10"
-                                       HorizontalOptions="Center"
-                                       VerticalOptions="Center"
-                                       LineBreakMode="TailTruncation"
-                                       TextColor="Black"
-                                       BackgroundColor="#80FFFFFF" />
+                                           Aspect="AspectFill"
+                                           WidthRequest="32"
+                                           HeightRequest="32" />
+                                    <Label Text="{Binding Name}"
+                                           FontSize="10"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center"
+                                           LineBreakMode="TailTruncation"
+                                           TextColor="Black"
+                                           BackgroundColor="#80FFFFFF" />
                                 </Grid>
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer
-                                    Command="{Binding BindingContext.SelectTileCommand, Source={x:Reference Name=TileSet}}"
-                                    CommandParameter="{Binding .}" />
+                                        Command="{Binding BindingContext.SelectTileCommand, Source={x:Reference Name=TileSet}}"
+                                        CommandParameter="{Binding .}" />
                                 </Border.GestureRecognizers>
                             </Border>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </FlexLayout>
-
-                <Button
-                Text="Add Tile"
-                Command="{Binding AddTileCommand}" />
-
-                <Button
-                Text="Fill Tiles"
-                Command="{Binding FillTilesCommand}" />
-
             </VerticalStackLayout>
         </ScrollView>
+
+        <!--Tile set options-->
+        <Border Grid.Row="3"
+                Margin="0,12,0,0"
+                Padding="8"
+                Stroke="DarkGray"
+                StrokeThickness="1">
+            <VerticalStackLayout Spacing="10">
+                <Label Grid.Row="0"
+                   Grid.ColumnSpan="2"
+                   Text="Tileset Options"
+                   FontAttributes="Bold"
+                   Margin="0,0,0,4" />
+
+                <HorizontalStackLayout Spacing="20">
+                    <Button Text="Fill tiles" 
+                            Command="{Binding FillTilesCommand}"
+                            HeightRequest="25"/>
+                    <HorizontalStackLayout>
+                        <VerticalStackLayout Spacing="1">
+                            <Label Text="Replace existing" FontSize="12" />
+                            <Switch IsToggled="{Binding ReplaceExistingTiles}" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="1">
+                            <Label Text="Fill empty tiles" FontSize="12" />
+                            <Switch IsToggled="{Binding FillEmptyTiles}" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </HorizontalStackLayout>
+
+
+                <VerticalStackLayout Grid.Row="3"
+                     HorizontalOptions="Start"
+                     VerticalOptions="Center">
+                    <Button Text="Clear all tiles"
+                        TextColor="White"
+                        BackgroundColor="#CCAA0000"
+                        Command="{Binding ClearAllTilesCommand}" />
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </Border>
     </Grid>
 </ContentView>

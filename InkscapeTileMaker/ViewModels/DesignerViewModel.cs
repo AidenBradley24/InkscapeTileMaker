@@ -142,7 +142,7 @@ namespace InkscapeTileMaker.ViewModels
 			}
 			_tileBitmaps.Clear();
 
-			var file = _tilesetConnection.CurrentFile;
+			var file = _tilesetConnection!.CurrentFile;
 			FileName = file?.Name;
 			if (file == null) return;
 
@@ -166,7 +166,7 @@ namespace InkscapeTileMaker.ViewModels
 
 			Task.Run(async () =>
 			{
-				using (var stream = await _svgRenderingService.RenderFile(file, CancellationToken.None))
+				using (var stream = await _svgRenderingService.RenderFileAsync(file, CancellationToken.None))
 				{
 					if (stream.CanSeek) stream.Position = 0;
 					_renderedBitmap = SKBitmap.Decode(stream);
@@ -176,7 +176,7 @@ namespace InkscapeTileMaker.ViewModels
 				{
 					tileWrapper.PreviewImage = ImageSource.FromStream(token =>
 					{
-						return _svgRenderingService.RenderSegment(
+						return _svgRenderingService.RenderSegmentAsync(
 						file,
 						left: tileWrapper.Value.Column * tileset.TileSize.width,
 						top: tileWrapper.Value.Row * tileset.TileSize.height,
@@ -194,7 +194,7 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			DrawTransparentBackground(canvas, width, height);
 
-			if (_tilesetConnection.CurrentFile == null)
+			if (_tilesetConnection?.CurrentFile == null)
 			{
 				using var textPaint = new SKPaint
 				{
@@ -248,7 +248,7 @@ namespace InkscapeTileMaker.ViewModels
 			var previewRect = GetImageRect()!.Value;
 			canvas.DrawBitmap(_renderedBitmap, previewRect);
 
-			if (_tilesetConnection.Tileset != null)
+			if (_tilesetConnection?.Tileset != null)
 			{
 				using var majorPaint = new SKPaint
 				{
@@ -266,7 +266,7 @@ namespace InkscapeTileMaker.ViewModels
 					Style = SKPaintStyle.Stroke,
 				};
 
-				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.TileSize, 2, majorPaint, minorPaint);
+				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.TileSize / 2, 2, majorPaint, minorPaint);
 				DrawBorder(canvas, previewRect);
 			}
 
@@ -320,7 +320,7 @@ namespace InkscapeTileMaker.ViewModels
 				DrawMaterialTilemap(canvas, tilemap);
 			}
 
-			if (_tilesetConnection.Tileset != null)
+			if (_tilesetConnection?.Tileset != null)
 			{
 				using var majorPaint = new SKPaint
 				{
@@ -338,7 +338,7 @@ namespace InkscapeTileMaker.ViewModels
 					Style = SKPaintStyle.Stroke,
 				};
 
-				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.Size, 2, majorPaint, minorPaint);
+				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.Size / 2, 2, majorPaint, minorPaint);
 				DrawBorder(canvas, previewRect);
 			}
 		}
@@ -389,7 +389,7 @@ namespace InkscapeTileMaker.ViewModels
 
 		public SKRect? GetInContextRect(int size)
 		{
-			if (_tilesetConnection.Tileset == null) return SKRect.Empty;
+			if (_tilesetConnection?.Tileset == null) return SKRect.Empty;
 			var zoomFactor = (float)SelectedZoomLevel;
 			return new SKRect()
 			{
@@ -403,7 +403,7 @@ namespace InkscapeTileMaker.ViewModels
 
 		public SKRect GetTileRect(int row, int column)
 		{
-			if (_tilesetConnection.Tileset == null) return SKRect.Empty;
+			if (_tilesetConnection?.Tileset == null) return SKRect.Empty;
 			float width = _tilesetConnection.Tileset.TileSize.width * (float)SelectedZoomLevel;
 			float height = _tilesetConnection.Tileset.TileSize.height * (float)SelectedZoomLevel;
 			float top = height * row + PreviewOffset.Y * (float)SelectedZoomLevel;
@@ -416,7 +416,7 @@ namespace InkscapeTileMaker.ViewModels
 
 		public SKRectI GetUnscaledTileRect(int row, int column)
 		{
-			if (_tilesetConnection.Tileset == null) return SKRectI.Empty;
+			if (_tilesetConnection?.Tileset == null) return SKRectI.Empty;
 			int width = _tilesetConnection.Tileset.TileSize.width;
 			int height = _tilesetConnection.Tileset.TileSize.height;
 			int top = height * row;
@@ -473,7 +473,7 @@ namespace InkscapeTileMaker.ViewModels
 
 		private void DrawBorder(SKCanvas canvas, SKRect interiorRect)
 		{
-			SKColor borderColor = SKColor.Parse("#FF0000").WithAlpha(128);
+			SKColor borderColor = SKColor.Parse("#222222").WithAlpha(200);
 
 			// Canvas bounds
 			int canvasWidth = canvas.DeviceClipBounds.Width;
@@ -483,7 +483,7 @@ namespace InkscapeTileMaker.ViewModels
 			{
 				Color = borderColor,
 				Style = SKPaintStyle.Fill,
-				IsAntialias = false
+				IsAntialias = false,
 			};
 
 			// Left area (to the left of the box, including top-left corner if in view)
@@ -533,6 +533,30 @@ namespace InkscapeTileMaker.ViewModels
 					canvas.DrawRect(bottomRect, borderPaint);
 				}
 			}
+
+			// lines from each rect corner to each canvas corner
+			using var linePaint = new SKPaint
+			{
+				Color = borderColor,
+				Style = SKPaintStyle.Stroke,
+				StrokeWidth = 1,
+				IsAntialias = false,
+			};
+
+			var topLeftCanvas = new SKPoint(0, 0);
+			var topRightCanvas = new SKPoint(canvasWidth, 0);
+			var bottomLeftCanvas = new SKPoint(0, canvasHeight);
+			var bottomRightCanvas = new SKPoint(canvasWidth, canvasHeight);
+
+			var topLeftRect = new SKPoint(interiorRect.Left, interiorRect.Top);
+			var topRightRect = new SKPoint(interiorRect.Right, interiorRect.Top);
+			var bottomLeftRect = new SKPoint(interiorRect.Left, interiorRect.Bottom);
+			var bottomRightRect = new SKPoint(interiorRect.Right, interiorRect.Bottom);
+
+			canvas.DrawLine(topLeftRect, topLeftCanvas, linePaint);
+			canvas.DrawLine(topRightRect, topRightCanvas, linePaint);
+			canvas.DrawLine(bottomLeftRect, bottomLeftCanvas, linePaint);
+			canvas.DrawLine(bottomRightRect, bottomRightCanvas, linePaint);
 		}
 
 		private void DrawTileOutline(SKCanvas canvas, SKRect rect, SKColor color)
@@ -647,6 +671,7 @@ namespace InkscapeTileMaker.ViewModels
 		[RelayCommand]
 		public async Task SaveDesign()
 		{
+			if (_tilesetConnection?.Tileset == null) return;
 			PreSave();
 			var file = _tilesetConnection.CurrentFile;
 			if (file == null) return;
@@ -657,6 +682,7 @@ namespace InkscapeTileMaker.ViewModels
 		[RelayCommand]
 		public async Task SaveDesignAs()
 		{
+			if (_tilesetConnection?.Tileset == null) return;
 			PreSave();
 			var svgFile = _tilesetConnection.CurrentFile;
 			if (svgFile == null) return;
@@ -700,7 +726,7 @@ namespace InkscapeTileMaker.ViewModels
 		[RelayCommand]
 		public void AddNewTile((int row, int col) position)
 		{
-			if (_tilesetConnection.Tileset == null) return;
+			if (_tilesetConnection?.Tileset == null) return;
 			_tilesetConnection.Tileset.Add(new Tile { Row = position.row, Column = position.col });
 			HasUnsavedChanges = true;
 		}
@@ -708,7 +734,22 @@ namespace InkscapeTileMaker.ViewModels
 		[RelayCommand]
 		public async Task FillTiles()
 		{
-			await _tilesetConnection.Tileset.FillTilesAsync(TilesetFillSettings.FillEmptyTiles);
+			if (_tilesetConnection?.Tileset == null) return;
+			TilesetFillSettings settings = TilesetFillSettings.None;
+			if (ReplaceExistingTiles) settings |= TilesetFillSettings.ReplaceExisting;
+			if (FillEmptyTiles) settings |= TilesetFillSettings.FillEmptyTiles;
+			await _tilesetConnection.Tileset.FillTilesAsync(settings);
+			HasUnsavedChanges = true;
+		}
+
+		[ObservableProperty] public partial bool ReplaceExistingTiles { get; set; } = false;
+		[ObservableProperty] public partial bool FillEmptyTiles { get; set; } = false;
+
+		[RelayCommand]
+		public void ClearAllTiles()
+		{
+			if (_tilesetConnection?.Tileset == null) return;
+			_tilesetConnection.Tileset.Clear();
 			HasUnsavedChanges = true;
 		}
 

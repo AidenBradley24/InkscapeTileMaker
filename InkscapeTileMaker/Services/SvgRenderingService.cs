@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using SkiaSharp;
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
 
@@ -22,7 +23,7 @@ namespace InkscapeTileMaker.Services
 			_cacheUpdates = new Dictionary<string, DateTime>();
 		}
 
-		public async Task<Stream> RenderFile(FileInfo svgFile, CancellationToken cancellationToken)
+		public async Task<Stream> RenderFileAsync(FileInfo svgFile, CancellationToken cancellationToken)
 		{
 			var requestHash = HashCode.Combine(svgFile.FullName, svgFile.LastWriteTimeUtc);
 			CheckAndAddToCache(svgFile, requestHash);
@@ -57,7 +58,7 @@ namespace InkscapeTileMaker.Services
 			return exportFile.OpenRead();
 		}
 
-		public async Task<Stream> RenderSegment(FileInfo svgFile, int left, int top, int right, int bottom, CancellationToken cancellationToken)
+		public async Task<Stream> RenderSegmentAsync(FileInfo svgFile, int left, int top, int right, int bottom, CancellationToken cancellationToken)
 		{
 			var requestHash = HashCode.Combine(svgFile.FullName, left, top, right, bottom, svgFile.LastWriteTimeUtc);
 			CheckAndAddToCache(svgFile, requestHash);
@@ -97,6 +98,25 @@ namespace InkscapeTileMaker.Services
 			return exportFile.OpenRead();
 		}
 
+		public async Task<bool> IsSegmentEmptyAsync(FileInfo file, int left, int top, int right, int bottom, CancellationToken cancellationToken)
+		{
+			using var pngStream = await RenderSegmentAsync(file, left, top, right, bottom, cancellationToken);
+			using var bitmap = SKBitmap.Decode(pngStream) ?? throw new Exception("Failed to decode rendered PNG.");
+			for (int y = 0; y < bitmap.Height; y++)
+			{
+				for (int x = 0; x < bitmap.Width; x++)
+				{
+					cancellationToken.ThrowIfCancellationRequested();
+					var pixel = bitmap.GetPixel(x, y);
+					if (pixel.Alpha != 0)
+					{
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+
 		private void CheckAndAddToCache(FileInfo svgFile, int requestHash)
 		{
 			// remove failed or canceled tasks
@@ -132,7 +152,7 @@ namespace InkscapeTileMaker.Services
 
 				AddHashToCache(svgFile, requestHash);
 			}
-			
+
 			if (filesToDelete == null) return;
 			foreach (var file in filesToDelete)
 			{

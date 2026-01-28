@@ -98,7 +98,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 		get
 		{
 			if (Document is null) return [];
-			XElement collectionElement = GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
+			XElement collectionElement = GetOrCreateTileCollectionElement();
 			return collectionElement.Elements(tileName).Select(tileElement => TileExtensions.GetTileFromXElement(tileElement));
 		}
 	}
@@ -176,7 +176,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 	public void ClearTiles()
 	{
 		if (Document is null) throw new InvalidOperationException("SVG Document is not loaded.");
-		XElement collectionElement = GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
+		XElement collectionElement = GetOrCreateTileCollectionElement();
 		collectionElement.RemoveAll();
 		TilesetChanged.Invoke(Tileset!);
 	}
@@ -203,14 +203,15 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 
 	public int GetTileCount()
 	{
-		return Tiles.Count(); // TODO maybe optimize later
+		XElement collectionElement = GetOrCreateTileCollectionElement();
+		return collectionElement.Elements(tileName).Count();
 	}
 
 	public async Task FillTilesAsync(TilesetFillSettings settings)
 	{
 		if (Document is null) throw new InvalidOperationException("SVG Document is not loaded.");
 		if (Tileset is null) throw new InvalidOperationException("Tileset is not loaded.");
-		XElement collectionElement = GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
+		XElement collectionElement = GetOrCreateTileCollectionElement();
 
 		int maxRow = Tileset.Size.height / Tileset.TileSize.height - 1;
 		int maxCol = Tileset.Size.width / Tileset.TileSize.width - 1;
@@ -238,11 +239,13 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 						Column = col
 					};
 
-					//SvgRenderingService renderingService = _services.GetRequiredService<SvgRenderingService>();
-					//renderingService.RenderSegment(_svgFile!, col * Tileset.TileSize.width, row * Tileset.TileSize.height,
-					//	(col + 1) * Tileset.TileSize.width, (row + 1) * Tileset.TileSize.height, CancellationToken.None);
-
-					// TODO implement smart
+					if (!settings.HasFlag(TilesetFillSettings.FillEmptyTiles))
+					{
+						ITilesetRenderingService renderingService = _services.GetRequiredService<ITilesetRenderingService>();
+						bool isEmpty = await renderingService.IsSegmentEmptyAsync(_svgFile!, col * Tileset.TileSize.width, row * Tileset.TileSize.height,
+							(col + 1) * Tileset.TileSize.width, (row + 1) * Tileset.TileSize.height, CancellationToken.None);
+						if (isEmpty) continue;
+					}
 
 					AddOrReplaceTile(newTile);
 				}
@@ -252,9 +255,9 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 		TilesetChanged.Invoke(Tileset!);
 	}
 
-	private XElement? GetOrCreateAppElement()
+	private XElement GetOrCreateAppElement()
 	{
-		if (Defs is null) return null;
+		if (Defs is null) throw new Exception("SVG Document isn't loaded or missing <defs> element.");
 		var appElement = Defs.Element(appDefsName);
 		if (appElement is null)
 		{
@@ -264,9 +267,9 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 		return appElement;
 	}
 
-	private XElement? GetOrCreateTileCollectionElement()
+	private XElement GetOrCreateTileCollectionElement()
 	{
-		XElement appElement = GetOrCreateAppElement() ?? throw new InvalidOperationException("Unable to get or create application element in SVG.");
+		XElement appElement = GetOrCreateAppElement();
 		var collectionElement = appElement.Element(tileCollectionName);
 		if (collectionElement is null)
 		{
@@ -279,7 +282,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 	private XElement? GetTileElement(int row, int col)
 	{
 		if (Document is null) throw new InvalidOperationException("SVG Document is not loaded.");
-		XElement collectionElement = GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
+		XElement collectionElement = GetOrCreateTileCollectionElement();
 		return collectionElement.Elements(tileName)
 			.FirstOrDefault(t => t.Attribute(XName.Get("row"))?.Value == row.ToString() && t.Attribute(XName.Get("column"))?.Value == col.ToString());
 	}
