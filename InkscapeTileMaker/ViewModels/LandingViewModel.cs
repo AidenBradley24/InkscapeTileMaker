@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Services;
+using InkscapeTileMaker.Utility;
 using InkscapeTileMaker.Views;
 using System.Collections.ObjectModel;
 
@@ -17,6 +18,21 @@ namespace InkscapeTileMaker.ViewModels
 
 		[ObservableProperty]
 		public partial ObservableCollection<TemplateRecord> Templates { get; set; } = [];
+
+		[ObservableProperty]
+		public partial TemplateRecord? SelectedTemplate { get; set; }
+
+		[ObservableProperty]
+		public partial int TileSizeX { get; set; } = 256;
+
+		[ObservableProperty]
+		public partial int TileSizeY { get; set; } = 256;
+
+		[ObservableProperty]
+		public partial int TileSetSizeX { get; set; } = 4;
+
+		[ObservableProperty]
+		public partial int TileSetSizeY { get; set; } = 4;
 
 		public LandingViewModel(IWindowService windowService, ITemplateService templateService, IFileSaver fileSaver)
 		{
@@ -70,15 +86,33 @@ namespace InkscapeTileMaker.ViewModels
 		}
 
 		[RelayCommand]
-		public async Task CreateWithTemplate(TemplateRecord template)
+		public async Task CreateWithTemplate()
 		{
-			var stream = await _templateService.OpenTemplateStreamAsync(template);
-			var result = await _fileSaver.SaveAsync($"new {template.Name}.svg", stream);
+			if (SelectedTemplate == null) return;
+			using var ms = new MemoryStream();
+			using (var stream = await _templateService.OpenTemplateStreamAsync(SelectedTemplate))
+			{
+				var svg = new InkscapeSvg(stream);
+				svg.SetTileSize(new Scale(TileSizeX, TileSizeY));
+				svg.SetSvgSize(new Scale(TileSetSizeX * TileSizeX, TileSetSizeY * TileSizeY));
+				await svg.SaveToStreamAsync(ms);
+			}
+			ms.Position = 0;
+			var result = await _fileSaver.SaveAsync($"new {SelectedTemplate.Name}.svg", ms);
 			if (result != null && !string.IsNullOrEmpty(result.FilePath))
 			{
 				var svgFile = new FileInfo(result.FilePath);
 				_windowService.OpenDesignerWindow(svgFile);
 			}
+		}
+
+		partial void OnSelectedTemplateChanged(TemplateRecord? value)
+		{
+			if (value == null) return;
+			TileSizeX = value.TileSize.width;
+			TileSizeY = value.TileSize.height;
+			TileSetSizeX = value.TilesetSize.width / TileSizeX;
+			TileSetSizeY = value.TilesetSize.height / TileSizeY;
 		}
 	}
 }

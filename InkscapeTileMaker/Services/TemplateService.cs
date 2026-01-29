@@ -38,8 +38,12 @@ namespace InkscapeTileMaker.Services
 		{
 			var svg = new InkscapeSvg(stream);
 			string path = svg.SvgRoot?.Attribute(InkscapeSvg.sodipodiNamespace + "docname")?.Value ?? throw new Exception("no");
-			return new TemplateRecord(Path.GetFileNameWithoutExtension(path), path);
-
+			
+			return new TemplateRecord(Path.GetFileNameWithoutExtension(path), path)
+			{
+				TileSize = svg.GetTileSize(),
+				TilesetSize = svg.GetSvgSize()
+			};
 		}
 	}
 }

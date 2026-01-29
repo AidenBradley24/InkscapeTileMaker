@@ -149,22 +149,14 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 
 	public Scale GetTileSize()
 	{
-		if (_svg?.Grid is null) throw new InvalidOperationException("SVG Document is not loaded.");
-		var spacingX = _svg.Grid.Attribute(XName.Get("spacingx"))?.Value;
-		var spacingY = _svg.Grid.Attribute(XName.Get("spacingy"))?.Value;
-		var empSpacing = _svg.Grid.Attribute(XName.Get("empspacing"))?.Value;
-		if (int.TryParse(spacingX, out int width) && int.TryParse(spacingY, out int height) && int.TryParse(empSpacing, out int unitsPerTile))
-		{
-			return new Scale() { width = width * unitsPerTile, height = height * unitsPerTile };
-		}
-		throw new InvalidDataException("Tile size information is missing or invalid in the SVG grid.");
+		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
+		return _svg.GetTileSize();
 	}
 
 	public Scale GetSvgSize()
 	{
-		int width = Convert.ToInt32(_svg?.SvgRoot?.Attribute(XName.Get("width"))?.Value ?? "1");
-		int height = Convert.ToInt32(_svg?.SvgRoot?.Attribute(XName.Get("height"))?.Value ?? "1");
-		return new Scale() { width = width, height = height };
+		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
+		return _svg.GetSvgSize();
 	}
 
 	public int GetTileCount()

@@ -78,5 +78,40 @@ namespace InkscapeTileMaker.Utility
 			XElement collectionElement = GetOrCreateTileCollectionElement();
 			return collectionElement.Elements(tileName);
 		}
+
+		public Scale GetTileSize()
+		{
+			if (Grid is null) throw new InvalidOperationException("Grid not in svg");
+			var spacingX = Grid.Attribute(XName.Get("spacingx"))?.Value;
+			var spacingY = Grid.Attribute(XName.Get("spacingy"))?.Value;
+			var empSpacing = Grid.Attribute(XName.Get("empspacing"))?.Value;
+			if (int.TryParse(spacingX, out int width) && int.TryParse(spacingY, out int height) && int.TryParse(empSpacing, out int unitsPerTile))
+			{
+				return new Scale() { width = width * unitsPerTile, height = height * unitsPerTile };
+			}
+			throw new InvalidDataException("Tile size information is missing or invalid in the SVG grid.");
+		}
+
+		public Scale GetSvgSize()
+		{
+			int width = Convert.ToInt32(SvgRoot?.Attribute(XName.Get("width"))?.Value ?? "1");
+			int height = Convert.ToInt32(SvgRoot?.Attribute(XName.Get("height"))?.Value ?? "1");
+			return new Scale() { width = width, height = height };
+		}
+
+		public void SetTileSize(Scale size)
+		{
+			if (Grid is null) throw new InvalidOperationException("Grid not in svg");
+			Grid.SetAttributeValue(XName.Get("spacingx"), (size.width / 2).ToString());
+			Grid.SetAttributeValue(XName.Get("spacingy"), (size.height / 2).ToString());
+			Grid.SetAttributeValue(XName.Get("empspacing"), 2);
+		}
+
+		public void SetSvgSize(Scale size)
+		{
+			if (SvgRoot is null) throw new InvalidOperationException("SVG Document is not loaded.");
+			SvgRoot.SetAttributeValue(XName.Get("width"), size.width.ToString());
+			SvgRoot.SetAttributeValue(XName.Get("height"), size.height.ToString());
+		}
 	}
 }

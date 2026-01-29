@@ -13,6 +13,8 @@ public class LandingWindow : Window, ILandingNavigation
 		Height = 400;
 		MinimumWidth = 600;
 		MinimumHeight = 400;
+		MaximumHeight = 600;
+		MinimumHeight = 400;
 
 		_nav = new NavigationPage(new LandingPage(vm));
 		_vm = vm;
