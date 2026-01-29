@@ -41,7 +41,7 @@ namespace InkscapeTileMaker.Services
 			{
 				var startInfo = _inkscapeService.GetProcessStartInfo();
 				var exportFile = new FileInfo(Path.Combine(_tempDirService.TempDir.FullName, $"{Guid.NewGuid()}.{exportType}"));
-				startInfo.Arguments = $"--export-type=\"{exportType}\" --export-filename=\"{exportFile.FullName}\" \"{file.FullName}\"" 
+				startInfo.Arguments = $"--export-type=\"{exportType}\" --export-filename=\"{exportFile.FullName}\" \"{file.FullName}\""
 					+ (exportType == "svg" ? " --export-plain-svg" : "");
 				var process = Process.Start(startInfo) ?? throw new Exception("Failed to start Inkscape process.");
 				try
@@ -102,7 +102,7 @@ namespace InkscapeTileMaker.Services
 				startInfo.Arguments =
 					$"--export-area={left}:{top}:{right}:{bottom} " +
 					$"--export-type=\"{exportType}\" " +
-					$"--export-filename=\"{exportFile.FullName}\" \"{file.FullName}\"" 
+					$"--export-filename=\"{exportFile.FullName}\" \"{file.FullName}\""
 						+ (exportType == "svg" ? " --export-plain-svg" : "");
 
 				var process = Process.Start(startInfo) ?? throw new Exception("Failed to start Inkscape process.");

@@ -1,6 +1,5 @@
 using InkscapeTileMaker.ViewModels;
 using SkiaSharp.Views.Maui;
-using System.Threading.Tasks;
 
 namespace InkscapeTileMaker.Views
 {

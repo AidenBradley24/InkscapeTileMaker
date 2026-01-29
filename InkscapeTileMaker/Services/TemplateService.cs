@@ -1,6 +1,5 @@
 ﻿using InkscapeTileMaker.Utility;
 using InkscapeTileMaker.ViewModels;
-using System.Xml.Linq;
 
 namespace InkscapeTileMaker.Services
 {
@@ -33,12 +32,12 @@ namespace InkscapeTileMaker.Services
 		{
 			return await FileSystem.Current.OpenAppPackageFileAsync($"Templates/{template.Name}.svg");
 		}
-		
+
 		public TemplateRecord GetTemplateFromSvgStream(Stream stream)
 		{
 			var svg = new InkscapeSvg(stream);
 			string path = svg.SvgRoot?.Attribute(InkscapeSvg.sodipodiNamespace + "docname")?.Value ?? throw new Exception("no");
-			
+
 			return new TemplateRecord(Path.GetFileNameWithoutExtension(path), path)
 			{
 				TileSize = svg.GetTileSize(),

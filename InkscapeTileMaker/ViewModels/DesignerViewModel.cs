@@ -7,7 +7,6 @@ using InkscapeTileMaker.Utility;
 using SkiaSharp;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.IO.Compression;
 
 namespace InkscapeTileMaker.ViewModels
@@ -778,7 +777,7 @@ namespace InkscapeTileMaker.ViewModels
 		[RelayCommand]
 		public async Task ExportTilesetImage(string extension)
 		{
-			if (_tilesetConnection?.CurrentFile == null) return;	
+			if (_tilesetConnection?.CurrentFile == null) return;
 			using var stream = await _svgRenderingService.RenderFileAsync(_tilesetConnection.CurrentFile, extension);
 			var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.{extension}", stream);
 		}
