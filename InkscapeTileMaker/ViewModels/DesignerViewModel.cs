@@ -7,6 +7,8 @@ using InkscapeTileMaker.Utility;
 using SkiaSharp;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.IO.Compression;
 
 namespace InkscapeTileMaker.ViewModels
 {
@@ -804,6 +806,37 @@ namespace InkscapeTileMaker.ViewModels
 				top: tile.Row * tileset.TileSize.height,
 				right: (tile.Column + 1) * tileset.TileSize.width,
 				bottom: (tile.Row + 1) * tileset.TileSize.height, CancellationToken.None);
+		}
+
+		[RelayCommand]
+		public async Task ExportSeparatedTilesPng()
+		{
+			if (_tilesetConnection?.CurrentFile == null) return;
+			if (_tilesetConnection.Tileset == null) return;
+			var tileset = _tilesetConnection.Tileset;
+
+			using var zipStream = new MemoryStream();
+			using (var zip = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
+			{
+				foreach (var tvm in Tiles)
+				{
+					using var stream = await _svgRenderingService.RenderSegmentAsync(
+						_tilesetConnection.CurrentFile,
+						".png",
+						left: tvm.Value.Column * tileset.TileSize.width,
+						top: tvm.Value.Row * tileset.TileSize.height,
+						right: (tvm.Value.Column + 1) * tileset.TileSize.width,
+						bottom: (tvm.Value.Row + 1) * tileset.TileSize.height,
+						CancellationToken.None);
+					string tileFileName = $"{tvm.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].png";
+					var entry = zip.CreateEntry(tileFileName);
+					using var entryStream = await entry.OpenAsync();
+					await stream.CopyToAsync(entryStream);
+				}
+			}
+
+			zipStream.Position = 0;
+			var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.zip", zipStream);
 		}
 
 		#endregion
