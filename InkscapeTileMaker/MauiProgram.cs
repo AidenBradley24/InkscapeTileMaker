@@ -40,6 +40,7 @@ namespace InkscapeTileMaker
 			builder.Services.AddSingleton<ITilesetRenderingService, SvgRenderingService>();
 			builder.Services.AddSingleton<ITempDirectoryService, TempDirectoryService>();
 			builder.Services.AddSingleton<IFileSaver>(FileSaver.Default);
+			builder.Services.AddSingleton<ITemplateService, TemplateService>();
 
 			// Windows + pages + viewmodels
 			builder.Services.AddTransient<LandingWindow>()

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="InkscapeTileMaker.Views.TemplatePage"
+             Title="New"
+             xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels"
+             x:DataType="vms:LandingViewModel"
+             x:Name="TemplatePageRoot">
+    <Grid RowDefinitions="0.2*, 0.8*"
+          ColumnDefinitions="0.3*, 0.7*"
+          Padding="50"
+          ColumnSpacing="5">
+        <Label 
+            Text="Templates"
+            VerticalOptions="Center" 
+            HorizontalOptions="Center"
+            Grid.ColumnSpan="2"
+            FontSize="Title"/>
+        <CollectionView ItemsSource="{Binding Templates}"
+                        SelectionMode="Single"
+                        Grid.Row="1"
+                        Grid.Column="1">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vms:TemplateRecord">
+                    <Border Padding="10"
+                            Margin="0,5">
+                        <Grid>
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding BindingContext.CreateWithTemplateCommand, Source={x:Reference Name=TemplatePageRoot}}"
+                                                      CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <Label Text="{Binding Name}" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>
