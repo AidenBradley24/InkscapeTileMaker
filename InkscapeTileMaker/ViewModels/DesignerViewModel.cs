@@ -168,7 +168,7 @@ namespace InkscapeTileMaker.ViewModels
 
 			Task.Run(async () =>
 			{
-				using (var stream = await _svgRenderingService.RenderFileAsync(file, CancellationToken.None))
+				using (var stream = await _svgRenderingService.RenderFileAsync(file, ".png"))
 				{
 					if (stream.CanSeek) stream.Position = 0;
 					_renderedBitmap = SKBitmap.Decode(stream);
@@ -180,6 +180,7 @@ namespace InkscapeTileMaker.ViewModels
 					{
 						return _svgRenderingService.RenderSegmentAsync(
 						file,
+						".png",
 						left: tileWrapper.Value.Column * tileset.TileSize.width,
 						top: tileWrapper.Value.Row * tileset.TileSize.height,
 						right: (tileWrapper.Value.Column + 1) * tileset.TileSize.width,
@@ -766,6 +767,43 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			if (SelectedTile == null) return;
 			SelectedTile = null;
+		}
+
+		#endregion
+
+
+		#region Exports
+		[RelayCommand]
+		public async Task ExportTilesetImage(string extension)
+		{
+			if (_tilesetConnection?.CurrentFile == null) return;	
+			using var stream = await _svgRenderingService.RenderFileAsync(_tilesetConnection.CurrentFile, extension);
+			var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.{extension}", stream);
+		}
+
+		[RelayCommand]
+		public async Task ExportSelectedTileImage(string extension)
+		{
+			if (_tilesetConnection?.CurrentFile == null) return;
+			if (SelectedTile == null) return;
+			using var stream = await GetTileImageStream(SelectedTile.Value, extension);
+			if (stream == null) return;
+			string tileFileName = $"{SelectedTile.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].{extension}";
+			var result = await _fileSaver.SaveAsync(tileFileName, stream);
+		}
+
+		private async Task<Stream?> GetTileImageStream(Tile tile, string extension)
+		{
+			if (_tilesetConnection?.CurrentFile == null || _tilesetConnection.Tileset == null) return null;
+			var tileset = _tilesetConnection.Tileset;
+
+			return await _svgRenderingService.RenderSegmentAsync(
+				_tilesetConnection.CurrentFile,
+				extension,
+				left: tile.Column * tileset.TileSize.width,
+				top: tile.Row * tileset.TileSize.height,
+				right: (tile.Column + 1) * tileset.TileSize.width,
+				bottom: (tile.Row + 1) * tileset.TileSize.height, CancellationToken.None);
 		}
 
 		#endregion

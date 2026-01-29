@@ -26,6 +26,7 @@
         </toolkit:EnumToBoolConverter>
         <conv:EnumToItemsSourceConverter x:Key="EnumToItemsSourceConverter" />
         <conv:EnumToStringConverter x:Key="EnumToStringConverter" />
+        <toolkit:IsNotNullConverter x:Key="IsNotNullConverter" />
     </ContentPage.Resources>
 
     <ContentPage.MenuBarItems>
@@ -41,6 +42,30 @@
             <MenuFlyoutSeparator />
             <MenuFlyoutItem Text="Exit"
                              Command="{Binding ExitCommand}" />
+        </MenuBarItem>
+        <MenuBarItem Text="Export">
+            <MenuFlyoutSubItem Text="Tileset Image">
+                <MenuFlyoutItem Text="PNG"
+                                Command="{Binding ExportTilesetImageCommand}" CommandParameter="png" />
+                <MenuFlyoutItem Text="SVG"
+                                Command="{Binding ExportTilesetImageCommand}" CommandParameter="svg" />
+            </MenuFlyoutSubItem>
+            <MenuFlyoutSubItem Text="Selected Tile Image"
+                               IsEnabled="{Binding SelectedTile, Converter={StaticResource IsNotNullConverter}}">
+                <MenuFlyoutItem Text="PNG"
+                    Command="{Binding ExportSelectedTileImageCommand}" CommandParameter="png" />
+                <!--<MenuFlyoutItem Text="SVG"
+                    Command="{Binding ExportSelectedTileImageCommand}" CommandParameter="svg" />-->
+            </MenuFlyoutSubItem>
+            <MenuFlyoutSeparator />
+            <MenuFlyoutSubItem Text="Seperated Tiles">
+                <MenuFlyoutItem Text="PNG"
+                                Command="{Binding ExportSeparatedTilesPngCommand}" />
+                <!--<MenuFlyoutItem Text="SVG"
+                                Command="{Binding ExportSeparatedTilesSvgCommand}" />-->
+                <MenuFlyoutItem Text="Unity Package"
+                                Command="{Binding ExportSeparatedTilesUnityPackageCommand}" />
+            </MenuFlyoutSubItem>
         </MenuBarItem>
     </ContentPage.MenuBarItems>
 
