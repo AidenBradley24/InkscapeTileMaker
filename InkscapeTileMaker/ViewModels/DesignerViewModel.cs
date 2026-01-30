@@ -679,7 +679,7 @@ namespace InkscapeTileMaker.ViewModels
 			PreSave();
 			var file = _tilesetConnection.CurrentFile;
 			if (file == null) return;
-			_tilesetConnection.Save(file);
+			await _tilesetConnection.SaveAsync(file);
 			HasUnsavedChanges = false;
 		}
 
@@ -698,7 +698,8 @@ namespace InkscapeTileMaker.ViewModels
 
 		public void PreSave()
 		{
-			foreach (var tileWrapper in Tiles)
+			var bakedTiles = Tiles.ToArray(); // prevent collection modified during enumeration
+			foreach (var tileWrapper in bakedTiles)
 			{
 				tileWrapper.Sync();
 			}

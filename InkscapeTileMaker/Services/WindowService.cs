@@ -40,8 +40,8 @@ public class WindowService : IWindowService
 				return;
 			}
 
-			connection.Load(file);
 			newViewModel.SetTilesetConnection(connection);
+			_ = connection.LoadAsync(file);
 		}
 	}
 }

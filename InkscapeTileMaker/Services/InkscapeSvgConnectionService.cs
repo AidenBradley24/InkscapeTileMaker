@@ -19,25 +19,82 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 
 	private InkscapeSvg? _svg;
 
+	private FileSystemWatcher? _fileWatcher;
+
+	private bool isLoading = false;
+
 	public InkscapeSvgConnectionService(IServiceProvider services)
 	{
 		_services = services;
 	}
 
-	public void Load(FileInfo file)
+	public async Task LoadAsync(FileInfo file)
 	{
-		_file = file;
-		_svg = new InkscapeSvg(file.OpenRead());
-		Tileset = new InkscapeSvgTileset(this);
-		TilesetChanged.Invoke(Tileset);
+		if (Interlocked.Exchange(ref isLoading, true) == true) return;
+
+		try
+		{
+			_fileWatcher?.Dispose();
+
+			const int maxRetries = 5;
+			const int delayMs = 200;
+			Exception? lastException = null;
+
+			for (int attempt = 0; attempt < maxRetries; attempt++)
+			{
+				try
+				{
+					await using var stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+					_svg = new InkscapeSvg(stream);
+					_file = file;
+					Tileset = new InkscapeSvgTileset(this);
+					TilesetChanged.Invoke(Tileset);
+
+					SetupWatcher(file);
+					return;
+				}
+				catch (IOException ex)
+				{
+					lastException = ex;
+					await Task.Delay(delayMs);
+				}
+			}
+
+			throw new IOException($"Failed to load SVG file after {maxRetries} attempts.", lastException);
+		}
+		finally
+		{
+			Interlocked.Exchange(ref isLoading, false);
+		}
 	}
 
-	public void Save(FileInfo file)
+	private void SetupWatcher(FileInfo file)
+	{
+		_fileWatcher = new FileSystemWatcher(file.DirectoryName!, file.Name)
+		{
+			NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Attributes,
+			EnableRaisingEvents = true
+		};
+
+		_fileWatcher.Changed += async (_, _) =>
+		{
+			await Task.Delay(200);
+			try
+			{
+				await LoadAsync(file);
+			}
+			catch (IOException)
+			{
+				// log / swallow / schedule another retry
+			}
+		};
+	}
+
+	public async Task SaveAsync(FileInfo file)
 	{
 		if (_file is null || _svg is null) return;
 		_svg.SaveToStreamAsync(file.Open(FileMode.Create, FileAccess.Write)).Wait();
 		_file = file;
-		TilesetChanged.Invoke(Tileset!);
 	}
 
 	public async Task SaveToStreamAsync(Stream stream)

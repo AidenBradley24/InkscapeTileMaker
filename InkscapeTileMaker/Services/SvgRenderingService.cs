@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Xml.Linq;
+using System.Security.Cryptography;
 
 namespace InkscapeTileMaker.Services
 {
@@ -27,7 +28,7 @@ namespace InkscapeTileMaker.Services
 
 		public async Task<Stream> RenderFileAsync(FileInfo file, string extension, CancellationToken cancellationToken = default)
 		{
-			var requestHash = HashCode.Combine(file.FullName, extension, file.LastWriteTimeUtc);
+			var requestHash = HashCode.Combine(file.FullName, extension, ComputeFileHash(file));
 			CheckAndAddToCache(file, requestHash);
 
 			if (!string.IsNullOrWhiteSpace(extension) && extension.StartsWith('.'))
@@ -77,7 +78,7 @@ namespace InkscapeTileMaker.Services
 
 		public async Task<Stream> RenderSegmentAsync(FileInfo file, string extension, int left, int top, int right, int bottom, CancellationToken cancellationToken = default)
 		{
-			var requestHash = HashCode.Combine(file.FullName, extension, left, top, right, bottom, file.LastWriteTimeUtc);
+			var requestHash = HashCode.Combine(file.FullName, extension, left, top, right, bottom, ComputeFileHash(file));
 			CheckAndAddToCache(file, requestHash);
 
 			if (!string.IsNullOrWhiteSpace(extension) && extension.StartsWith('.'))
@@ -238,6 +239,14 @@ namespace InkscapeTileMaker.Services
 			document.Save(outputStream);
 			outputStream.Position = 0;
 			return outputStream;
+		}
+
+		private static int ComputeFileHash(FileInfo file)
+		{
+			using var hashAlg = SHA256.Create();
+			using var stream = file.OpenRead();
+			var hashBytes = hashAlg.ComputeHash(stream);
+			return BitConverter.ToInt32(hashBytes, 0);
 		}
 	}
 }

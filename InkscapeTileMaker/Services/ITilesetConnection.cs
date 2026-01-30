@@ -8,10 +8,11 @@
 
 		public event Action<ITileset> TilesetChanged;
 
-		public void Save(FileInfo file);
+		public Task SaveAsync(FileInfo file);
 
 		public Task SaveToStreamAsync(Stream stream);
 
-		public void Load(FileInfo file);
+		public Task LoadAsync(FileInfo file);
+
 	}
 }
