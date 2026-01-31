@@ -17,6 +17,8 @@ namespace InkscapeTileMaker.Services
 		private readonly ConcurrentDictionary<string, ImmutableHashSet<int>> _renderHashes;
 		private readonly Dictionary<string, DateTime> _cacheUpdates; // access only in CheckCache
 
+		private readonly SemaphoreSlim _fileHashSemaphore;
+
 		public SvgRenderingService(IInkscapeService inkscapeService, ITempDirectoryService tempDirService)
 		{
 			_inkscapeService = inkscapeService;
@@ -24,11 +26,12 @@ namespace InkscapeTileMaker.Services
 			_renderedFiles = new ConcurrentDictionary<int, Task<FileInfo>>();
 			_renderHashes = new ConcurrentDictionary<string, ImmutableHashSet<int>>();
 			_cacheUpdates = new Dictionary<string, DateTime>();
+			_fileHashSemaphore = new SemaphoreSlim(1, 1);
 		}
 
 		public async Task<Stream> RenderFileAsync(FileInfo file, string extension, CancellationToken cancellationToken = default)
 		{
-			var requestHash = HashCode.Combine(file.FullName, extension, ComputeFileHash(file));
+			var requestHash = HashCode.Combine(file.FullName, extension, await ComputeFileHashAsync(file));
 			CheckAndAddToCache(file, requestHash);
 
 			if (!string.IsNullOrWhiteSpace(extension) && extension.StartsWith('.'))
@@ -78,7 +81,7 @@ namespace InkscapeTileMaker.Services
 
 		public async Task<Stream> RenderSegmentAsync(FileInfo file, string extension, int left, int top, int right, int bottom, CancellationToken cancellationToken = default)
 		{
-			var requestHash = HashCode.Combine(file.FullName, extension, left, top, right, bottom, ComputeFileHash(file));
+			var requestHash = HashCode.Combine(file.FullName, extension, left, top, right, bottom, await ComputeFileHashAsync(file));
 			CheckAndAddToCache(file, requestHash);
 
 			if (!string.IsNullOrWhiteSpace(extension) && extension.StartsWith('.'))
@@ -241,11 +244,34 @@ namespace InkscapeTileMaker.Services
 			return outputStream;
 		}
 
-		private static int ComputeFileHash(FileInfo file)
+		private async Task<int> ComputeFileHashAsync(FileInfo file)
 		{
-			using var hashAlg = SHA256.Create();
-			using var stream = file.OpenRead();
-			var hashBytes = hashAlg.ComputeHash(stream);
+			byte[]? hashBytes = null;
+			using (var hashAlg = SHA256.Create())
+			{
+				await _fileHashSemaphore.WaitAsync();
+
+				for (int i = 0; i < 5; i++)
+				{
+					try
+					{
+						using var stream = file.OpenRead();
+						hashBytes = await hashAlg.ComputeHashAsync(stream);
+						break;
+					}
+					catch
+					{
+						await Task.Delay(100 + i * 50);
+					}
+				}
+			}
+
+			if (hashBytes == null)
+			{
+				throw new Exception("Failed to compute file hash after multiple attempts.");
+			}
+
+			_fileHashSemaphore.Release();
 			return BitConverter.ToInt32(hashBytes, 0);
 		}
 	}

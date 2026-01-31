@@ -19,12 +19,14 @@ namespace InkscapeTileMaker.ViewModels
 		public partial (int row, int col) Position { get; set; }
 
 		[ObservableProperty]
+		[NotifyPropertyChangedFor(nameof(IsMaterial))]
 		public partial TileType Type { get; set; }
 
 		[ObservableProperty]
 		public partial TileAlignment Allignment { get; set; }
 
 		[ObservableProperty]
+		[NotifyPropertyChangedFor(nameof(IsMaterial))]
 		public partial string MaterialName { get; set; }
 
 		public Tile Value => _tile;

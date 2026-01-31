@@ -93,7 +93,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 	public async Task SaveAsync(FileInfo file)
 	{
 		if (_file is null || _svg is null) return;
-		_svg.SaveToStreamAsync(file.Open(FileMode.Create, FileAccess.Write)).Wait();
+		await _svg.SaveToStreamAsync(file.Open(FileMode.Create, FileAccess.Write));
 		_file = file;
 	}
 
@@ -108,17 +108,8 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 		if (_svg is null) return null;
 		var element = _svg.GetTileElement(row, col);
 		if (element is null) return null;
-		XElement collectionElement = _svg.GetOrCreateTileCollectionElement()!;
 		var tile = TileExtensions.GetTileFromXElement(element);
-		return new TileViewModel(tile, designerViewModel, (tile) =>
-		{
-			var tileElement = _svg.GetTileElement(tile.Row, tile.Column);
-			if (tileElement is not null)
-			{
-				tileElement.ReplaceWith(tile.ToXElement());
-				TilesetChanged.Invoke(Tileset!);
-			}
-		});
+		return GetTileViewModel(tile, designerViewModel);
 	}
 
 	public IEnumerable<Tile> Tiles
@@ -133,18 +124,19 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 	public TileViewModel[] GetAllTiles(DesignerViewModel designerViewModel)
 	{
 		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
-		return Tiles.Select(tile =>
+		return [.. Tiles.Select((t) => GetTileViewModel(t, designerViewModel))];
+	}
+
+	private TileViewModel GetTileViewModel(Tile tile, DesignerViewModel designerViewModel)
+	{
+		return new TileViewModel(tile, designerViewModel, (tile) =>
 		{
-			return new TileViewModel(tile, designerViewModel, (tile) =>
-			{
-				var tileElement = _svg.GetTileElement(tile.Row, tile.Column);
-				if (tileElement is not null)
-				{
-					tileElement.ReplaceWith(tile.ToXElement());
-					TilesetChanged.Invoke(Tileset!);
-				}
-			});
-		}).ToArray();
+			ArgumentNullException.ThrowIfNull(_svg, nameof(_svg));
+			var tileElement = _svg.GetTileElement(tile.Row, tile.Column);
+			ArgumentNullException.ThrowIfNull(tileElement, "Tile element not found in SVG.");
+			tileElement.ReplaceWith(tile.ToXElement());
+			// note that sync doesn't change the state of the tileset, so we don't invoke TilesetChanged here
+		});
 	}
 
 	public bool AddTile(Tile tile)

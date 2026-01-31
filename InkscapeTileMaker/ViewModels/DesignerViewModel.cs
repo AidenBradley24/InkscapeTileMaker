@@ -136,6 +136,14 @@ namespace InkscapeTileMaker.ViewModels
 
 		private void OnTilesetChanged(ITileset tileset)
 		{
+			MainThread.BeginInvokeOnMainThread(() =>
+			{
+				RecalculateTileset(tileset);
+			});
+		}
+
+		private void RecalculateTileset(ITileset tileset)
+		{
 			_renderedBitmap?.Dispose();
 			_renderedBitmap = null;
 
@@ -739,6 +747,19 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			if (_tilesetConnection?.Tileset == null) return;
 			_tilesetConnection.Tileset.Add(new Tile { Row = position.row, Column = position.col });
+			HasUnsavedChanges = true;
+		}
+
+		[RelayCommand]
+		public void DeleteSelectedTile()
+		{
+			if (_tilesetConnection?.Tileset == null) return;
+			if (SelectedTile == null) return;
+
+
+
+			_tilesetConnection.Tileset.Remove(SelectedTile.Value);
+			SelectedTile = null;
 			HasUnsavedChanges = true;
 		}
 

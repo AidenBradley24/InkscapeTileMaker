@@ -15,7 +15,7 @@
 
     <Grid Padding="12"
           ColumnDefinitions="Auto, *"
-          RowDefinitions="75, 150, Auto, Auto, Auto, Auto, Auto"
+          RowDefinitions="75, 150, Auto, 100, Auto, Auto, Auto, Auto"
           RowSpacing="12">
 
         <Button Grid.Row="0"
@@ -63,7 +63,16 @@
                VerticalTextAlignment="Center"
                Margin="0,4,0,0" />
 
-        <Picker Grid.Row="4"
+        <HorizontalStackLayout Grid.Row="4"
+                               Grid.Column="0"
+                               Grid.ColumnSpan="2"
+                               Spacing="8"
+                               VerticalOptions="Center"
+                               Margin="0,12,0,0">
+            <Button Text="Delete" Command="{Binding DeleteSelectedTileCommand}"/>
+        </HorizontalStackLayout>
+
+        <Picker Grid.Row="5"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
                 Title="Select Tile Type"
@@ -72,19 +81,19 @@
                 ItemDisplayBinding="{Binding Converter={StaticResource EnumToStringConverter}}"
                 Margin="0,12,0,0"/>
 
-        <Label Grid.Row="5"
+        <Label Grid.Row="6"
                Grid.Column="0"
                Text="Material Name:"
                FontAttributes="Bold"
                VerticalTextAlignment="Center"
                Margin="0,0,8,0"
                IsVisible="{Binding SelectedTile.Type, Converter={StaticResource UsingMaterialConverter}}"/>
-        <ctrls:EditableLabel Grid.Row="5"
+        <ctrls:EditableLabel Grid.Row="6"
                              Grid.Column="1"
                              Text="{Binding SelectedTile.MaterialName, Mode=TwoWay}"
                              IsVisible="{Binding SelectedTile.Type, Converter={StaticResource UsingMaterialConverter}}"/>
 
-        <Picker Grid.Row="6"
+        <Picker Grid.Row="7"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
                 Title="Select Alignment"
