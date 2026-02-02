@@ -784,11 +784,13 @@ namespace InkscapeTileMaker.ViewModels
 		[ObservableProperty] public partial bool FillEmptyTiles { get; set; } = false;
 
 		[RelayCommand]
-		public void ClearAllTiles()
+		public async Task ClearAllTiles()
 		{
 			if (_tilesetConnection?.Tileset == null) return;
 			_tilesetConnection.Tileset.Clear();
 			HasUnsavedChanges = true;
+			if (_windowProvider == null) return;
+			await _windowProvider.PopupService.ShowTextAsync("All tiles have been cleared.");
 		}
 
 		[RelayCommand]

@@ -126,7 +126,7 @@ namespace InkscapeTileMaker.ViewModels
 		public async Task TestPopup()
 		{
 			if (_windowProvider == null) return;
-			await _windowProvider.PopupService.ShowText("This is a test popup from LandingViewModel.");
+			await _windowProvider.PopupService.ShowTextAsync("This is a test popup from LandingViewModel.");
 		}
 	}
 }

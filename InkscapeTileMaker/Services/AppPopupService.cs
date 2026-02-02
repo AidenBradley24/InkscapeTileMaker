@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Extensions;
-using System.Diagnostics;
 
 namespace InkscapeTileMaker.Services
 {
@@ -15,14 +14,20 @@ namespace InkscapeTileMaker.Services
 			_windowProvider = windowProvider;
 		}
 
-		public Task<bool> ShowConfirmation(string message)
+		public Task<bool> ShowConfirmationAsync(string message)
 		{
 			throw new NotImplementedException();
 		}
 
-		public async Task ShowText(string text)
+		public async Task ShowTextAsync(string text)
 		{
-			_popupService.ShowPopup<Views.TextPopup>(_windowProvider.Navigation);
+			var vm = new ViewModels.TextPopupViewModel()
+			{
+				Text = text
+			};
+
+			var view = new Views.TextPopup(vm);
+			await PopupExtensions.ShowPopupAsync(_windowProvider.Navigation, view, PopupOptions.Empty);
 		}
 	}
 }

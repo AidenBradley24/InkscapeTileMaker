@@ -2,8 +2,8 @@
 {
 	public interface IAppPopupService
 	{
-		public Task ShowText(string text);
+		public Task ShowTextAsync(string text);
 
-		public Task<bool> ShowConfirmation(string message);
+		public Task<bool> ShowConfirmationAsync(string message);
 	}
 }
