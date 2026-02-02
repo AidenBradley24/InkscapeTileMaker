@@ -1,3 +1,5 @@
+using CommunityToolkit.Maui;
+using InkscapeTileMaker.Services;
 using InkscapeTileMaker.ViewModels;
 
 #if WINDOWS
@@ -7,12 +9,23 @@ using Microsoft.UI.Windowing;
 
 namespace InkscapeTileMaker.Views;
 
-public partial class DesignerWindow : Microsoft.Maui.Controls.Window
+public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowProvider
 {
-	public DesignerWindow(DesignerViewModel vm)
+	private readonly NavigationPage _nav;
+	private readonly AppPopupService _popupService;
+
+	public IAppPopupService PopupService => _popupService;
+
+	public Page CurrentPage => _nav.CurrentPage;
+
+	public DesignerWindow(DesignerViewModel vm, IServiceProvider serviceProvider)
 	{
-		Page = new NavigationPage(new DesignerPage(vm));
+		_nav = new NavigationPage(new DesignerPage(vm));
+		Page = _nav;
 		BindingContext = vm;
+
+		_popupService = new AppPopupService(serviceProvider.GetRequiredService<IPopupService>(), this);
+		vm.RegisterWindow(this);
 
 		var titleBar = new TitleBar();
 		TitleBar = titleBar;
@@ -48,6 +61,21 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window
 		{
 			viewModel.CloseRequested -= OnCloseRequested;
 		}
+	}
+
+	public INavigation GetNavigation()
+	{
+		return _nav.Navigation;
+	}
+
+	public Page GetCurrentPage()
+	{
+		return _nav.CurrentPage;
+	}
+
+	public void CloseWindow()
+	{
+		OnCloseRequested();
 	}
 
 #if WINDOWS

@@ -1,7 +1,6 @@
 namespace InkscapeTileMaker.Services;
 
-public interface IWindowService
+public interface IWindowOpeningService
 {
 	void OpenDesignerWindow(FileInfo? svgFile = null);
-	void CloseCurrentWindow();
 }

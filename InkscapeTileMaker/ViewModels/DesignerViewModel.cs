@@ -14,9 +14,11 @@ namespace InkscapeTileMaker.ViewModels
 	public partial class DesignerViewModel : ObservableObject
 	{
 		private ITilesetConnection? _tilesetConnection;
-		private readonly IWindowService _windowService;
+		private readonly IWindowOpeningService _windowService;
 		private readonly ITilesetRenderingService _svgRenderingService;
 		private readonly IFileSaver _fileSaver;
+
+		private IWindowProvider? _windowProvider;		
 
 		[ObservableProperty]
 		[NotifyPropertyChangedFor(nameof(Title))]
@@ -75,13 +77,17 @@ namespace InkscapeTileMaker.ViewModels
 
 		public event Action CloseRequested = delegate { };
 
-		public DesignerViewModel(IWindowService windowService, ITilesetRenderingService renderingService, IFileSaver fileSaver)
+		public DesignerViewModel(IWindowOpeningService windowService, ITilesetRenderingService renderingService, IFileSaver fileSaver)
 		{
 			_windowService = windowService;
 			_svgRenderingService = renderingService;
 			_fileSaver = fileSaver;
-
 			SelectedZoomLevel = 1.0m;
+		}
+
+		public void RegisterWindow(IWindowProvider windowProvider)
+		{
+			_windowProvider = windowProvider;
 		}
 
 		public void SetTilesetConnection(ITilesetConnection connection)
@@ -861,6 +867,7 @@ namespace InkscapeTileMaker.ViewModels
 		}
 
 		#endregion
+
 	}
 
 	public enum DesignerMode

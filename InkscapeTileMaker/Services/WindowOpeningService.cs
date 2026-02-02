@@ -3,21 +3,13 @@ using InkscapeTileMaker.Views;
 
 namespace InkscapeTileMaker.Services;
 
-public class WindowService : IWindowService
+public class WindowOpeningService : IWindowOpeningService
 {
 	private readonly IServiceProvider _services;
 
-	public WindowService(IServiceProvider services)
+	public WindowOpeningService(IServiceProvider services)
 	{
 		_services = services;
-	}
-
-	public void CloseCurrentWindow()
-	{
-		var app = Application.Current;
-		if (app is null) return;
-
-		// TODO implement
 	}
 
 	public void OpenDesignerWindow(FileInfo? file = null)

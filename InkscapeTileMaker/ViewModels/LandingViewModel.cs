@@ -10,9 +10,11 @@ namespace InkscapeTileMaker.ViewModels
 {
 	public partial class LandingViewModel : ObservableObject
 	{
-		private readonly IWindowService _windowService;
+		private readonly IWindowOpeningService _windowService;
 		private readonly ITemplateService _templateService;
 		private readonly IFileSaver _fileSaver;
+
+		private IWindowProvider? _windowProvider;
 
 		public ILandingNavigation? LandingNavigation { get; set; }
 
@@ -34,11 +36,16 @@ namespace InkscapeTileMaker.ViewModels
 		[ObservableProperty]
 		public partial int TileSetSizeY { get; set; } = 4;
 
-		public LandingViewModel(IWindowService windowService, ITemplateService templateService, IFileSaver fileSaver)
+		public LandingViewModel(IWindowOpeningService windowService, ITemplateService templateService, IFileSaver fileSaver)
 		{
 			_windowService = windowService;
 			_templateService = templateService;
 			_fileSaver = fileSaver;
+		}
+
+		public void RegisterWindow(IWindowProvider windowProvider)
+		{
+			_windowProvider = windowProvider;
 		}
 
 		[RelayCommand]
@@ -113,6 +120,13 @@ namespace InkscapeTileMaker.ViewModels
 			TileSizeY = value.TileSize.height;
 			TileSetSizeX = value.TilesetSize.width / TileSizeX;
 			TileSetSizeY = value.TilesetSize.height / TileSizeY;
+		}
+
+		[RelayCommand]
+		public async Task TestPopup()
+		{
+			if (_windowProvider == null) return;
+			await _windowProvider.PopupService.ShowText("This is a test popup from LandingViewModel.");
 		}
 	}
 }

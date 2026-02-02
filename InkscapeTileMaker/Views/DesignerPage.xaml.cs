@@ -1,3 +1,5 @@
+using CommunityToolkit.Maui.Extensions;
+using InkscapeTileMaker.Services;
 using InkscapeTileMaker.ViewModels;
 using SkiaSharp.Views.Maui;
 

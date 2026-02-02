@@ -41,6 +41,9 @@
                 FontSize="Body"
                 VerticalOptions="Center"
                 HorizontalOptions="Center"/>
+            <Button
+                Text="Test Popup"
+                Command="{Binding TestPopupCommand}"/>
         </StackLayout>
 
     </Grid>
