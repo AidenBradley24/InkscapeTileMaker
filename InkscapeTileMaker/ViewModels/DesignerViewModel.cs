@@ -18,7 +18,7 @@ namespace InkscapeTileMaker.ViewModels
 		private readonly ITilesetRenderingService _svgRenderingService;
 		private readonly IFileSaver _fileSaver;
 
-		private IWindowProvider? _windowProvider;		
+		private IWindowProvider? _windowProvider;
 
 		[ObservableProperty]
 		[NotifyPropertyChangedFor(nameof(Title))]
@@ -757,12 +757,19 @@ namespace InkscapeTileMaker.ViewModels
 		}
 
 		[RelayCommand]
-		public void DeleteSelectedTile()
+		public async Task DeleteSelectedTile()
 		{
 			if (_tilesetConnection?.Tileset == null) return;
 			if (SelectedTile == null) return;
 
-
+			if (_windowProvider != null)
+			{
+				var confirm = await _windowProvider.PopupService.ShowConfirmationAsync(
+					"Delete Tile",
+					$"Are you sure you want to delete tile '{SelectedTile.Name}' at ({SelectedTile.Value.Row}, {SelectedTile.Value.Column})?",
+					"Delete");
+				if (!confirm) return;
+			}
 
 			_tilesetConnection.Tileset.Remove(SelectedTile.Value);
 			SelectedTile = null;
@@ -787,6 +794,16 @@ namespace InkscapeTileMaker.ViewModels
 		public async Task ClearAllTiles()
 		{
 			if (_tilesetConnection?.Tileset == null) return;
+
+			if (_windowProvider != null)
+			{
+				var confirm = await _windowProvider.PopupService.ShowConfirmationAsync(
+					"Clear All Tiles",
+					"Are you sure you want to clear all tiles from the tileset?",
+					"Clear All");
+				if (!confirm) return;
+			}
+
 			_tilesetConnection.Tileset.Clear();
 			HasUnsavedChanges = true;
 			if (_windowProvider == null) return;

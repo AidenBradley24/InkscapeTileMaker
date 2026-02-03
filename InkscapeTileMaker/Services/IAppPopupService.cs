@@ -4,6 +4,6 @@
 	{
 		public Task ShowTextAsync(string text);
 
-		public Task<bool> ShowConfirmationAsync(string message);
+		public Task<bool> ShowConfirmationAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel");
 	}
 }

@@ -1,4 +1,3 @@
-using CommunityToolkit.Maui;
 using InkscapeTileMaker.Services;
 using InkscapeTileMaker.ViewModels;
 
@@ -10,7 +9,7 @@ public class LandingWindow : Window, ILandingNavigation, IWindowProvider
 	private readonly LandingViewModel _vm;
 	private readonly AppPopupService _popupService;
 
-	public LandingWindow(LandingViewModel vm, IServiceProvider serviceProvider)
+	public LandingWindow(LandingViewModel vm)
 	{
 		Width = 600;
 		Height = 400;
@@ -25,7 +24,7 @@ public class LandingWindow : Window, ILandingNavigation, IWindowProvider
 		vm.LandingNavigation = this;
 		vm.RegisterWindow(this);
 
-		_popupService = new AppPopupService(serviceProvider.GetRequiredService<IPopupService>(), this);
+		_popupService = new AppPopupService(this);
 	}
 
 	public IAppPopupService PopupService => _popupService;

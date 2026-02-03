@@ -1,4 +1,3 @@
-using CommunityToolkit.Maui;
 using InkscapeTileMaker.Services;
 using InkscapeTileMaker.ViewModels;
 
@@ -18,13 +17,13 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 
 	public Page CurrentPage => _nav.CurrentPage;
 
-	public DesignerWindow(DesignerViewModel vm, IServiceProvider serviceProvider)
+	public DesignerWindow(DesignerViewModel vm)
 	{
 		_nav = new NavigationPage(new DesignerPage(vm));
 		Page = _nav;
 		BindingContext = vm;
 
-		_popupService = new AppPopupService(serviceProvider.GetRequiredService<IPopupService>(), this);
+		_popupService = new AppPopupService(this);
 		vm.RegisterWindow(this);
 
 		var titleBar = new TitleBar();

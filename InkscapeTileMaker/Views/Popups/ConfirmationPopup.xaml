@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels"
+               xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+               x:Class="InkscapeTileMaker.Views.ConfirmationPopup"
+               x:DataType="vms:ConfirmationPopupViewModel"
+               MinimumWidthRequest="100"
+               MinimumHeightRequest="50">
+
+    <Grid RowDefinitions="Auto, *, Auto" 
+          ColumnDefinitions="*"
+          BackgroundColor="{DynamicResource OffBlack}"
+          Padding="100">
+            <!-- Title -->
+            <Label Grid.Row="0"
+               Text="{Binding Title}"
+               FontAttributes="Bold"
+               FontSize="18"
+               HorizontalOptions="Center"
+               HorizontalTextAlignment="Center"
+               Margin="0,0,0,8" />
+
+            <!-- Message -->
+            <Label Grid.Row="1"
+               Text="{Binding Message}"
+               FontSize="14"
+               LineBreakMode="WordWrap"
+               HorizontalOptions="Center"
+               HorizontalTextAlignment="Center"
+               Margin="0,0,0,16" />
+
+            <!-- Buttons -->
+            <Grid Grid.Row="2"
+              ColumnDefinitions="*, *"
+              ColumnSpacing="12">
+                <Button Grid.Column="0"
+                    Text="{Binding CancelButtonText}"
+                    Command="{Binding CancelCommand}"
+                    BackgroundColor="{DynamicResource SecondaryColor}"
+                    TextColor="{DynamicResource PrimaryTextColor}" />
+
+            <Button Grid.Column="1"
+                    Text="{Binding ConfirmButtonText}"
+                    Command="{Binding ConfirmCommand}"
+                    BackgroundColor="{DynamicResource PrimaryColor}"
+                    TextColor="{DynamicResource PrimaryTextColor}" />
+            </Grid>
+    </Grid>
+</toolkit:Popup>

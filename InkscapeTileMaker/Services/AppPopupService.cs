@@ -5,18 +5,33 @@ namespace InkscapeTileMaker.Services
 {
 	public class AppPopupService : IAppPopupService
 	{
-		private readonly IPopupService _popupService;
 		private readonly IWindowProvider _windowProvider;
 
-		public AppPopupService(IPopupService popupService, IWindowProvider windowProvider)
+		public AppPopupService(IWindowProvider windowProvider)
 		{
-			_popupService = popupService;
 			_windowProvider = windowProvider;
 		}
 
-		public Task<bool> ShowConfirmationAsync(string message)
+		public async Task<bool> ShowConfirmationAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel")
 		{
-			throw new NotImplementedException();
+			var vm = new ViewModels.ConfirmationPopupViewModel()
+			{
+				Title = title,
+				Message = message,
+				ConfirmButtonText = confirmText,
+				CancelButtonText = cancelText
+			};
+
+			var view = new Views.ConfirmationPopup(vm);
+
+			var opts = new PopupOptions()
+			{
+				CanBeDismissedByTappingOutsideOfPopup = false
+			};
+
+			await PopupExtensions.ShowPopupAsync(_windowProvider.Navigation, view, opts);
+
+			return vm.Result;
 		}
 
 		public async Task ShowTextAsync(string text)

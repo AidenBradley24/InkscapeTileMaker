@@ -7,11 +7,11 @@
              x:DataType="vms:TextPopupViewModel"
              MinimumWidthRequest="100"
              MinimumHeightRequest="50">
-    <Grid Padding="100">
+    <Grid Padding="100"
+          BackgroundColor="{DynamicResource OffBlack}">
         <Label 
             Text="{Binding Text}"
             VerticalOptions="Center" 
-            HorizontalOptions="Center"
-            TextColor="Black"/>
+            HorizontalOptions="Center"/>
     </Grid>
 </toolkit:Popup>
