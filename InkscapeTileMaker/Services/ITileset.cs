@@ -13,7 +13,7 @@ namespace InkscapeTileMaker.Services
 
 		public TileViewModel[] GetAllTileViewModels(DesignerViewModel designerViewModel);
 
-		public Task FillTilesAsync(TilesetFillSettings settings);
+		public Task FillTilesAsync(TilesetFillSettings settings, IProgress<double>? progressReporter = default);
 	}
 
 	[Flags]

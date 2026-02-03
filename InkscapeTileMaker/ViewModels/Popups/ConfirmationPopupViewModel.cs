@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Services;
 
-namespace InkscapeTileMaker.ViewModels
+namespace InkscapeTileMaker.ViewModels.Popups
 {
 	public partial class ConfirmationPopupViewModel : ObservableObject
 	{

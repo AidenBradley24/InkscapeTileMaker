@@ -126,7 +126,14 @@ namespace InkscapeTileMaker.ViewModels
 		public async Task TestPopup()
 		{
 			if (_windowProvider == null) return;
-			await _windowProvider.PopupService.ShowTextAsync("This is a test popup from LandingViewModel.");
+			await _windowProvider.PopupService.ShowProgressOnTaskAsync("test", false, async (progress) =>
+			{
+				for (int i = 0; i <= 100; i++)
+				{
+					progress.Report(i / 100.0);
+					await Task.Delay(50);
+				}
+			});
 		}
 	}
 }

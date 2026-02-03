@@ -48,8 +48,6 @@ namespace InkscapeTileMaker
 			builder.Services.AddTransient<DesignerWindow>()
 				.AddTransient<DesignerPage, DesignerViewModel>();
 
-			builder.Services.AddTransientPopup<Views.TextPopup, ViewModels.TextPopupViewModel>();
-
 			return builder.Build();
 		}
 	}

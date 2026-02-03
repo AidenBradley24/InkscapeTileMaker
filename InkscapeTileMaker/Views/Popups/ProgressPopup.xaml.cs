@@ -4,9 +4,9 @@ using InkscapeTileMaker.ViewModels.Popups;
 
 namespace InkscapeTileMaker.Views.Popups;
 
-public partial class TextPopup : Popup, IPopupCloser
+public partial class ProgressPopup : Popup, IPopupCloser
 {
-	public TextPopup(TextPopupViewModel vm)
+	public ProgressPopup(ProgressPopupViewModel vm)
 	{
 		InitializeComponent();
 		BindingContext = vm;

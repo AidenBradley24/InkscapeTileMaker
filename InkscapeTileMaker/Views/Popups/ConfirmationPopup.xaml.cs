@@ -1,8 +1,8 @@
 using CommunityToolkit.Maui.Views;
 using InkscapeTileMaker.Services;
-using InkscapeTileMaker.ViewModels;
+using InkscapeTileMaker.ViewModels.Popups;
 
-namespace InkscapeTileMaker.Views;
+namespace InkscapeTileMaker.Views.Popups;
 
 public partial class ConfirmationPopup : Popup, IPopupCloser
 {

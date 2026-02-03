@@ -214,7 +214,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 		return _svg.GetAllTileElements().Count();
 	}
 
-	public async Task FillTilesAsync(TilesetFillSettings settings)
+	public async Task FillTilesAsync(TilesetFillSettings settings, IProgress<double>? progressReporter = default)
 	{
 		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
 		if (Tileset is null) throw new InvalidOperationException("Tileset is not loaded.");
@@ -233,6 +233,8 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 		{
 			for (int col = 0; col <= maxCol; col++)
 			{
+				progressReporter?.Report((col + row * maxCol) / (double)((maxCol + 1) * (maxRow + 1)));
+
 				var element = _svg.GetTileElement(row, col);
 				if (settings.HasFlag(TilesetFillSettings.ReplaceExisting) || element is null)
 				{

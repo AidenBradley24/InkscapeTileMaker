@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Maui.Storage;
+﻿using CommunityToolkit.Maui.Services;
+using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Models;
@@ -783,7 +784,16 @@ namespace InkscapeTileMaker.ViewModels
 			TilesetFillSettings settings = TilesetFillSettings.None;
 			if (ReplaceExistingTiles) settings |= TilesetFillSettings.ReplaceExisting;
 			if (FillEmptyTiles) settings |= TilesetFillSettings.FillEmptyTiles;
-			await _tilesetConnection.Tileset.FillTilesAsync(settings);
+
+			if (_windowProvider == null)
+			{
+				await _tilesetConnection.Tileset.FillTilesAsync(settings);
+			}
+			else await _windowProvider.PopupService.ShowProgressOnTaskAsync(message: "Filling Tiles...", isIndeterminate: false, async progress =>
+			{
+				await _tilesetConnection.Tileset.FillTilesAsync(settings, progress);
+			});
+
 			HasUnsavedChanges = true;
 		}
 
@@ -825,8 +835,17 @@ namespace InkscapeTileMaker.ViewModels
 		public async Task ExportTilesetImage(string extension)
 		{
 			if (_tilesetConnection?.CurrentFile == null) return;
-			using var stream = await _svgRenderingService.RenderFileAsync(_tilesetConnection.CurrentFile, extension);
-			var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.{extension}", stream);
+
+			if (_windowProvider == null)
+			{
+				using var stream = await _svgRenderingService.RenderFileAsync(_tilesetConnection.CurrentFile, extension);
+				var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.{extension}", stream);
+			}
+			else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async _ =>
+			{
+				using var stream = await _svgRenderingService.RenderFileAsync(_tilesetConnection.CurrentFile, extension);
+				var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.{extension}", stream);
+			});
 		}
 
 		[RelayCommand]
@@ -834,10 +853,21 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			if (_tilesetConnection?.CurrentFile == null) return;
 			if (SelectedTile == null) return;
-			using var stream = await GetTileImageStream(SelectedTile.Value, extension);
-			if (stream == null) return;
-			string tileFileName = $"{SelectedTile.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].{extension}";
-			var result = await _fileSaver.SaveAsync(tileFileName, stream);
+
+			if (_windowProvider == null)
+			{
+				using var stream = await GetTileImageStream(SelectedTile.Value, extension);
+				if (stream == null) return;
+				string tileFileName = $"{SelectedTile.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].{extension}";
+				var result = await _fileSaver.SaveAsync(tileFileName, stream);
+			}
+			else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async _ =>
+			{
+				using var stream = await GetTileImageStream(SelectedTile.Value, extension);
+				if (stream == null) return;
+				string tileFileName = $"{SelectedTile.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].{extension}";
+				var result = await _fileSaver.SaveAsync(tileFileName, stream);
+			});
 		}
 
 		private async Task<Stream?> GetTileImageStream(Tile tile, string extension)
@@ -864,21 +894,43 @@ namespace InkscapeTileMaker.ViewModels
 			using var zipStream = new MemoryStream();
 			using (var zip = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
 			{
-				foreach (var tvm in Tiles)
+				if (_windowProvider == null)
 				{
-					using var stream = await _svgRenderingService.RenderSegmentAsync(
-						_tilesetConnection.CurrentFile,
-						".png",
-						left: tvm.Value.Column * tileset.TileSize.width,
-						top: tvm.Value.Row * tileset.TileSize.height,
-						right: (tvm.Value.Column + 1) * tileset.TileSize.width,
-						bottom: (tvm.Value.Row + 1) * tileset.TileSize.height,
-						CancellationToken.None);
-					string tileFileName = $"{tvm.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].png";
-					var entry = zip.CreateEntry(tileFileName);
-					using var entryStream = await entry.OpenAsync();
-					await stream.CopyToAsync(entryStream);
+					foreach (var tvm in Tiles)
+					{
+						using var stream = await _svgRenderingService.RenderSegmentAsync(
+							_tilesetConnection.CurrentFile,
+							".png",
+							left: tvm.Value.Column * tileset.TileSize.width,
+							top: tvm.Value.Row * tileset.TileSize.height,
+							right: (tvm.Value.Column + 1) * tileset.TileSize.width,
+							bottom: (tvm.Value.Row + 1) * tileset.TileSize.height,
+							CancellationToken.None);
+						string tileFileName = $"{tvm.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].png";
+						var entry = zip.CreateEntry(tileFileName);
+						using var entryStream = await entry.OpenAsync();
+						await stream.CopyToAsync(entryStream);
+					}
 				}
+				else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: false, async progress =>
+				{
+					foreach (var (tvm, i) in Tiles.Select((t, i) => (t, i)))
+					{
+						progress.Report((double)i / Tiles.Count);
+						using var stream = await _svgRenderingService.RenderSegmentAsync(
+							_tilesetConnection.CurrentFile,
+							".png",
+							left: tvm.Value.Column * tileset.TileSize.width,
+							top: tvm.Value.Row * tileset.TileSize.height,
+							right: (tvm.Value.Column + 1) * tileset.TileSize.width,
+							bottom: (tvm.Value.Row + 1) * tileset.TileSize.height,
+							CancellationToken.None);
+						string tileFileName = $"{tvm.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].png";
+						var entry = zip.CreateEntry(tileFileName);
+						using var entryStream = await entry.OpenAsync();
+						await stream.CopyToAsync(entryStream);
+					}
+				});
 			}
 
 			zipStream.Position = 0;

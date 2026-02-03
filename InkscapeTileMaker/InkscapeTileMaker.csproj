@@ -91,6 +91,9 @@
 	  <MauiXaml Update="Views\LandingPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="Views\Popups\ProgressPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Views\TemplatePage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>

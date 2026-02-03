@@ -72,9 +72,9 @@ namespace InkscapeTileMaker.Services
 			return _connection.GetAllTiles(designerViewModel);
 		}
 
-		public async Task FillTilesAsync(TilesetFillSettings settings)
+		public async Task FillTilesAsync(TilesetFillSettings settings, IProgress<double>? progressReporter = default)
 		{
-			await _connection.FillTilesAsync(settings);
+			await _connection.FillTilesAsync(settings, progressReporter);
 		}
 	}
 }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-               xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels"
+               xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels.Popups"
                xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-               x:Class="InkscapeTileMaker.Views.ConfirmationPopup"
+               x:Class="InkscapeTileMaker.Views.Popups.ConfirmationPopup"
                x:DataType="vms:ConfirmationPopupViewModel"
                MinimumWidthRequest="100"
                MinimumHeightRequest="50">
