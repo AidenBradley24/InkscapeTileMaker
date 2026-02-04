@@ -10,19 +10,6 @@ namespace InkscapeTileMaker.Utility
 		{
 			var matrix = SKMatrix.CreateIdentity();
 
-			if (transformation.HasFlag(TileTransformation.Rotate90))
-			{
-				matrix = SKMatrix.CreateRotationDegrees(90);
-			}
-			else if (transformation.HasFlag(TileTransformation.Rotate180))
-			{
-				matrix = SKMatrix.CreateRotationDegrees(180);
-			}
-			else if (transformation.HasFlag(TileTransformation.Rotate270))
-			{
-				matrix = SKMatrix.CreateRotationDegrees(270);
-			}
-
 			if (transformation.HasFlag(TileTransformation.FlipHorizontal))
 			{
 				var flipMatrix = SKMatrix.CreateScale(-1, 1);
@@ -33,6 +20,22 @@ namespace InkscapeTileMaker.Utility
 			{
 				var flipMatrix = SKMatrix.CreateScale(1, -1);
 				matrix = SKMatrix.Concat(matrix, flipMatrix);
+			}
+
+			if (transformation.HasFlag(TileTransformation.Rotate90))
+			{
+				var rotateMatrix = SKMatrix.CreateRotationDegrees(90);
+				matrix = SKMatrix.Concat(matrix, rotateMatrix);
+			}
+			else if (transformation.HasFlag(TileTransformation.Rotate180))
+			{
+				var rotateMatrix = SKMatrix.CreateRotationDegrees(180);
+				matrix = SKMatrix.Concat(matrix, rotateMatrix);
+			}
+			else if (transformation.HasFlag(TileTransformation.Rotate270))
+			{
+				var rotateMatrix = SKMatrix.CreateRotationDegrees(270);
+				matrix = SKMatrix.Concat(matrix, rotateMatrix);
 			}
 
 			return matrix;

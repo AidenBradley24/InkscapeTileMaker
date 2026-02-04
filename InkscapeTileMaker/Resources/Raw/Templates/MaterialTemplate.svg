@@ -7,8 +7,8 @@
   <defs id="defs1">
     <tilemaker:tilemakerdefs>
       <tilemaker:tiles>
-        <tilemaker:tile name="Basic Outer Corner" type="MatOuterCorner" allignment="BottomLeftOuterCorner" priority="1" row="0" column="0" materialname="Basic" />
-        <tilemaker:tile name="Edge" type="MatEdge" allignment="BottomEdge" priority="1" row="0" column="1" materialname="Basic" />
+        <tilemaker:tile name="Basic Outer Corner" type="MatOuterCorner" allignment="TopLeftOuterCorner" priority="1" row="0" column="0" materialname="Basic" />
+        <tilemaker:tile name="Edge" type="MatEdge" allignment="TopEdge" priority="1" row="0" column="1" materialname="Basic" />
         <tilemaker:tile name="Inner Corner" type="MatInnerCorner" allignment="BottomRightInnerCorner" priority="1" row="0" column="2" materialname="Basic" />
         <tilemaker:tile name="Tile 3,0" type="MatCore" allignment="Core" priority="1" row="0" column="3" materialname="Basic" />
         <tilemaker:tile name="Diagonal" type="MatDiagonal" allignment="DiagonalTopRightToBottomLeft" priority="1" row="1" column="0" materialname="Basic" />

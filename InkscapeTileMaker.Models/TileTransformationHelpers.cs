@@ -7,9 +7,8 @@
 			if (sourceAlignment == targetAlignment)
 				return TileTransformation.None;
 
-			// Map each alignment (except Core) to a direction vector
-			(int x, int y) src = GetDirection(sourceAlignment);
-			(int x, int y) dst = GetDirection(targetAlignment);
+			(int x, int y) src = sourceAlignment.GetFaceDirection();
+			(int x, int y) dst = targetAlignment.GetFaceDirection();
 
 			// Core cannot be reached from / mapped to directional alignments
 			if (src == (0, 0) || dst == (0, 0))
@@ -32,63 +31,16 @@
 			return found ? best : TileTransformation.None;
 		}
 
-		private static (int x, int y) GetDirection(TileAlignment alignment)
-		{
-			switch (alignment)
-			{
-				case TileAlignment.TopEdge:
-					return (0, -1);
-				case TileAlignment.RightEdge:
-					return (1, 0);
-				case TileAlignment.BottomEdge:
-					return (0, 1);
-				case TileAlignment.LeftEdge:
-					return (-1, 0);
-
-				case TileAlignment.TopLeftOuterCorner:
-					return (-1, -1);
-				case TileAlignment.TopRightOuterCorner:
-					return (1, -1);
-				case TileAlignment.BottomRightOuterCorner:
-					return (1, 1);
-				case TileAlignment.BottomLeftOuterCorner:
-					return (-1, 1);
-
-				// Inner corners: pointing into the tile (opposite of their outer-corner counterparts)
-				case TileAlignment.TopLeftInnerCorner:
-					return (1, 1);   // into the tile from top-left
-				case TileAlignment.TopRightInnerCorner:
-					return (-1, 1);  // into the tile from top-right
-				case TileAlignment.BottomRightInnerCorner:
-					return (-1, -1); // into the tile from bottom-right
-				case TileAlignment.BottomLeftInnerCorner:
-					return (1, -1);  // into the tile from bottom-left
-
-				// Diagonals between edges
-				case TileAlignment.DiagonalTopLeftToBottomRight:
-					return (1, -1);
-				case TileAlignment.DiagonalTopRightToBottomLeft:
-					return (-1, -1);
-
-				case TileAlignment.Core:
-				default:
-					return (0, 0);
-			}
-		}
-
 		private static (int x, int y) ApplyTransformation((int x, int y) v, TileTransformation t)
 		{
-			// decode rotation (low 2 bits)
-			var rot = (int)(t & (TileTransformation)3);
-			// decode flips
+			var rotation = (int)(t & (TileTransformation)3);
 			bool flipH = (t & TileTransformation.FlipHorizontal) != 0;
 			bool flipV = (t & TileTransformation.FlipVertical) != 0;
 
 			int x = v.x;
 			int y = v.y;
 
-			// apply rotation
-			switch (rot)
+			switch (rotation)
 			{
 				case 0: // 0°
 					break;
@@ -114,7 +66,6 @@
 					break;
 			}
 
-			// apply flips
 			if (flipH)
 				x = -x;
 			if (flipV)

@@ -2,6 +2,10 @@
 
 namespace InkscapeTileMaker.Models
 {
+	/// <summary>
+	/// Rotation and flip transformations that can be applied to a tile.
+	/// Note that flip is applied before rotation.
+	/// </summary>
 	[Flags]
 	public enum TileTransformation : byte
 	{
