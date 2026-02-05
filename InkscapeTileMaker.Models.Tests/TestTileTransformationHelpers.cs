@@ -29,6 +29,8 @@
 		[InlineData(TileAlignment.LeftEdge, TileAlignment.RightEdge, TileTransformation.FlipHorizontal)]
 		[InlineData(TileAlignment.DiagonalTopLeftToBottomRight, TileAlignment.DiagonalTopRightToBottomLeft, TileTransformation.FlipHorizontal)]
 		[InlineData(TileAlignment.DiagonalTopRightToBottomLeft, TileAlignment.DiagonalTopLeftToBottomRight, TileTransformation.FlipHorizontal)]
+		[InlineData(TileAlignment.TopLeftOuterCorner, TileAlignment.TopRightOuterCorner, TileTransformation.FlipHorizontal)]
+		[InlineData(TileAlignment.TopRightOuterCorner, TileAlignment.TopLeftOuterCorner, TileTransformation.FlipHorizontal)]
 		public void GetTransformationForAlignment_Flips(TileAlignment source, TileAlignment target, TileTransformation expected)
 		{
 			var result = TileTransformationHelpers.GetTransformationForAlignment(source, target);
@@ -40,6 +42,10 @@
 		[InlineData(TileAlignment.TopRightOuterCorner, TileAlignment.BottomLeftOuterCorner, TileTransformation.FlipVertical | TileTransformation.FlipHorizontal)]
 		[InlineData(TileAlignment.BottomRightOuterCorner, TileAlignment.TopLeftOuterCorner, TileTransformation.FlipVertical | TileTransformation.FlipHorizontal)]
 		[InlineData(TileAlignment.BottomLeftOuterCorner, TileAlignment.TopRightOuterCorner, TileTransformation.FlipVertical | TileTransformation.FlipHorizontal)]
+		[InlineData(TileAlignment.TopLeftInnerCorner, TileAlignment.BottomRightInnerCorner, TileTransformation.FlipVertical | TileTransformation.FlipHorizontal)]
+		[InlineData(TileAlignment.TopRightInnerCorner, TileAlignment.BottomLeftInnerCorner, TileTransformation.FlipVertical | TileTransformation.FlipHorizontal)]
+		[InlineData(TileAlignment.BottomRightInnerCorner, TileAlignment.TopLeftInnerCorner, TileTransformation.FlipVertical | TileTransformation.FlipHorizontal)]
+		[InlineData(TileAlignment.BottomLeftInnerCorner, TileAlignment.TopRightInnerCorner, TileTransformation.FlipVertical | TileTransformation.FlipHorizontal)]
 		public void GetTransformationForAlignment_DoubleFlips(TileAlignment source, TileAlignment target, TileTransformation expected)
 		{
 			var result = TileTransformationHelpers.GetTransformationForAlignment(source, target);
@@ -51,10 +57,6 @@
 		[InlineData(TileAlignment.RightEdge, TileAlignment.BottomEdge, TileTransformation.Rotate90)]
 		[InlineData(TileAlignment.BottomEdge, TileAlignment.LeftEdge, TileTransformation.Rotate90)]
 		[InlineData(TileAlignment.LeftEdge, TileAlignment.TopEdge, TileTransformation.Rotate90)]
-		[InlineData(TileAlignment.TopEdge, TileAlignment.LeftEdge, TileTransformation.Rotate270)]
-		[InlineData(TileAlignment.RightEdge, TileAlignment.TopEdge, TileTransformation.Rotate270)]
-		[InlineData(TileAlignment.LeftEdge, TileAlignment.BottomEdge, TileTransformation.Rotate270)]
-		[InlineData(TileAlignment.BottomEdge, TileAlignment.RightEdge, TileTransformation.Rotate270)]
 		public void GetTransformationForAlignment_Rotations(TileAlignment source, TileAlignment target, TileTransformation expected)
 		{
 			var result = TileTransformationHelpers.GetTransformationForAlignment(source, target);

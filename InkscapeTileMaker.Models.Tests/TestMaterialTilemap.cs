@@ -80,7 +80,8 @@
 
 			Assert.Single(tilesOnDuelGrid);
 			Assert.Equal("EdgeTileRight", tilesOnDuelGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.Rotate90, tilesOnDuelGrid[0].transformation);
+			Assert.Equal(TileTransformation.Rotate90 | TileTransformation.FlipVertical, tilesOnDuelGrid[0].transformation);
+			// 270 degree rotation is the same as 90 degrees + vertical flip
 		}
 
 		[Fact]

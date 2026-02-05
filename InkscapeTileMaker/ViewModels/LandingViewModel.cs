@@ -121,19 +121,5 @@ namespace InkscapeTileMaker.ViewModels
 			TileSetSizeX = value.TilesetSize.width / TileSizeX;
 			TileSetSizeY = value.TilesetSize.height / TileSizeY;
 		}
-
-		[RelayCommand]
-		public async Task TestPopup()
-		{
-			if (_windowProvider == null) return;
-			await _windowProvider.PopupService.ShowProgressOnTaskAsync("test", false, async (progress) =>
-			{
-				for (int i = 0; i <= 100; i++)
-				{
-					progress.Report(i / 100.0);
-					await Task.Delay(50);
-				}
-			});
-		}
 	}
 }

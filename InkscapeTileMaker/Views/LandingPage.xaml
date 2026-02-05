@@ -17,7 +17,6 @@
             Grid.ColumnSpan="2"
             FontSize="Title"/>
 
-        <!--Options-->
         <VerticalStackLayout
             Grid.Row="1"
             Grid.Column="0"
@@ -41,9 +40,6 @@
                 FontSize="Body"
                 VerticalOptions="Center"
                 HorizontalOptions="Center"/>
-            <Button
-                Text="Test Popup"
-                Command="{Binding TestPopupCommand}"/>
         </StackLayout>
 
     </Grid>

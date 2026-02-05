@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Maui.Services;
-using CommunityToolkit.Maui.Storage;
+﻿using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Models;
@@ -69,6 +68,9 @@ namespace InkscapeTileMaker.ViewModels
 		[ObservableProperty]
 		public partial PreviewMode SelectedPreviewMode { get; set; } = PreviewMode.Image;
 
+		[ObservableProperty]
+		public partial TilemapViewModel MatViewModel { get; set; }
+
 		public string Title => FileName != null ? $"Inkscape Tile Maker - {FileName}" + (HasUnsavedChanges ? " *" : "") : "Inkscape Tile Maker";
 
 		private SKBitmap? _renderedBitmap;
@@ -78,12 +80,15 @@ namespace InkscapeTileMaker.ViewModels
 
 		public event Action CloseRequested = delegate { };
 
+		const int TILEMAP_SCALE = 12;
+
 		public DesignerViewModel(IWindowOpeningService windowService, ITilesetRenderingService renderingService, IFileSaver fileSaver)
 		{
 			_windowService = windowService;
 			_svgRenderingService = renderingService;
 			_fileSaver = fileSaver;
 			SelectedZoomLevel = 1.0m;
+			MatViewModel = new TilemapViewModel(TILEMAP_SCALE, TILEMAP_SCALE);
 		}
 
 		public void RegisterWindow(IWindowProvider windowProvider)
@@ -317,14 +322,13 @@ namespace InkscapeTileMaker.ViewModels
 			if (_renderedBitmap == null) return;
 			if (SelectedTile == null) return;
 
-			const int size = 8;
-			var previewRect = GetInContextRect(size)!.Value;
+			var previewRect = GetInContextRect(new Scale(MatViewModel.Width, MatViewModel.Height))!.Value;
 
 			if (SelectedTile.Type == TileType.Singular)
 			{
-				for (int row = 0; row < size; row++)
+				for (int row = 0; row < MatViewModel.Height; row++)
 				{
-					for (int col = 0; col < size; col++)
+					for (int col = 0; col < MatViewModel.Width; col++)
 					{
 						var tileRect = GetTileRect(row, col);
 						DrawSingleTile(canvas, new TileData() { tile = SelectedTile.Value }, tileRect);
@@ -333,10 +337,9 @@ namespace InkscapeTileMaker.ViewModels
 			}
 			else if (SelectedTile.IsMaterial)
 			{
-				var tilemap = new MaterialTilemap(size, size);
 				var material = new Material(SelectedTile.Value.MaterialName, () => Tiles.Select(t => t.Value));
-				tilemap.AddMaterialSample(3, 3, material);
-				DrawMaterialTilemap(canvas, tilemap);
+				MatViewModel.AddSampleMaterial(material);
+				DrawMaterialTilemap(canvas, MatViewModel.Tilemap);
 			}
 
 			if (_tilesetConnection?.Tileset != null)
@@ -357,7 +360,7 @@ namespace InkscapeTileMaker.ViewModels
 					Style = SKPaintStyle.Stroke,
 				};
 
-				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.Size / 2, 2, majorPaint, minorPaint);
+				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.TileSize / 2, 2, majorPaint, minorPaint);
 				DrawBorder(canvas, previewRect);
 			}
 		}
@@ -371,7 +374,7 @@ namespace InkscapeTileMaker.ViewModels
 			return SelectedPreviewMode switch
 			{
 				PreviewMode.Image => GetImageRect(),
-				PreviewMode.InContext => GetInContextRect(8),
+				PreviewMode.InContext => GetInContextRect(new Scale(TILEMAP_SCALE, TILEMAP_SCALE)),
 				_ => null,
 			};
 		}
@@ -406,7 +409,7 @@ namespace InkscapeTileMaker.ViewModels
 			return new SKRectI(0, 0, _renderedBitmap.Width, _renderedBitmap.Height);
 		}
 
-		public SKRect? GetInContextRect(int size)
+		public SKRect? GetInContextRect(Scale scale)
 		{
 			if (_tilesetConnection?.Tileset == null) return SKRect.Empty;
 			var zoomFactor = (float)SelectedZoomLevel;
@@ -415,8 +418,8 @@ namespace InkscapeTileMaker.ViewModels
 				Top = PreviewOffset.Y * zoomFactor,
 				Left = PreviewOffset.X * zoomFactor,
 				Size = new SKSize(
-					size * _tilesetConnection.Tileset.TileSize.width * zoomFactor,
-					size * _tilesetConnection.Tileset.TileSize.height * zoomFactor),
+					scale.width * _tilesetConnection.Tileset.TileSize.width * zoomFactor,
+					scale.height * _tilesetConnection.Tileset.TileSize.height * zoomFactor),
 			};
 		}
 
@@ -623,9 +626,19 @@ namespace InkscapeTileMaker.ViewModels
 			using var tileBitmap = new SKBitmap(TileSize.width, TileSize.height);
 			if (!_renderedBitmap.ExtractSubset(tileBitmap, GetUnscaledTileRect(tileData.tile.Row, tileData.tile.Column))) return;
 			using var transformedBitmap = new SKBitmap(TileSize.width, TileSize.height);
-			using (SKCanvas tileCanvas = new SKCanvas(transformedBitmap))
+			using (var tileCanvas = new SKCanvas(transformedBitmap))
 			{
-				tileCanvas.SetMatrix(tileData.transformation.ToSKMatrix());
+				tileCanvas.Clear(SKColors.Transparent);
+
+				float cx = TileSize.width / 2f;
+				float cy = TileSize.height / 2f;
+
+				var matrix = SKMatrix.Identity;
+				matrix = matrix.PostConcat(SKMatrix.CreateTranslation(-cx, -cy));
+				matrix = matrix.PostConcat(tileData.transformation.ToSKMatrix());
+				matrix = matrix.PostConcat(SKMatrix.CreateTranslation(cx, cy));
+
+				tileCanvas.SetMatrix(matrix);
 				tileCanvas.DrawBitmap(tileBitmap, 0, 0);
 			}
 			canvas.DrawBitmap(transformedBitmap, rect);
@@ -640,6 +653,7 @@ namespace InkscapeTileMaker.ViewModels
 					var tileDataList = tilemap.GetTilesOnDuelGrid(col, row);
 					if (tileDataList.Count == 0) continue;
 					SKRect tileRect = GetTileRect(row, col);
+					tileRect.Offset(0.5f, 0.5f);
 					foreach (var tileData in tileDataList)
 					{
 						DrawSingleTile(canvas, tileData, tileRect);

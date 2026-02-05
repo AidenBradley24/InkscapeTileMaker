@@ -34,8 +34,6 @@
 		private static (int x, int y) ApplyTransformation((int x, int y) v, TileTransformation t)
 		{
 			var rotation = (int)(t & (TileTransformation)3);
-			bool flipH = (t & TileTransformation.FlipHorizontal) != 0;
-			bool flipV = (t & TileTransformation.FlipVertical) != 0;
 
 			int x = v.x;
 			int y = v.y;
@@ -44,10 +42,10 @@
 			{
 				case 0: // 0°
 					break;
-				case 1: // 90°: (x, y) -> (y, -x)
+				case 1: // 90° clockwise: (x, y) -> (-y, x)
 					{
-						int nx = y;
-						int ny = -x;
+						int nx = -y;
+						int ny = x;
 						x = nx;
 						y = ny;
 					}
@@ -56,15 +54,18 @@
 					x = -x;
 					y = -y;
 					break;
-				case 3: // 270°: (x, y) -> (-y, x)
+				case 3: // 270° clockwise (i.e., 90° counter-clockwise): (x, y) -> (y, -x)
 					{
-						int nx = -y;
-						int ny = x;
+						int nx = y;
+						int ny = -x;
 						x = nx;
 						y = ny;
 					}
 					break;
 			}
+
+			bool flipH = (t & TileTransformation.FlipHorizontal) != 0;
+			bool flipV = (t & TileTransformation.FlipVertical) != 0;
 
 			if (flipH)
 				x = -x;

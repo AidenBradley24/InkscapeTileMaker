@@ -116,7 +116,7 @@ namespace InkscapeTileMaker.Models
 			bool ruleApplies = quadsAvailable &&
 							   topLeft != null && topRight != null && bottomLeft != null &&
 							   topLeft.Equals(topRight) && topRight.Equals(bottomLeft);
-			if (ruleApplies && topLeft!.TryGetTileData(TileType.MatInnerCorner, TileAlignment.TopRightInnerCorner, out var tileData))
+			if (ruleApplies && topLeft!.TryGetTileData(TileType.MatInnerCorner, TileAlignment.TopLeftInnerCorner, out var tileData))
 			{
 				tiles.Add(tileData.Value);
 				topLeftUsed = true;
@@ -129,7 +129,7 @@ namespace InkscapeTileMaker.Models
 			ruleApplies = quadsAvailable &&
 						  topLeft != null && topRight != null && bottomRight != null &&
 						  topLeft.Equals(topRight) && topRight.Equals(bottomRight);
-			if (ruleApplies && topLeft!.TryGetTileData(TileType.MatInnerCorner, TileAlignment.TopLeftInnerCorner, out tileData))
+			if (ruleApplies && topLeft!.TryGetTileData(TileType.MatInnerCorner, TileAlignment.TopRightInnerCorner, out tileData))
 			{
 				tiles.Add(tileData.Value);
 				topLeftUsed = true;
