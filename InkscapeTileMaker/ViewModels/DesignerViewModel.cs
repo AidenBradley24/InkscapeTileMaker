@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Models;
 using InkscapeTileMaker.Services;
 using InkscapeTileMaker.Utility;
+using Microsoft.Maui.Graphics;
 using SkiaSharp;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -393,6 +394,23 @@ namespace InkscapeTileMaker.ViewModels
 					IsAntialias = false,
 					Style = SKPaintStyle.Stroke,
 				};
+
+				if (HoveredTile != null)
+				{
+					var tileRect = GetTileRect(HoveredTile.Value.row, HoveredTile.Value.col);
+					var tiles = _inContextTilemap.Tilemap.GetTilesOnDuelGrid(HoveredTile.Value.col, HoveredTile.Value.row);
+					var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
+					if (tile == null)
+					{
+						DrawTileX(canvas, tileRect, SKColors.Red.WithAlpha(128));
+						DrawTileOutline(canvas, tileRect, SKColors.Red.WithAlpha(128));
+					}
+					else
+					{
+						DrawTileOutline(canvas, tileRect, SKColors.DarkGreen.WithAlpha(128));
+						DrawTileLabel(canvas, tile.Name, tileRect);
+					}
+				}
 			}
 
 			if (_tilesetConnection?.Tileset != null && majorPaint != null && minorPaint != null)
@@ -435,6 +453,41 @@ namespace InkscapeTileMaker.ViewModels
 				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.TileSize / 2, 2, majorPaint, minorPaint);
 				DrawBorder(canvas, previewRect);
 			}
+
+			if (HoveredTile != null)
+			{
+				var tileRect = GetTileRect(HoveredTile.Value.row, HoveredTile.Value.col);
+				switch (SelectedPaintTool)
+				{
+					case PaintTool.Cursor:
+						{
+							var tiles = _paintTilemap.Tilemap.GetTilesOnDuelGrid(HoveredTile.Value.col, HoveredTile.Value.row);
+							var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
+							if (tile == null)
+							{
+								DrawTileX(canvas, tileRect, SKColors.Red.WithAlpha(128));
+								DrawTileOutline(canvas, tileRect, SKColors.Red.WithAlpha(128));
+							}
+							else
+							{
+								DrawTileOutline(canvas, tileRect, SKColors.DarkGreen.WithAlpha(128));
+								DrawTileLabel(canvas, tile.Name, tileRect);
+							}
+						}
+						break;
+					case PaintTool.Paint:
+						{
+							DrawTileOutline(canvas, tileRect, SKColors.Green.WithAlpha(128));
+						}
+						break;
+					case PaintTool.Eraser:
+						{
+							DrawTileOutline(canvas, tileRect, SKColors.Red.WithAlpha(128));
+						}
+						break;
+				}
+
+			}
 		}
 
 		#endregion
@@ -447,6 +500,7 @@ namespace InkscapeTileMaker.ViewModels
 			{
 				PreviewMode.Image => GetImageRect(),
 				PreviewMode.InContext => GetRectAtScale(new Scale(TILEMAP_SCALE, TILEMAP_SCALE)),
+				PreviewMode.Paint => GetRectAtScale(new Scale(TILEMAP_SCALE, TILEMAP_SCALE)),
 				_ => null,
 			};
 		}
@@ -457,6 +511,7 @@ namespace InkscapeTileMaker.ViewModels
 			{
 				PreviewMode.Image => GetUnscaledImageRect(),
 				PreviewMode.InContext => new SKRectI(0, 0, TileSize.width * 8, TileSize.height * 8),
+				PreviewMode.Paint => new SKRectI(0, 0, TileSize.width * 8, TileSize.height * 8),
 				_ => null,
 			};
 		}
@@ -823,9 +878,27 @@ namespace InkscapeTileMaker.ViewModels
 			switch (SelectedPreviewMode)
 			{
 				case PreviewMode.Image:
-					var tile = Tiles.FirstOrDefault(t => t.Value.Row == row && t.Value.Column == column);
-					SelectedTile = tile;
+					SelectedTile = Tiles.FirstOrDefault(t => t.Value.Row == row && t.Value.Column == column);
 					break;
+				case PreviewMode.InContext:
+					{
+						var tileRect = GetTileRect(row, column);
+						var tiles = _inContextTilemap.Tilemap.GetTilesOnDuelGrid(column, row);
+						var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
+						if (tile == null) return;
+						SelectedTile = Tiles.FirstOrDefault(t => t.Value.Row == tile.Row && t.Value.Column == tile.Column);
+					}
+					break;
+				case PreviewMode.Paint:
+					{
+						var tileRect = GetTileRect(row, column);
+						var tiles = _paintTilemap.Tilemap.GetTilesOnDuelGrid(column, row);
+						var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
+						if (tile == null) return;
+						SelectedTile = Tiles.FirstOrDefault(t => t.Value.Row == tile.Row && t.Value.Column == tile.Column);
+					}
+					break;
+
 			}
 		}
 
