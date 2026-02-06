@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="InkscapeTileMaker.Controls.ToolIcon"
+             x:Name="Root">
+    <ContentView.Resources>
+        <ResourceDictionary>
+            <toolkit:BoolToObjectConverter x:Key="BorderStrokeConverter">
+                <toolkit:BoolToObjectConverter.FalseObject>
+                    <SolidColorBrush Color="Transparent"/>
+                </toolkit:BoolToObjectConverter.FalseObject>
+                <toolkit:BoolToObjectConverter.TrueObject>
+                    <SolidColorBrush Color="{DynamicResource PrimaryDark}"/>
+                </toolkit:BoolToObjectConverter.TrueObject>
+            </toolkit:BoolToObjectConverter>
+        </ResourceDictionary>
+    </ContentView.Resources>
+
+    <Border Stroke="{Binding IsSelected, Source={x:Reference Root}, Converter={StaticResource BorderStrokeConverter}}"
+            StrokeThickness="2">
+        <Grid BackgroundColor="White">
+            <Image x:Name="IconImage"
+                   Aspect="AspectFit"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="Fill"
+                   Source="{Binding Source, Source={x:Reference Root}}"
+                   Margin="2"/>
+            <Button x:Name="IconButton"
+                    BackgroundColor="Transparent"
+                    BorderColor="Transparent"
+                    BorderWidth="0"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="Fill"
+                    Command="{Binding Command, Source={x:Reference Root}}"
+                    CommandParameter="{Binding CommandParameter, Source={x:Reference Root}}"
+                    Text=""
+                    Padding="0" />
+        </Grid>
+    </Border>
+</ContentView>

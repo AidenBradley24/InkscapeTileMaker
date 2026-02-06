@@ -54,7 +54,20 @@ namespace InkscapeTileMaker.Models
 				_grid[x, y] = material;
 				count++;
 			}
+			DuelGridAreaChanged((0, 0, Height, Width));
 			return count;
+		}
+
+		public void Clear()
+		{
+			for (int y = 0; y < Height; y++)
+			{
+				for (int x = 0; x < Width; x++)
+				{
+					_grid[x, y] = null;
+				}
+			}
+			DuelGridAreaChanged((0, 0, Height, Width));
 		}
 
 		/// <summary>

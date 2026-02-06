@@ -25,10 +25,10 @@
 		<ApplicationTitle>InkscapeTileMaker</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.inkscapetilemaker</ApplicationId>
+		<ApplicationId>com.aidenbradley.inkscapetilemaker</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationDisplayVersion>0.1</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
@@ -47,8 +47,7 @@
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 
 		<!-- Images -->
-		<MauiImage Include="Resources\Images\*" />
-		<MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
+		<MauiImage Include="Resources\Images\**\*.*" />
 		
 		<!-- Custom Fonts -->
 		<MauiFont Include="Resources\Fonts\*" />
@@ -77,6 +76,9 @@
 
 	<ItemGroup>
 	  <MauiXaml Update="Controls\EditableLabel.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Controls\ToolIcon.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\Popups\ConfirmationPopup.xaml">
@@ -109,6 +111,10 @@
 	  <MauiXaml Update="Views\LandingWindow.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Resources\Images\Icons\" />
 	</ItemGroup>
 
 </Project>

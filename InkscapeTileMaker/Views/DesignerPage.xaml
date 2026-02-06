@@ -5,6 +5,7 @@
 
              xmlns:views="clr-namespace:InkscapeTileMaker.Views"
              xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels"
+             xmlns:ctrls="clr-namespace:InkscapeTileMaker.Controls"
              x:DataType="vms:DesignerViewModel"
 
              xmlns:ska="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
@@ -17,6 +18,7 @@
         <toolkit:EnumToBoolConverter x:Key="ShowTileSetConverter">
             <toolkit:EnumToBoolConverter.TrueValues>
                 <vms:DesignerMode>TileSet</vms:DesignerMode>
+                <vms:DesignerMode>Paint</vms:DesignerMode>
             </toolkit:EnumToBoolConverter.TrueValues>
         </toolkit:EnumToBoolConverter>
         <toolkit:EnumToBoolConverter x:Key="ShowIndividualTileConverter">
@@ -24,9 +26,33 @@
                 <vms:DesignerMode>SingleTile</vms:DesignerMode>
             </toolkit:EnumToBoolConverter.TrueValues>
         </toolkit:EnumToBoolConverter>
+        <toolkit:EnumToBoolConverter x:Key="PreviewIsPaintConverter">
+            <toolkit:EnumToBoolConverter.TrueValues>
+                <vms:PreviewMode>Paint</vms:PreviewMode>
+            </toolkit:EnumToBoolConverter.TrueValues>
+        </toolkit:EnumToBoolConverter>
         <conv:EnumToItemsSourceConverter x:Key="EnumToItemsSourceConverter" />
         <conv:EnumToStringConverter x:Key="EnumToStringConverter" />
         <toolkit:IsNotNullConverter x:Key="IsNotNullConverter" />
+        <toolkit:IsEqualConverter x:Key="IsEqualConverter" />
+
+        <toolkit:EnumToBoolConverter x:Key="IsCursorToolSelectedConverter">
+            <toolkit:EnumToBoolConverter.TrueValues>
+                <vms:PaintTool>Cursor</vms:PaintTool>
+            </toolkit:EnumToBoolConverter.TrueValues>
+        </toolkit:EnumToBoolConverter>
+
+        <toolkit:EnumToBoolConverter x:Key="IsPaintToolSelectedConverter">
+            <toolkit:EnumToBoolConverter.TrueValues>
+                <vms:PaintTool>Paint</vms:PaintTool>
+            </toolkit:EnumToBoolConverter.TrueValues>
+        </toolkit:EnumToBoolConverter>
+
+        <toolkit:EnumToBoolConverter x:Key="IsEraserToolSelectedConverter">
+            <toolkit:EnumToBoolConverter.TrueValues>
+                <vms:PaintTool>Eraser</vms:PaintTool>
+            </toolkit:EnumToBoolConverter.TrueValues>
+        </toolkit:EnumToBoolConverter>
     </ContentPage.Resources>
 
     <ContentPage.MenuBarItems>
@@ -112,6 +138,40 @@
                         ItemsSource="{Binding ZoomLevels}"
                         ItemDisplayBinding="{Binding Converter={StaticResource DecimalToPercentageConverter}}"
                         SelectedItem="{Binding SelectedZoomLevel, Mode=TwoWay}" />
+
+                    <Border IsVisible="{Binding SelectedPreviewMode, Converter={StaticResource PreviewIsPaintConverter}}"
+                            Margin="5" StrokeThickness="0">
+                        <Grid RowDefinitions="Auto, 40">
+                            <Label Text="Tools" FontSize="Micro" Grid.Row="0" Margin="2"/>
+                            <HorizontalStackLayout Grid.Row="1" Spacing="5" Padding="5,0">
+
+                                <ctrls:ToolIcon ToolName="Cursor"
+                                    WidthRequest="30"
+                                    HeightRequest="30"
+                                    Source="cursor.png"
+                                    Command="{Binding SelectToolCommand}"
+                                    CommandParameter="Cursor"
+                                    IsSelected="{Binding SelectedPaintTool, Converter={StaticResource IsCursorToolSelectedConverter}}"/>
+
+                                <ctrls:ToolIcon ToolName="Paint"
+                                    WidthRequest="30"
+                                    HeightRequest="30"
+                                    Source="paint.png"
+                                    Command="{Binding SelectToolCommand}"
+                                    CommandParameter="Paint"
+                                    IsSelected="{Binding SelectedPaintTool, Converter={StaticResource IsPaintToolSelectedConverter}}"/>
+
+                                <ctrls:ToolIcon ToolName="Eraser"
+                                    WidthRequest="30"
+                                    HeightRequest="30"
+                                    Source="eraser.png"
+                                    Command="{Binding SelectToolCommand}"
+                                    CommandParameter="Eraser"
+                                    IsSelected="{Binding SelectedPaintTool, Converter={StaticResource IsEraserToolSelectedConverter}}"/>
+
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </Border>
                 </HorizontalStackLayout>
                 <HorizontalStackLayout Grid.Column="1"
                                        HorizontalOptions="End">

@@ -26,13 +26,21 @@ namespace InkscapeTileMaker.ViewModels
 
 			(int x, int y)[] positions =
 			[
-				(0, 1), (2, 1), (3, 1), (5, 1), (6, 1), (7, 1),
-				(2, 2),(6, 2),
+				(0, 0), (2, 0),
+				(0, 1), (1, 1), (2, 1), (3, 1), (5, 1), (6, 1), (7, 1),
+				(2, 2), (3, 2), (6, 2),
 				(6, 3),
-				(2, 5),(3, 5)
+				(2, 4), (3, 4),
+				(2, 5), (3, 5)
 			];
 
 			_tilemap.Paint(material, positions);
+		}
+
+		[RelayCommand]
+		public void Clear()
+		{
+			_tilemap.Clear();
 		}
 	}
 }

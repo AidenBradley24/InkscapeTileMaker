@@ -47,6 +47,7 @@ namespace InkscapeTileMaker.ViewModels
 		public partial PointF PreviewOffset { get; set; }
 
 		[ObservableProperty]
+		[NotifyPropertyChangedFor(nameof(SelectedDesignerMode))]
 		public partial TileViewModel? SelectedTile { get; set; }
 
 		[ObservableProperty]
@@ -62,14 +63,26 @@ namespace InkscapeTileMaker.ViewModels
 		[NotifyPropertyChangedFor(nameof(Title))]
 		public partial bool HasUnsavedChanges { get; set; } = false;
 
-		[ObservableProperty]
-		public partial DesignerMode SelectedDesignerMode { get; set; } = DesignerMode.TileSet;
+		public DesignerMode SelectedDesignerMode
+		{
+			get
+			{
+				if (SelectedPreviewMode == PreviewMode.Paint) return DesignerMode.Paint;
+				return SelectedTile == null ? DesignerMode.TileSet : DesignerMode.SingleTile;
+			}
+		}
 
 		[ObservableProperty]
+		[NotifyPropertyChangedFor(nameof(SelectedDesignerMode))]
 		public partial PreviewMode SelectedPreviewMode { get; set; } = PreviewMode.Image;
 
 		[ObservableProperty]
-		public partial TilemapViewModel MatViewModel { get; set; }
+		public partial TilemapViewModel PreviewTilemap { get; set; }
+		private readonly TilemapViewModel _inContextTilemap;
+		private readonly TilemapViewModel _paintTilemap;
+
+		[ObservableProperty]
+		public partial PaintTool SelectedPaintTool { get; set; } = PaintTool.Cursor;
 
 		public string Title => FileName != null ? $"Inkscape Tile Maker - {FileName}" + (HasUnsavedChanges ? " *" : "") : "Inkscape Tile Maker";
 
@@ -88,7 +101,10 @@ namespace InkscapeTileMaker.ViewModels
 			_svgRenderingService = renderingService;
 			_fileSaver = fileSaver;
 			SelectedZoomLevel = 1.0m;
-			MatViewModel = new TilemapViewModel(TILEMAP_SCALE, TILEMAP_SCALE);
+
+			_inContextTilemap = new TilemapViewModel(TILEMAP_SCALE, TILEMAP_SCALE);
+			_paintTilemap = new TilemapViewModel(TILEMAP_SCALE, TILEMAP_SCALE);
+			PreviewTilemap = _inContextTilemap;
 		}
 
 		public void RegisterWindow(IWindowProvider windowProvider)
@@ -125,7 +141,6 @@ namespace InkscapeTileMaker.ViewModels
 
 		partial void OnSelectedTileChanged(TileViewModel? value)
 		{
-			SelectedDesignerMode = value == null ? DesignerMode.TileSet : DesignerMode.SingleTile;
 			CanvasNeedsRedraw.Invoke();
 		}
 
@@ -134,13 +149,9 @@ namespace InkscapeTileMaker.ViewModels
 			CanvasNeedsRedraw.Invoke();
 		}
 
-		partial void OnSelectedDesignerModeChanged(DesignerMode value)
-		{
-			CanvasNeedsRedraw.Invoke();
-		}
-
 		partial void OnSelectedPreviewModeChanged(PreviewMode value)
 		{
+			PreviewTilemap = value == PreviewMode.InContext ? _inContextTilemap : _paintTilemap;
 			CanvasNeedsRedraw.Invoke();
 		}
 
@@ -260,6 +271,9 @@ namespace InkscapeTileMaker.ViewModels
 				case PreviewMode.InContext:
 					DrawInContextPreview(canvas);
 					break;
+				case PreviewMode.Paint:
+					DrawPaintPreview(canvas);
+					break;
 			}
 		}
 
@@ -288,6 +302,7 @@ namespace InkscapeTileMaker.ViewModels
 					StrokeWidth = 1,
 					IsAntialias = false,
 					Style = SKPaintStyle.Stroke,
+					PathEffect = SKPathEffect.CreateDash([10, 10], 0),
 				};
 
 				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.TileSize / 2, 2, majorPaint, minorPaint);
@@ -322,29 +337,23 @@ namespace InkscapeTileMaker.ViewModels
 			if (_renderedBitmap == null) return;
 			if (SelectedTile == null) return;
 
-			var previewRect = GetInContextRect(new Scale(MatViewModel.Width, MatViewModel.Height))!.Value;
+			var previewRect = GetRectAtScale(new Scale(_inContextTilemap.Width, _inContextTilemap.Height))!.Value;
+
+			SKPaint? majorPaint = null;
+			SKPaint? minorPaint = null;
 
 			if (SelectedTile.Type == TileType.Singular)
 			{
-				for (int row = 0; row < MatViewModel.Height; row++)
+				for (int row = 0; row < _inContextTilemap.Height; row++)
 				{
-					for (int col = 0; col < MatViewModel.Width; col++)
+					for (int col = 0; col < _inContextTilemap.Width; col++)
 					{
 						var tileRect = GetTileRect(row, col);
 						DrawSingleTile(canvas, new TileData() { tile = SelectedTile.Value }, tileRect);
 					}
 				}
-			}
-			else if (SelectedTile.IsMaterial)
-			{
-				var material = new Material(SelectedTile.Value.MaterialName, () => Tiles.Select(t => t.Value));
-				MatViewModel.AddSampleMaterial(material);
-				DrawMaterialTilemap(canvas, MatViewModel.Tilemap);
-			}
 
-			if (_tilesetConnection?.Tileset != null)
-			{
-				using var majorPaint = new SKPaint
+				majorPaint = new SKPaint
 				{
 					Color = SKColors.Black.WithAlpha(128),
 					StrokeWidth = 2,
@@ -352,9 +361,72 @@ namespace InkscapeTileMaker.ViewModels
 					Style = SKPaintStyle.Stroke,
 				};
 
-				using var minorPaint = new SKPaint
+				minorPaint = new SKPaint
 				{
 					Color = SKColors.Gray.WithAlpha(64),
+					StrokeWidth = 1,
+					IsAntialias = false,
+					Style = SKPaintStyle.Stroke,
+					PathEffect = SKPathEffect.CreateDash([10, 10], 0),
+				};
+			}
+			else if (SelectedTile.IsMaterial)
+			{
+				var material = new Material(SelectedTile.Value.MaterialName, () => Tiles.Select(t => t.Value));
+				_inContextTilemap.Clear();
+				_inContextTilemap.AddSampleMaterial(material);
+				DrawMaterialTilemap(canvas, _inContextTilemap.Tilemap);
+
+				majorPaint = new SKPaint
+				{
+					Color = SKColors.Magenta.WithAlpha(64),
+					StrokeWidth = 2,
+					IsAntialias = false,
+					Style = SKPaintStyle.Stroke,
+					PathEffect = SKPathEffect.CreateDash([10, 10], 0),
+				};
+
+				minorPaint = new SKPaint
+				{
+					Color = SKColors.LimeGreen.WithAlpha(128),
+					StrokeWidth = 1,
+					IsAntialias = false,
+					Style = SKPaintStyle.Stroke,
+				};
+			}
+
+			if (_tilesetConnection?.Tileset != null && majorPaint != null && minorPaint != null)
+			{
+				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.TileSize / 2, 2, majorPaint, minorPaint);
+				DrawBorder(canvas, previewRect);
+
+				majorPaint.Dispose();
+				minorPaint.Dispose();
+			}
+		}
+
+		private void DrawPaintPreview(SKCanvas canvas)
+		{
+			if (_renderedBitmap == null) return;
+
+			var previewRect = GetRectAtScale(new Scale(_paintTilemap.Width, _paintTilemap.Height))!.Value;
+
+			DrawMaterialTilemap(canvas, _paintTilemap.Tilemap);
+
+			if (_tilesetConnection?.Tileset != null)
+			{
+				using var majorPaint = new SKPaint
+				{
+					Color = SKColors.Magenta.WithAlpha(64),
+					StrokeWidth = 2,
+					IsAntialias = false,
+					Style = SKPaintStyle.Stroke,
+					PathEffect = SKPathEffect.CreateDash([10, 10], 0),
+				};
+
+				using var minorPaint = new SKPaint
+				{
+					Color = SKColors.LimeGreen.WithAlpha(128),
 					StrokeWidth = 1,
 					IsAntialias = false,
 					Style = SKPaintStyle.Stroke,
@@ -374,7 +446,7 @@ namespace InkscapeTileMaker.ViewModels
 			return SelectedPreviewMode switch
 			{
 				PreviewMode.Image => GetImageRect(),
-				PreviewMode.InContext => GetInContextRect(new Scale(TILEMAP_SCALE, TILEMAP_SCALE)),
+				PreviewMode.InContext => GetRectAtScale(new Scale(TILEMAP_SCALE, TILEMAP_SCALE)),
 				_ => null,
 			};
 		}
@@ -409,7 +481,7 @@ namespace InkscapeTileMaker.ViewModels
 			return new SKRectI(0, 0, _renderedBitmap.Width, _renderedBitmap.Height);
 		}
 
-		public SKRect? GetInContextRect(Scale scale)
+		public SKRect? GetRectAtScale(Scale scale)
 		{
 			if (_tilesetConnection?.Tileset == null) return SKRect.Empty;
 			var zoomFactor = (float)SelectedZoomLevel;
@@ -841,6 +913,23 @@ namespace InkscapeTileMaker.ViewModels
 			SelectedTile = null;
 		}
 
+		[RelayCommand]
+		public void SelectTool(string tool)
+		{
+			switch (tool)
+			{
+				case "Cursor":
+					SelectedPaintTool = PaintTool.Cursor;
+					break;
+				case "Paint":
+					SelectedPaintTool = PaintTool.Paint;
+					break;
+				case "Eraser":
+					SelectedPaintTool = PaintTool.Eraser;
+					break;
+			}
+		}
+
 		#endregion
 
 
@@ -958,12 +1047,21 @@ namespace InkscapeTileMaker.ViewModels
 	public enum DesignerMode
 	{
 		TileSet,
-		SingleTile
+		SingleTile,
+		Paint
 	}
 
 	public enum PreviewMode
 	{
 		Image,
 		InContext,
+		Paint
+	}
+
+	public enum PaintTool
+	{
+		Cursor,
+		Paint,
+		Eraser
 	}
 }
