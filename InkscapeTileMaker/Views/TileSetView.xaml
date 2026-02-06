@@ -4,9 +4,14 @@
              x:Class="InkscapeTileMaker.Views.TileSetView"
              xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels"
              xmlns:models="clr-namespace:InkscapeTileMaker.Models;assembly=InkscapeTileMaker.Models"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:ctrls="clr-namespace:InkscapeTileMaker.Controls"
+             xmlns:conv="clr-namespace:InkscapeTileMaker.Converters"
              x:DataType="vms:DesignerViewModel"
              x:Name="TileSet">
-
+    <ContentView.Resources>
+        <conv:CurrentIsSelectedConverter x:Key="CurrentIsSelectedConverter" />
+    </ContentView.Resources>
     <Grid Padding="12"
           RowDefinitions="Auto,Auto,*,Auto">
 
@@ -54,34 +59,25 @@
                     BindableLayout.ItemsSource="{Binding Tiles}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="vms:TileViewModel">
-                            <Border
+                            <ctrls:ToolIcon 
                                 Padding="4"
                                 Margin="2"
-                                BackgroundColor="White"
-                                Stroke="Black"
-                                StrokeThickness="1"
-                                ToolTipProperties.Text="{Binding Name}">
-                                <Grid WidthRequest="32"
-                                      HeightRequest="32"
-                                      BackgroundColor="LightGray">
-                                    <Image Source="{Binding PreviewImage}"
-                                           Aspect="AspectFill"
-                                           WidthRequest="32"
-                                           HeightRequest="32" />
-                                    <Label Text="{Binding Name}"
-                                           FontSize="10"
-                                           HorizontalOptions="Center"
-                                           VerticalOptions="Center"
-                                           LineBreakMode="TailTruncation"
-                                           TextColor="Black"
-                                           BackgroundColor="#80FFFFFF" />
-                                </Grid>
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer
-                                        Command="{Binding BindingContext.SelectTileCommand, Source={x:Reference Name=TileSet}}"
-                                        CommandParameter="{Binding .}" />
-                                </Border.GestureRecognizers>
-                            </Border>
+                                WidthRequest="50"
+                                HeightRequest="50"
+                                ToolName="{Binding Name}"
+                                Source="{Binding PreviewImage}"
+                                Command="{Binding BindingContext.SelectTileCommand, Source={x:Reference TileSet}}"
+                                CommandParameter="{Binding .}"
+                                BackgroundColor="Transparent"
+                                UnselectedOutlineStroke="White"
+                                SelectedOutlineStroke="{DynamicResource PrimaryDark}">
+                                <ctrls:ToolIcon.IsSelected>
+                                    <MultiBinding Converter="{StaticResource CurrentIsSelectedConverter}">
+                                        <Binding Path="." />
+                                        <Binding Path="BindingContext.SelectedTile" Source="{x:Reference TileSet}" />
+                                    </MultiBinding>
+                                </ctrls:ToolIcon.IsSelected>
+                            </ctrls:ToolIcon>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </FlexLayout>

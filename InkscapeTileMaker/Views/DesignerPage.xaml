@@ -151,7 +151,10 @@
                                     Source="cursor.png"
                                     Command="{Binding SelectToolCommand}"
                                     CommandParameter="Cursor"
-                                    IsSelected="{Binding SelectedPaintTool, Converter={StaticResource IsCursorToolSelectedConverter}}"/>
+                                    IsSelected="{Binding SelectedPaintTool, Converter={StaticResource IsCursorToolSelectedConverter}}"
+                                    BackgroundColor="White"
+                                    UnselectedOutlineStroke="Transparent"
+                                    SelectedOutlineStroke="{DynamicResource PrimaryDark}"/>
 
                                 <ctrls:ToolIcon ToolName="Paint"
                                     WidthRequest="30"
@@ -159,7 +162,10 @@
                                     Source="paint.png"
                                     Command="{Binding SelectToolCommand}"
                                     CommandParameter="Paint"
-                                    IsSelected="{Binding SelectedPaintTool, Converter={StaticResource IsPaintToolSelectedConverter}}"/>
+                                    IsSelected="{Binding SelectedPaintTool, Converter={StaticResource IsPaintToolSelectedConverter}}"
+                                    BackgroundColor="White"
+                                    UnselectedOutlineStroke="Transparent"
+                                    SelectedOutlineStroke="{DynamicResource PrimaryDark}"/>
 
                                 <ctrls:ToolIcon ToolName="Eraser"
                                     WidthRequest="30"
@@ -167,7 +173,19 @@
                                     Source="eraser.png"
                                     Command="{Binding SelectToolCommand}"
                                     CommandParameter="Eraser"
-                                    IsSelected="{Binding SelectedPaintTool, Converter={StaticResource IsEraserToolSelectedConverter}}"/>
+                                    IsSelected="{Binding SelectedPaintTool, Converter={StaticResource IsEraserToolSelectedConverter}}"
+                                    BackgroundColor="White"
+                                    UnselectedOutlineStroke="Transparent"
+                                    SelectedOutlineStroke="{DynamicResource PrimaryDark}"/>
+
+                                <ctrls:ToolIcon ToolName="Clear"
+                                    WidthRequest="30"
+                                    HeightRequest="30"
+                                    Source="trash.png"
+                                    Command="{Binding PreviewTilemap.ClearCommand}"
+                                    BackgroundColor="White"
+                                    UnselectedOutlineStroke="Transparent"
+                                    SelectedOutlineStroke="{DynamicResource PrimaryDark}"/>
 
                             </HorizontalStackLayout>
                         </Grid>

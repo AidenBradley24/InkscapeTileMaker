@@ -20,6 +20,12 @@ public partial class ToolIcon : ContentView
 	public static readonly BindableProperty CommandParameterProperty =
 		BindableProperty.Create(nameof(CommandParameter), typeof(object), typeof(ToolIcon));
 
+	public static readonly BindableProperty SelectedOutlineStrokeProperty =
+		BindableProperty.Create(nameof(SelectedOutlineStroke), typeof(Color), typeof(ToolIcon), Brush.White.Color);
+
+	public static readonly BindableProperty UnselectedOutlineStrokeProperty =
+		BindableProperty.Create(nameof(UnselectedOutlineStroke), typeof(Color), typeof(ToolIcon), Brush.Transparent.Color);
+
 	public string ToolName
 	{
 		get => (string)GetValue(ToolNameProperty);
@@ -63,6 +69,24 @@ public partial class ToolIcon : ContentView
 		set
 		{
 			SetValue(CommandParameterProperty, value);
+		}
+	}
+
+	public Color SelectedOutlineStroke
+	{
+		get => (Color)GetValue(SelectedOutlineStrokeProperty);
+		set
+		{
+			SetValue(SelectedOutlineStrokeProperty, value);
+		}
+	}
+
+	public Color UnselectedOutlineStroke
+	{
+		get => (Color)GetValue(UnselectedOutlineStrokeProperty);
+		set
+		{
+			SetValue(UnselectedOutlineStrokeProperty, value);
 		}
 	}
 

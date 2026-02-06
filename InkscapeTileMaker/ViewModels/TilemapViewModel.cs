@@ -8,6 +8,8 @@ namespace InkscapeTileMaker.ViewModels
 	{
 		private readonly MaterialTilemap _tilemap;
 
+		public event Action NeedsRedraw = delegate { };
+
 		public MaterialTilemap Tilemap => _tilemap;
 
 		public int Width => _tilemap.Width;
@@ -35,12 +37,14 @@ namespace InkscapeTileMaker.ViewModels
 			];
 
 			_tilemap.Paint(material, positions);
+			NeedsRedraw.Invoke();
 		}
 
 		[RelayCommand]
 		public void Clear()
 		{
 			_tilemap.Clear();
+			NeedsRedraw.Invoke();
 		}
 	}
 }

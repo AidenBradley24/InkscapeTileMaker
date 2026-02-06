@@ -8,10 +8,10 @@
         <ResourceDictionary>
             <toolkit:BoolToObjectConverter x:Key="BorderStrokeConverter">
                 <toolkit:BoolToObjectConverter.FalseObject>
-                    <SolidColorBrush Color="Transparent"/>
+                    <SolidColorBrush Color="{Binding UnselectedOutlineStroke, Source={x:Reference Root}}"/>
                 </toolkit:BoolToObjectConverter.FalseObject>
                 <toolkit:BoolToObjectConverter.TrueObject>
-                    <SolidColorBrush Color="{DynamicResource PrimaryDark}"/>
+                    <SolidColorBrush Color="{Binding SelectedOutlineStroke, Source={x:Reference Root}}"/>
                 </toolkit:BoolToObjectConverter.TrueObject>
             </toolkit:BoolToObjectConverter>
         </ResourceDictionary>
@@ -19,7 +19,7 @@
 
     <Border Stroke="{Binding IsSelected, Source={x:Reference Root}, Converter={StaticResource BorderStrokeConverter}}"
             StrokeThickness="2">
-        <Grid BackgroundColor="White">
+        <Grid>
             <Image x:Name="IconImage"
                    Aspect="AspectFit"
                    HorizontalOptions="Fill"

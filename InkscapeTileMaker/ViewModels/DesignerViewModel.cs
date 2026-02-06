@@ -109,6 +109,8 @@ namespace InkscapeTileMaker.ViewModels
 			_inContextTilemap = new TilemapViewModel(TILEMAP_SCALE, TILEMAP_SCALE);
 			_paintTilemap = new TilemapViewModel(TILEMAP_SCALE, TILEMAP_SCALE);
 			PreviewTilemap = _inContextTilemap;
+
+			_paintTilemap.NeedsRedraw += () => CanvasNeedsRedraw.Invoke();
 		}
 
 		public void RegisterWindow(IWindowProvider windowProvider)
@@ -477,6 +479,8 @@ namespace InkscapeTileMaker.ViewModels
 				};
 
 				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.TileSize / 2, 2, majorPaint, minorPaint);
+				previewRect.Bottom -= _tilesetConnection.Tileset.TileSize.height * (float)SelectedZoomLevel;
+				previewRect.Right -= _tilesetConnection.Tileset.TileSize.width * (float)SelectedZoomLevel;
 				DrawBorder(canvas, previewRect);
 			}
 
