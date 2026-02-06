@@ -1,4 +1,3 @@
-using Microsoft.Maui.Controls;
 using System.Windows.Input;
 
 namespace InkscapeTileMaker.Controls;

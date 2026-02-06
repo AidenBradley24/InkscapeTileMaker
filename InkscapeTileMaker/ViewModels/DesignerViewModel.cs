@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Models;
 using InkscapeTileMaker.Services;
 using InkscapeTileMaker.Utility;
-using Microsoft.Maui.Graphics;
 using SkiaSharp;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -229,28 +228,31 @@ namespace InkscapeTileMaker.ViewModels
 
 			Task.Run(async () =>
 			{
-				using (var stream = await _svgRenderingService.RenderFileAsync(file, ".png"))
+				try
 				{
-					if (stream.CanSeek) stream.Position = 0;
-					_renderedBitmap = SKBitmap.Decode(stream);
-				}
-
-				foreach (var tileWrapper in Tiles)
-				{
-					tileWrapper.PreviewImage = ImageSource.FromStream(token =>
+					using (var stream = await _svgRenderingService.RenderFileAsync(file, ".png"))
 					{
-						return _svgRenderingService.RenderSegmentAsync(
-						file,
-						".png",
-						left: tileWrapper.Value.Column * tileset.TileSize.width,
-						top: tileWrapper.Value.Row * tileset.TileSize.height,
-						right: (tileWrapper.Value.Column + 1) * tileset.TileSize.width,
-						bottom: (tileWrapper.Value.Row + 1) * tileset.TileSize.height,
-						token);
-					});
-				}
+						if (stream.CanSeek) stream.Position = 0;
+						_renderedBitmap = SKBitmap.Decode(stream);
+					}
 
-				await MainThread.InvokeOnMainThreadAsync(CanvasNeedsRedraw);
+					foreach (var tile in Tiles)
+					{
+						tile.PreviewImage = ImageSource.FromStream(token =>
+						{
+							return _svgRenderingService.RenderSegmentAsync(
+							file,
+							".png",
+							left: tile.Value.Column * tileset.TileSize.width,
+							top: tile.Value.Row * tileset.TileSize.height,
+							right: (tile.Value.Column + 1) * tileset.TileSize.width,
+							bottom: (tile.Value.Row + 1) * tileset.TileSize.height,
+							token);
+						});
+					}
+					await MainThread.InvokeOnMainThreadAsync(CanvasNeedsRedraw);
+				}
+				catch (OperationCanceledException) { }
 			});
 		}
 
