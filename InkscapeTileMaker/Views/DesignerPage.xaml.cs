@@ -6,7 +6,7 @@ namespace InkscapeTileMaker.Views
 	public partial class DesignerPage : ContentPage
 	{
 		Point dragPoint;
-		bool isPanning;
+		bool isPanning, isLeftClicking;
 		int _canvasPixelWidth;
 		int _canvasPixelHeight;
 
@@ -68,6 +68,11 @@ namespace InkscapeTileMaker.Views
 
 			var pos = PointToPosition(e.GetPosition(PreviewCanvasView));
 			viewModel.HoveredTile = pos;
+
+			if (isLeftClicking)
+			{
+				viewModel.SelectTileFromPreviewAt(pos?.row ?? -1, pos?.col ?? -1);
+			}
 		}
 
 		private void OnCanvasViewPointerPressed(object sender, PointerEventArgs e)
@@ -88,6 +93,11 @@ namespace InkscapeTileMaker.Views
 				return;
 			}
 			viewModel.SelectTileFromPreviewAt(pos.Value.row, pos.Value.col);
+
+			if (e.Button == ButtonsMask.Primary)
+			{
+				isLeftClicking = true;
+			}
 		}
 
 		private void OnCanvasViewPointerReleased(object sender, PointerEventArgs e)
@@ -97,12 +107,18 @@ namespace InkscapeTileMaker.Views
 			{
 				isPanning = false;
 			}
+
+			if (e.Button == ButtonsMask.Primary && isLeftClicking)
+			{
+				isLeftClicking = false;
+			}
 		}
 
 		private (int row, int col)? PointToPosition(Point? point)
 		{
 			if (BindingContext is not DesignerViewModel viewModel) return null;
 			if (point is null) return null;
+
 			var tileSize = viewModel.TileSize;
 
 			var previewRect = viewModel.GetPreviewRect();
@@ -131,8 +147,34 @@ namespace InkscapeTileMaker.Views
 			var tileWidth = (double)tileSize.width;
 			var tileHeight = (double)tileSize.height;
 
-			int row = (int)Math.Round((logicalY - tileHeight / 2) / tileHeight);
-			int col = (int)Math.Round((logicalX - tileWidth / 2) / tileWidth);
+			logicalX -= tileWidth / 2;
+			logicalY -= tileHeight / 2;
+			logicalX += viewModel.HoveredTileOffset.x * tileWidth;
+			logicalY += viewModel.HoveredTileOffset.y * tileHeight;
+
+			int row = (int)Math.Round((logicalY) / tileHeight);
+			int col = (int)Math.Round((logicalX) / tileWidth);
+
+			if (viewModel.HoveredTileOffset.x != 0f || viewModel.HoveredTileOffset.y != 0f)
+			{
+				if (viewModel.HoveredTileOffset.y > 0f)
+				{
+					row -= 1;
+				}
+				else if (viewModel.HoveredTileOffset.y < 0f)
+				{
+					row += 1;
+				}
+
+				if (viewModel.HoveredTileOffset.x > 0f)
+				{
+					col -= 1;
+				}
+				else if (viewModel.HoveredTileOffset.x < 0f)
+				{
+					col += 1;
+				}
+			}
 
 			return (row, col);
 		}

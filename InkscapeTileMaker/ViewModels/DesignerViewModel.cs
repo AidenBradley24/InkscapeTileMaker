@@ -61,6 +61,9 @@ namespace InkscapeTileMaker.ViewModels
 		public partial (int row, int col)? HoveredTile { get; set; }
 
 		[ObservableProperty]
+		public partial (float x, float y) HoveredTileOffset { get; set; }
+
+		[ObservableProperty]
 		[NotifyPropertyChangedFor(nameof(Title))]
 		public partial bool HasUnsavedChanges { get; set; } = false;
 
@@ -153,6 +156,29 @@ namespace InkscapeTileMaker.ViewModels
 		partial void OnSelectedPreviewModeChanged(PreviewMode value)
 		{
 			PreviewTilemap = value == PreviewMode.InContext ? _inContextTilemap : _paintTilemap;
+			CanvasNeedsRedraw.Invoke();
+		}
+
+		partial void OnSelectedPreviewModeChanging(PreviewMode value)
+		{
+			if (value == PreviewMode.Paint)
+			{
+				SelectedPaintTool = PaintTool.Cursor;
+			}
+			else
+			{
+				HoveredTileOffset = (0f, 0f);
+			}
+
+			CanvasNeedsRedraw.Invoke();
+		}
+
+		partial void OnSelectedPaintToolChanged(PaintTool value)
+		{
+			if (value == PaintTool.Cursor)
+				HoveredTileOffset = (0f, 0f);
+			else
+				HoveredTileOffset = (-0.5f, -0.5f);
 			CanvasNeedsRedraw.Invoke();
 		}
 
@@ -477,11 +503,13 @@ namespace InkscapeTileMaker.ViewModels
 						break;
 					case PaintTool.Paint:
 						{
+							tileRect.Offset(HoveredTileOffset.x * tileRect.Width, HoveredTileOffset.y * tileRect.Height);
 							DrawTileOutline(canvas, tileRect, SKColors.Green.WithAlpha(128));
 						}
 						break;
 					case PaintTool.Eraser:
 						{
+							tileRect.Offset(HoveredTileOffset.x * tileRect.Width, HoveredTileOffset.y * tileRect.Height);
 							DrawTileOutline(canvas, tileRect, SKColors.Red.WithAlpha(128));
 						}
 						break;
@@ -891,14 +919,33 @@ namespace InkscapeTileMaker.ViewModels
 					break;
 				case PreviewMode.Paint:
 					{
-						var tileRect = GetTileRect(row, column);
-						var tiles = _paintTilemap.Tilemap.GetTilesOnDuelGrid(column, row);
-						var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
-						if (tile == null) return;
-						SelectedTile = Tiles.FirstOrDefault(t => t.Value.Row == tile.Row && t.Value.Column == tile.Column);
+						switch (SelectedPaintTool)
+						{
+							case PaintTool.Cursor:
+								{
+									var tiles = _paintTilemap.Tilemap.GetTilesOnDuelGrid(column, row);
+									var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
+									if (tile == null) return;
+									SelectedTile = Tiles.FirstOrDefault(t => t.Value.Row == tile.Row && t.Value.Column == tile.Column);
+								}
+								break;
+							case PaintTool.Paint:
+								{
+									if (SelectedTile == null) return;
+									var material = new Material(SelectedTile.Value.MaterialName, () => Tiles.Select(t => t.Value));
+									_paintTilemap.Tilemap[column, row] = material;
+									CanvasNeedsRedraw.Invoke();
+								}
+								break;
+							case PaintTool.Eraser:
+								{
+									_paintTilemap.Tilemap[column, row] = null;
+									CanvasNeedsRedraw.Invoke();
+								}
+								break;
+						}
 					}
 					break;
-
 			}
 		}
 
