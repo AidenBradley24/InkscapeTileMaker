@@ -8,6 +8,8 @@ using SkiaSharp;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.IO.Compression;
+using System.IO.Pipes;
+using UnityPackageNET;
 
 namespace InkscapeTileMaker.ViewModels
 {
@@ -1119,9 +1121,8 @@ namespace InkscapeTileMaker.ViewModels
 			if (_tilesetConnection?.CurrentFile == null) return;
 			if (_tilesetConnection.Tileset == null) return;
 			var tileset = _tilesetConnection.Tileset;
-
-			using var zipStream = new MemoryStream();
-			using (var zip = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
+			var tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip"));
+			using (var zip = new ZipArchive(tmpFile.OpenWrite(), ZipArchiveMode.Create, leaveOpen: false))
 			{
 				if (_windowProvider == null)
 				{
@@ -1161,9 +1162,29 @@ namespace InkscapeTileMaker.ViewModels
 					}
 				});
 			}
+			using (var fs = new FileStream(tmpFile.FullName, FileMode.Open, FileAccess.Read))
+			{
+				var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.zip", fs);
+			}
+			tmpFile.Delete();
+		}
 
-			zipStream.Position = 0;
-			var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.zip", zipStream);
+		[RelayCommand]
+		public async Task ExportUnityPackage()
+		{
+			if (_tilesetConnection?.CurrentFile == null) return;
+			if (_tilesetConnection.Tileset == null) return;
+			var tileset = _tilesetConnection.Tileset;
+			var tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.unitypackage"));
+			using (var writer = new UnityPackageWriter(tmpFile.OpenWrite(), leaveOpen: false))
+			{
+				await UnityPackageFactoryExtensions.WriteTileAssetsAsync(_tilesetConnection, _svgRenderingService, writer);
+			}
+			using (var fs = tmpFile.OpenRead())
+			{
+				var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.unitypackage", fs);
+			}
+			tmpFile.Delete();
 		}
 
 		#endregion

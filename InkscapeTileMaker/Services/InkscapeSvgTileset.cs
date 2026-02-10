@@ -9,6 +9,8 @@ namespace InkscapeTileMaker.Services
 	{
 		private readonly InkscapeSvgConnectionService _connection;
 
+		public string Name => Path.GetFileNameWithoutExtension(_connection.CurrentFile?.Name) ?? "";
+
 		public Scale TileSize => _connection.GetTileSize();
 
 		public Scale Size => _connection.GetSvgSize();

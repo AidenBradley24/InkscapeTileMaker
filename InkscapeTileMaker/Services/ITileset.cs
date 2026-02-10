@@ -6,6 +6,7 @@ namespace InkscapeTileMaker.Services
 {
 	public interface ITileset : ICollection<Tile>
 	{
+		public string Name { get; }
 		public Scale TileSize { get; }
 		public Scale Size { get; }
 

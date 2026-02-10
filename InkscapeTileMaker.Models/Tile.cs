@@ -25,5 +25,19 @@ namespace InkscapeTileMaker.Models
 			if (rowComparison != 0) return rowComparison;
 			return Column.CompareTo(other.Column);
 		}
+
+		public override bool Equals(object? obj)
+		{
+			if (obj is Tile other)
+			{
+				return Row == other.Row && Column == other.Column;
+			}
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(Row, Column);
+		}
 	}
 }
