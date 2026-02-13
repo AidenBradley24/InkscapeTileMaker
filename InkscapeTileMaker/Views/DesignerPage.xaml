@@ -89,9 +89,10 @@
                                 Command="{Binding ExportSeparatedTilesPngCommand}" />
                 <!--<MenuFlyoutItem Text="SVG"
                                 Command="{Binding ExportSeparatedTilesSvgCommand}" />-->
-                <MenuFlyoutItem Text="Unity Package"
-                                Command="{Binding ExportUnityPackageCommand}" />
             </MenuFlyoutSubItem>
+            <MenuFlyoutSeparator/>
+            <MenuFlyoutItem Text="Unity Package"
+                                Command="{Binding ExportUnityPackageCommand}" />
         </MenuBarItem>
     </ContentPage.MenuBarItems>
 

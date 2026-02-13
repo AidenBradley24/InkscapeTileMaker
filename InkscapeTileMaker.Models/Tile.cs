@@ -30,14 +30,14 @@ namespace InkscapeTileMaker.Models
 		{
 			if (obj is Tile other)
 			{
-				return Row == other.Row && Column == other.Column;
+				return Name == other.Name && Row == other.Row && Column == other.Column;
 			}
 			return false;
 		}
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(Row, Column);
+			return HashCode.Combine(Name, Row, Column);
 		}
 	}
 }

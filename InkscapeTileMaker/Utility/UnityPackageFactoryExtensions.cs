@@ -2,7 +2,6 @@
 using InkscapeTileMaker.Services;
 using UnityPackageNET;
 using YamlDotNet.RepresentationModel;
-using static UnityPackageNET.UnityPackageFactory;
 
 namespace InkscapeTileMaker.Utility
 {
@@ -15,18 +14,24 @@ namespace InkscapeTileMaker.Utility
 			if (tileset == null || file == null) return;
 
 			// create sliced image asset
-			var imageEntry = MakeEmptyEntry($"{imageLocation}/{tileset.Name}.png");
+			var imageEntry = UnityPackageEntryFactory.MakeEmptyEntry($"{imageLocation}/{tileset.Name}.png");
 			imageEntry.DataStream = await renderingService.RenderFileAsync(file, ".png");
-			var root = imageEntry.Metadata!.Document.RootNode as YamlMappingNode;
+			var root = imageEntry.Metadata!.Root;
 			root!.Add("TextureImporter", WriteTextureImporter(tileset, out var uids));
 			writer.WriteEntry(imageEntry);
 			imageEntry.DataStream.Close();
 
+			// Originally I planned to create separate tile assets for each tile,
+			// but Unity's Texture Importer doesn't have stable internal ids for the sprites
+			// upon import, if anything looks slightly wrong, unity re-imports and changes the ids.
+
+			// this isn't a huge deal as the sprites are still generated with the correct cutouts, but the tiles assets will need to be made seperately
+
 			// create tile assets
-			foreach (var tile in tileset)
-			{
-				WriteTileAsset(tile, uids, writer, tileLocation, imageEntry.GUID);
-			}
+			//foreach (var tile in tileset)
+			//{
+			//	WriteTileAsset(tile, uids, writer, tileLocation, imageEntry.GUID);
+			//}
 		}
 
 		private static YamlMappingNode WriteTextureImporter(ITileset tileset, out Dictionary<Tile, long> uids)
@@ -105,83 +110,49 @@ namespace InkscapeTileMaker.Utility
 
 			var spriteSheetNode = new YamlMappingNode
 			{
-				{ "sprites", spritesSequence }
+				{ "sprites", spritesSequence },
+				//{ "nameFileIDTable", nameFileIdTable  }
 			};
 
 			textureImporter.Add("spriteSheet", spriteSheetNode);
 
 			// platformSettings
-			var platformSettingsSequence = new YamlSequenceNode();
-			var defaultPlatformSettings = new YamlMappingNode
-			{
-				{ "buildTarget", new YamlScalarNode("DefaultTexturePlatform") },
-				{ "maxTextureSize", new YamlScalarNode("2048") },
-				{ "resizeAlgorithm", new YamlScalarNode("0") },
-				{ "textureCompression", new YamlScalarNode("1") },
-				{ "compressionQuality", new YamlScalarNode("50") },
-				{ "crunchedCompression", new YamlScalarNode("0") },
-				{ "allowsAlphaSplitting", new YamlScalarNode("0") },
-				{ "overridden", new YamlScalarNode("0") }
-			};
-			platformSettingsSequence.Add(defaultPlatformSettings);
+			//var platformSettingsSequence = new YamlSequenceNode();
+			//var defaultPlatformSettings = new YamlMappingNode
+			//{
+			//	{ "buildTarget", new YamlScalarNode("DefaultTexturePlatform") },
+			//	{ "maxTextureSize", new YamlScalarNode("2048") },
+			//	{ "resizeAlgorithm", new YamlScalarNode("0") },
+			//	{ "textureCompression", new YamlScalarNode("1") },
+			//	{ "compressionQuality", new YamlScalarNode("50") },
+			//	{ "crunchedCompression", new YamlScalarNode("0") },
+			//	{ "allowsAlphaSplitting", new YamlScalarNode("0") },
+			//	{ "overridden", new YamlScalarNode("0") }
+			//};
+			//platformSettingsSequence.Add(defaultPlatformSettings);
+			//textureImporter.Add("platformSettings", platformSettingsSequence);
 
-			textureImporter.Add("platformSettings", platformSettingsSequence);
 			return textureImporter;
 		}
 
-		private static void WriteTileAsset(Tile tile, Dictionary<Tile, long> uids, UnityPackageWriter writer, string tileLocation, Guid imageGuid)
-		{
-			var tileEntry = MakeEmptyEntry($"{tileLocation}/{tile.Name}.asset");
-			var root = new YamlMappingNode();
-			var doc = new YamlDocument(root);
+		//private static void WriteTileAsset(Tile tile, Dictionary<Tile, long> uids, UnityPackageWriter writer, string tileLocation, Guid imageGuid)
+		//{
+		//	var (asset, metadata, monoBehaviourNode) = 
+		//		UnityAssetFactory.MakeScriptableObject($"{tileLocation}/{tile.Name}.asset", Guid.Parse("0000000000000000e000000000000000"));
 
-			// Build root mapping (MonoBehaviour)
-			var monoBehaviourNode = new YamlMappingNode
-			{
-				{ "m_ObjectHideFlags", new YamlScalarNode("0") },
-				{ "m_CorrespondingSourceObject", new YamlMappingNode { { "fileID", new YamlScalarNode("0") } } },
-				{ "m_PrefabInstance", new YamlMappingNode { { "fileID", new YamlScalarNode("0") } } },
-				{ "m_PrefabAsset", new YamlMappingNode { { "fileID", new YamlScalarNode("0") } } },
-				{ "m_GameObject", new YamlMappingNode { { "fileID", new YamlScalarNode("0") } } },
-				{ "m_Enabled", new YamlScalarNode("1") },
-				{ "m_EditorHideFlags", new YamlScalarNode("0") },
+		//	var scriptNode = (YamlMappingNode)monoBehaviourNode["m_Script"]; 
+		//	scriptNode.Children["fileID"] =  new YamlScalarNode("13312");
+		//	scriptNode.Children["type"] = "0";
+		//	monoBehaviourNode.Children["m_EditorClassIdentifier"] = "UnityEngine.dll::UnityEngine.Tilemaps.Tile";
+		//	monoBehaviourNode.Children.Add("m_Sprite", new YamlMappingNode()
+		//	{
+		//		{ "fileID", new YamlScalarNode(uids[tile].ToString()) },
+		//		{ "guid", new YamlScalarNode(imageGuid.ToString("N")) },
+		//		{ "type", new YamlScalarNode("3") }
+		//	});
 
-				{
-					"m_Script",
-					new YamlMappingNode
-					{
-						{ "fileID", new YamlScalarNode("13312") },
-						{ "guid", new YamlScalarNode("0000000000000000e000000000000000") },
-						{ "type", new YamlScalarNode("0") }
-					}
-				},
-
-				{ "m_Name", new YamlScalarNode(tile.Name) },
-				{ "m_EditorClassIdentifier", new YamlScalarNode("UnityEngine.dll::UnityEngine.Tilemaps.Tile") },
-
-				{
-					"m_Sprite",
-					new YamlMappingNode()
-					{
-						{ "fileID", new YamlScalarNode(uids[tile].ToString()) },
-						{ "guid", new YamlScalarNode(imageGuid.ToString("N")) },
-						{ "type", new YamlScalarNode("3") }
-					}
-				}
-			};
-
-			root.Add("MonoBehaviour", monoBehaviourNode);
-
-			tileEntry.DataStream = new MemoryStream();
-			YamlStream ys = new YamlStream(doc);
-			using (var sw = new StreamWriter(tileEntry.DataStream, leaveOpen: true))
-			{
-				ys.Save(sw);
-			}
-			tileEntry.DataStream.Flush();
-			tileEntry.DataStream.Position = 0;
-
-			writer.WriteEntry(tileEntry);
-		}
+		//	var tileEntry = UnityPackageEntryFactory.Combine(asset, metadata);
+		//	writer.WriteEntry(tileEntry);
+		//}
 	}
 }

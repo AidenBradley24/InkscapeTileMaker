@@ -8,7 +8,6 @@ using SkiaSharp;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.IO.Compression;
-using System.IO.Pipes;
 using UnityPackageNET;
 
 namespace InkscapeTileMaker.ViewModels
