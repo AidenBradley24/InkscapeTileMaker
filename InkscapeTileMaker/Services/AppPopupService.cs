@@ -31,7 +31,7 @@ namespace InkscapeTileMaker.Services
 				CanBeDismissedByTappingOutsideOfPopup = false
 			};
 
-			await PopupExtensions.ShowPopupAsync(_windowProvider.Navigation, view, opts);
+			await PopupExtensions.ShowPopupAsync(_windowProvider.NavPage, view, opts);
 			return vm.Result;
 		}
 
@@ -43,7 +43,7 @@ namespace InkscapeTileMaker.Services
 			};
 
 			var view = new TextPopup(vm);
-			await PopupExtensions.ShowPopupAsync(_windowProvider.Navigation, view, PopupOptions.Empty);
+			await PopupExtensions.ShowPopupAsync(_windowProvider.NavPage, view, PopupOptions.Empty);
 		}
 
 		public async Task ShowProgressOnTaskAsync(string message, bool isIndeterminate, Func<IProgress<double>, Task> progressAction)
@@ -60,7 +60,7 @@ namespace InkscapeTileMaker.Services
 				CanBeDismissedByTappingOutsideOfPopup = false
 			};
 
-			var popupTask = PopupExtensions.ShowPopupAsync(_windowProvider.Navigation, view, opts);
+			var popupTask = PopupExtensions.ShowPopupAsync(_windowProvider.NavPage, view, opts);
 			var workTask = progressAction.Invoke(vm.ProgressReporter);
 			await workTask.ConfigureAwait(continueOnCapturedContext: false);
 			await MainThread.InvokeOnMainThreadAsync(view.RequestClose);

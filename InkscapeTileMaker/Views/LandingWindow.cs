@@ -31,6 +31,8 @@ public class LandingWindow : Window, ILandingNavigation, IWindowProvider
 
 	public Page CurrentPage => _nav.CurrentPage;
 
+	public NavigationPage NavPage => _nav;
+
 	public void CloseWindow()
 	{
 		throw new NotImplementedException();

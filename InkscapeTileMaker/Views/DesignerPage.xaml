@@ -69,6 +69,10 @@
             <MenuFlyoutItem Text="Exit"
                              Command="{Binding ExitCommand}" />
         </MenuBarItem>
+        <MenuBarItem Text="Edit">
+            <MenuFlyoutItem Text="Settings"
+                             Command="{Binding OpenSettingsCommand}" />
+        </MenuBarItem>
         <MenuBarItem Text="Export">
             <MenuFlyoutSubItem Text="Tileset Image">
                 <MenuFlyoutItem Text="PNG"

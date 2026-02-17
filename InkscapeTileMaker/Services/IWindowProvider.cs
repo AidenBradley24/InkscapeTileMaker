@@ -3,7 +3,7 @@
 	public interface IWindowProvider
 	{
 		public IAppPopupService PopupService { get; }
-		public INavigation Navigation { get; }
+		public NavigationPage NavPage { get; }
 		public Page CurrentPage { get; }
 		public void CloseWindow();
 	}

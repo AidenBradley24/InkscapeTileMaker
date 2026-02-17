@@ -49,6 +49,8 @@ namespace InkscapeTileMaker
 			builder.Services.AddTransient<DesignerWindow>()
 				.AddTransient<DesignerPage, DesignerViewModel>();
 
+			builder.Services.AddTransient<SettingsPage, SettingsViewModel>();
+
 			return builder.Build();
 		}
 	}

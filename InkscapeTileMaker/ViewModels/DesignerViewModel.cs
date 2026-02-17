@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Models;
 using InkscapeTileMaker.Services;
 using InkscapeTileMaker.Utility;
+using InkscapeTileMaker.Views;
 using SkiaSharp;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -19,6 +20,7 @@ namespace InkscapeTileMaker.ViewModels
 		private readonly ITilesetRenderingService _svgRenderingService;
 		private readonly IFileSaver _fileSaver;
 		private readonly IUnityPackageService _unityPackageService;
+		private readonly IServiceProvider _serviceProvider;
 
 		private IWindowProvider? _windowProvider;
 
@@ -100,7 +102,7 @@ namespace InkscapeTileMaker.ViewModels
 
 		const int TILEMAP_SCALE = 12;
 
-		public DesignerViewModel(
+		public DesignerViewModel(IServiceProvider serviceProvider,
 			IWindowOpeningService windowService, 
 			ITilesetRenderingService renderingService, 
 			IFileSaver fileSaver, 
@@ -110,6 +112,7 @@ namespace InkscapeTileMaker.ViewModels
 			_svgRenderingService = renderingService;
 			_fileSaver = fileSaver;
 			_unityPackageService = unityPackageService;
+			_serviceProvider = serviceProvider;
 
 			_inContextTilemap = new TilemapViewModel(TILEMAP_SCALE, TILEMAP_SCALE);
 			PreviewTilemap = _inContextTilemap;
@@ -906,6 +909,14 @@ namespace InkscapeTileMaker.ViewModels
 		public async Task Exit()
 		{
 			CloseRequested.Invoke();
+		}
+
+		[RelayCommand]
+		public async Task OpenSettings()
+		{
+			var task = _windowProvider?.NavPage.PushAsync(_serviceProvider.GetRequiredService<SettingsPage>());
+			if (task == null) return;
+			await task;
 		}
 
 		[RelayCommand]

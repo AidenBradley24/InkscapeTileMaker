@@ -17,6 +17,8 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 
 	public Page CurrentPage => _nav.CurrentPage;
 
+	public NavigationPage NavPage => _nav;
+
 	public DesignerWindow(DesignerViewModel vm)
 	{
 		_nav = new NavigationPage(new DesignerPage(vm));
@@ -60,16 +62,6 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 		{
 			viewModel.CloseRequested -= OnCloseRequested;
 		}
-	}
-
-	public INavigation GetNavigation()
-	{
-		return _nav.Navigation;
-	}
-
-	public Page GetCurrentPage()
-	{
-		return _nav.CurrentPage;
 	}
 
 	public void CloseWindow()
