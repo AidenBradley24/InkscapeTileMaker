@@ -40,6 +40,7 @@ namespace InkscapeTileMaker
 			builder.Services.AddSingleton<IFileSaver>(FileSaver.Default);
 			builder.Services.AddSingleton<ITemplateService, TemplateService>();
 			builder.Services.AddTransient<IAppPopupService, AppPopupService>();
+			builder.Services.AddTransient<IUnityPackageService, UnityPackageService>();
 
 			// Windows + pages + viewmodels
 			builder.Services.AddTransient<LandingWindow>()

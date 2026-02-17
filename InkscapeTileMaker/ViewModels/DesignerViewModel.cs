@@ -18,6 +18,7 @@ namespace InkscapeTileMaker.ViewModels
 		private readonly IWindowOpeningService _windowService;
 		private readonly ITilesetRenderingService _svgRenderingService;
 		private readonly IFileSaver _fileSaver;
+		private readonly IUnityPackageService _unityPackageService;
 
 		private IWindowProvider? _windowProvider;
 
@@ -99,18 +100,23 @@ namespace InkscapeTileMaker.ViewModels
 
 		const int TILEMAP_SCALE = 12;
 
-		public DesignerViewModel(IWindowOpeningService windowService, ITilesetRenderingService renderingService, IFileSaver fileSaver)
+		public DesignerViewModel(
+			IWindowOpeningService windowService, 
+			ITilesetRenderingService renderingService, 
+			IFileSaver fileSaver, 
+			IUnityPackageService unityPackageService)
 		{
 			_windowService = windowService;
 			_svgRenderingService = renderingService;
 			_fileSaver = fileSaver;
-			SelectedZoomLevel = 1.0m;
+			_unityPackageService = unityPackageService;
 
 			_inContextTilemap = new TilemapViewModel(TILEMAP_SCALE, TILEMAP_SCALE);
-			_paintTilemap = new TilemapViewModel(TILEMAP_SCALE, TILEMAP_SCALE);
 			PreviewTilemap = _inContextTilemap;
-
+			_paintTilemap = new TilemapViewModel(TILEMAP_SCALE, TILEMAP_SCALE);
 			_paintTilemap.NeedsRedraw += () => CanvasNeedsRedraw.Invoke();
+
+			SelectedZoomLevel = 1.0m;
 		}
 
 		public void RegisterWindow(IWindowProvider windowProvider)
@@ -1173,11 +1179,10 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			if (_tilesetConnection?.CurrentFile == null) return;
 			if (_tilesetConnection.Tileset == null) return;
-			var tileset = _tilesetConnection.Tileset;
 			var tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.unitypackage"));
 			using (var writer = new UnityPackageWriter(tmpFile.OpenWrite(), leaveOpen: false))
 			{
-				await UnityPackageFactoryExtensions.WriteTileAssetsAsync(_tilesetConnection, _svgRenderingService, writer);
+				await _unityPackageService.WriteTilesetPackageAsync(writer, _tilesetConnection, _svgRenderingService);
 			}
 			using (var fs = tmpFile.OpenRead())
 			{
