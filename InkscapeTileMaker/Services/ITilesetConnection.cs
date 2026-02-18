@@ -6,7 +6,7 @@
 
 		public FileInfo? CurrentFile { get; }
 
-		public event Action<ITileset> TilesetChanged;
+		public event Action<ITilesetConnection> TilesetChanged;
 
 		public Task SaveAsync(FileInfo file);
 

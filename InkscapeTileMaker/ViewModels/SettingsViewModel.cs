@@ -1,11 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using InkscapeTileMaker.Services;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace InkscapeTileMaker.ViewModels

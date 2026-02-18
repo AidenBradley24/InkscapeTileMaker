@@ -25,7 +25,7 @@
 			get => Preferences.Get(UnityExportTilesKey, UnityExportTilesDefault);
 			set => Preferences.Set(UnityExportTilesKey, value);
 		}
-		
+
 		const string UnityEditorScriptPathKey = "unity_editor_script_path";
 		const string UnityEditorScriptPathDefault = "Assets/Editor/Tiles";
 		public string UnityEditorScriptPath

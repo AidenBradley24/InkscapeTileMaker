@@ -103,9 +103,9 @@ namespace InkscapeTileMaker.ViewModels
 		const int TILEMAP_SCALE = 12;
 
 		public DesignerViewModel(IServiceProvider serviceProvider,
-			IWindowOpeningService windowService, 
-			ITilesetRenderingService renderingService, 
-			IFileSaver fileSaver, 
+			IWindowOpeningService windowService,
+			ITilesetRenderingService renderingService,
+			IFileSaver fileSaver,
 			IUnityPackageService unityPackageService)
 		{
 			_windowService = windowService;
@@ -129,16 +129,13 @@ namespace InkscapeTileMaker.ViewModels
 
 		public void SetTilesetConnection(ITilesetConnection connection)
 		{
-			if (_tilesetConnection != null)
-			{
-				_tilesetConnection.TilesetChanged -= OnTilesetChanged;
-			}
+			_tilesetConnection?.TilesetChanged -= OnTilesetChanged;
 
 			_tilesetConnection = connection;
 			_tilesetConnection.TilesetChanged += OnTilesetChanged;
 			if (_tilesetConnection.Tileset != null)
 			{
-				OnTilesetChanged(_tilesetConnection.Tileset);
+				OnTilesetChanged(_tilesetConnection);
 			}
 		}
 
@@ -195,15 +192,15 @@ namespace InkscapeTileMaker.ViewModels
 
 		#endregion
 
-		private void OnTilesetChanged(ITileset tileset)
+		private void OnTilesetChanged(ITilesetConnection conn)
 		{
 			MainThread.BeginInvokeOnMainThread(() =>
 			{
-				RecalculateTileset(tileset);
+				RecalculateTileset(conn);
 			});
 		}
 
-		private void RecalculateTileset(ITileset tileset)
+		private void RecalculateTileset(ITilesetConnection conn)
 		{
 			_renderedBitmap?.Dispose();
 			_renderedBitmap = null;
@@ -214,10 +211,15 @@ namespace InkscapeTileMaker.ViewModels
 			}
 			_tileBitmaps.Clear();
 
-			var file = _tilesetConnection!.CurrentFile;
-			FileName = file?.Name;
-			if (file == null) return;
+			FileName = conn.CurrentFile?.Name;
+			if (conn.CurrentFile == null)
+			{
+				Tiles.Clear();
+				return;
+			}
 
+			var file = conn.CurrentFile;
+			var tileset = conn.Tileset!;
 			TileSize = tileset.TileSize;
 
 			var newTiles = tileset.GetAllTileViewModels(this);

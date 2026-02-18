@@ -17,7 +17,7 @@ namespace InkscapeTileMaker.Services
 			{
 				FileName = Environment.ExpandEnvironmentVariables(_settingsService.InkscapePath),
 				UseShellExecute = false,
-				CreateNoWindow = false,
+				CreateNoWindow = true,
 			};
 		}
 	}

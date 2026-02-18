@@ -1,6 +1,7 @@
 ﻿using InkscapeTileMaker.Models;
 using InkscapeTileMaker.Utility;
 using InkscapeTileMaker.ViewModels;
+using System.Diagnostics;
 using System.Xml.Linq;
 
 namespace InkscapeTileMaker.Services;
@@ -8,6 +9,7 @@ namespace InkscapeTileMaker.Services;
 public partial class InkscapeSvgConnectionService : ITilesetConnection
 {
 	private readonly IServiceProvider _services;
+	private readonly IWindowProvider _windowProvider;
 
 	private FileInfo? _file;
 
@@ -15,7 +17,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 
 	public FileInfo? CurrentFile => _file;
 
-	public event Action<ITileset> TilesetChanged = delegate { };
+	public event Action<ITilesetConnection> TilesetChanged = delegate { };
 
 	private InkscapeSvg? _svg;
 
@@ -23,9 +25,10 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 
 	private bool isLoading = false;
 
-	public InkscapeSvgConnectionService(IServiceProvider services)
+	public InkscapeSvgConnectionService(IServiceProvider services, IWindowProvider windowProvider)
 	{
 		_services = services;
+		_windowProvider = windowProvider;
 	}
 
 	public async Task LoadAsync(FileInfo file)
@@ -48,7 +51,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 					_svg = new InkscapeSvg(stream);
 					_file = file;
 					Tileset = new InkscapeSvgTileset(this);
-					TilesetChanged.Invoke(Tileset);
+					TilesetChanged.Invoke(this);
 
 					SetupWatcher(file);
 					return;
@@ -70,10 +73,54 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 
 	private void SetupWatcher(FileInfo file)
 	{
+		_fileWatcher?.Dispose();
+
 		_fileWatcher = new FileSystemWatcher(file.DirectoryName!, file.Name)
 		{
-			NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Attributes,
-			EnableRaisingEvents = true
+			NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Attributes | NotifyFilters.FileName,
+			EnableRaisingEvents = true,
+			IncludeSubdirectories = false
+		};
+
+		_fileWatcher.Deleted += async (_, _) =>
+		{
+			if (!File.Exists(file.FullName))
+			{
+				await MainThread.InvokeOnMainThreadAsync(async () =>
+				{
+					await _windowProvider.NavPage.DisplayAlertAsync(
+						"File Deleted",
+						$"The file {file.FullName} has been deleted. The designer will now be cleared.",
+						"OK");
+				});
+
+				_svg = null;
+				_file = null;
+				Tileset = null;
+				TilesetChanged.Invoke(this);
+			}
+		};
+
+		_fileWatcher.Renamed += async (_, e) =>
+		{
+			// If the original file name was changed, treat it as a deletion of the current file
+			if (string.Equals(e.OldFullPath, file.FullName, StringComparison.OrdinalIgnoreCase))
+			{
+				if (!File.Exists(file.FullName))
+				{
+					await MainThread.InvokeOnMainThreadAsync(async () =>
+					{
+						await _windowProvider.NavPage.DisplayAlertAsync(
+							"File Deleted",
+							$"The file {file.FullName} has been deleted. The designer will now be cleared.",
+							"OK");
+					});
+					_svg = null;
+					_file = null;
+					Tileset = null;
+					TilesetChanged.Invoke(this);
+				}
+			}
 		};
 
 		_fileWatcher.Changed += async (_, _) =>
@@ -85,7 +132,14 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 			}
 			catch (IOException)
 			{
-				// log / swallow / schedule another retry
+				Trace.WriteLine($"File {file.FullName} is currently inaccessible. Changes will be loaded when the file becomes available.");
+				await MainThread.InvokeOnMainThreadAsync(async () =>
+				{
+					await _windowProvider.NavPage.DisplayAlertAsync(
+						"File Inaccessible",
+						$"File {file.FullName} is currently inaccessible. Changes will be loaded when the file becomes available.",
+						"OK");
+				});
 			}
 		};
 	}
@@ -151,7 +205,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 		}
 		element = tile.ToXElement();
 		collectionElement.Add(element);
-		TilesetChanged.Invoke(Tileset!);
+		TilesetChanged.Invoke(this);
 		return true;
 	}
 
@@ -169,7 +223,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 			element = tile.ToXElement();
 			collectionElement.Add(element);
 		}
-		TilesetChanged.Invoke(Tileset!);
+		TilesetChanged.Invoke(this);
 		return true;
 	}
 
@@ -184,7 +238,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 			return false;
 		}
 		element.Remove();
-		TilesetChanged.Invoke(Tileset!);
+		TilesetChanged.Invoke(this);
 		return true;
 	}
 
@@ -193,7 +247,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
 		XElement collectionElement = _svg.GetOrCreateTileCollectionElement();
 		collectionElement.RemoveAll();
-		TilesetChanged.Invoke(Tileset!);
+		TilesetChanged.Invoke(this);
 	}
 
 	public Scale GetTileSize()
@@ -259,7 +313,6 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 				}
 			}
 		}
-
-		TilesetChanged.Invoke(Tileset!);
+		TilesetChanged.Invoke(this);
 	}
 }

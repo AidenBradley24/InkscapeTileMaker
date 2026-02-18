@@ -24,7 +24,7 @@ public class WindowOpeningService : IWindowOpeningService
 			ITilesetConnection connection;
 			if (file.Extension.Equals(".svg", StringComparison.OrdinalIgnoreCase))
 			{
-				connection = new InkscapeSvgConnectionService(_services);
+				connection = new InkscapeSvgConnectionService(_services, designerWindow);
 			}
 			else
 			{

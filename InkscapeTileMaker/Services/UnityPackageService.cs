@@ -1,9 +1,9 @@
-﻿using System.Text.Json;
+﻿using InkscapeTileMaker.Models;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using UnityPackageNET;
 using UnityPackageNET.Metadata;
 using YamlDotNet.RepresentationModel;
-using InkscapeTileMaker.Models;
 
 namespace InkscapeTileMaker.Services
 {
