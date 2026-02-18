@@ -5,10 +5,207 @@
              xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels"
              Title="Settings"
              x:DataType="vms:SettingsViewModel">
-    <VerticalStackLayout>
-        <Label 
-            Text="Settings"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+
+    <ContentPage.Resources>
+        <Style x:Key="ErrorEntryStyle" TargetType="Entry">
+            <Setter Property="TextColor" Value="Red" />
+            <Setter Property="BackgroundColor" Value="#20FF0000" />
+        </Style>
+    </ContentPage.Resources>
+
+    <!-- Single Grid layout with all content -->
+    <Grid Padding="16" RowSpacing="8" ColumnSpacing="8">
+        <Grid.RowDefinitions>
+            <!-- General header -->
+            <RowDefinition Height="Auto" />
+            <!-- Inkscape path label + entry -->
+            <RowDefinition Height="Auto" />
+            <!-- Inkscape error -->
+            <RowDefinition Height="Auto" />
+
+            <!-- Unity header -->
+            <RowDefinition Height="Auto" />
+            <!-- Unity image export path label + entry -->
+            <RowDefinition Height="Auto" />
+            <!-- Unity image export error -->
+            <RowDefinition Height="Auto" />
+
+            <!-- Unity export tiles label + switch -->
+            <RowDefinition Height="Auto" />
+
+            <!-- Unity editor script path label + entry -->
+            <RowDefinition Height="Auto" />
+            <!-- Unity editor script path error -->
+            <RowDefinition Height="Auto" />
+
+            <!-- Unity script path label + entry -->
+            <RowDefinition Height="Auto" />
+            <!-- Unity script path error -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- General Settings Section -->
+        <Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+               Text="General Settings"
+               FontAttributes="Bold"
+               FontSize="18"
+               Margin="0,0,0,4"/>
+
+        <!-- Inkscape Path Label -->
+        <Label Grid.Row="1" Grid.Column="0"
+               Text="Inkscape Path:"
+               VerticalOptions="Center" />
+
+        <!-- Inkscape Path Entry -->
+        <Entry Grid.Row="1" Grid.Column="1"
+               Text="{Binding InkscapePath, Mode=TwoWay}"
+               VerticalOptions="Center">
+            <Entry.Triggers>
+                <DataTrigger TargetType="Entry"
+                             Binding="{Binding InkscapePathError}"
+                             Value="{x:Null}">
+                </DataTrigger>
+                <DataTrigger TargetType="Entry"
+                             Binding="{Binding InkscapePathError}"
+                             Value="">
+                </DataTrigger>
+                <DataTrigger TargetType="Entry"
+                             Binding="{Binding InkscapePathError, Converter={x:Static x:Boolean.FalseString}}"
+                             Value="False">
+                </DataTrigger>
+            </Entry.Triggers>
+        </Entry>
+
+        <!-- Inkscape Error -->
+        <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+               Text="{Binding InkscapePathError}"
+               TextColor="Red"
+               FontSize="12"
+               IsVisible="{Binding InkscapePathError, Converter={x:Static x:Reference NotNullToBool}}" />
+
+        <!-- Unity Settings Section Label -->
+        <Label Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+               Text="Unity Settings"
+               FontAttributes="Bold"
+               FontSize="18"
+               Margin="0,16,0,4"/>
+
+        <!-- Unity Image Export Path Label -->
+        <Label Grid.Row="4" Grid.Column="0"
+               Text="Unity Image Export Path:"
+               VerticalOptions="Center" />
+
+        <!-- Unity Image Export Path Entry -->
+        <Entry Grid.Row="4" Grid.Column="1"
+               Text="{Binding UnityImageExportPath, Mode=TwoWay}"
+               VerticalOptions="Center">
+            <Entry.Triggers>
+                <DataTrigger TargetType="Entry"
+                             Binding="{Binding UnityImageExportPathError}"
+                             Value="{x:Null}">
+                </DataTrigger>
+                <DataTrigger TargetType="Entry"
+                             Binding="{Binding UnityImageExportPathError}"
+                             Value="">
+                </DataTrigger>
+                <DataTrigger TargetType="Entry"
+                             Binding="{Binding UnityImageExportPathError, Converter={x:Static x:Boolean.FalseString}}"
+                             Value="False">
+                </DataTrigger>
+            </Entry.Triggers>
+        </Entry>
+
+        <!-- Unity Image Export Error -->
+        <Label Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"
+               Text="{Binding UnityImageExportPathError}"
+               TextColor="Red"
+               FontSize="12"
+               IsVisible="{Binding UnityImageExportPathError, Converter={x:Static x:Reference NotNullToBool}}" />
+
+        <!-- Unity Export Tiles Label -->
+        <Label Grid.Row="6" Grid.Column="0"
+               Text="Export Tiles to Unity:"
+               VerticalOptions="Center"
+               Margin="0,8,0,0" />
+
+        <!-- Unity Export Tiles Switch -->
+        <Switch Grid.Row="6" Grid.Column="1"
+                IsToggled="{Binding UnityExportTiles, Mode=TwoWay}"
+                VerticalOptions="Center"
+                Margin="0,8,0,0" />
+
+        <!-- Unity Editor Script Path Label -->
+        <Label Grid.Row="7" Grid.Column="0"
+               Text="Unity Editor Script Path:"
+               VerticalOptions="Center"
+               Margin="0,8,0,0" />
+
+        <!-- Unity Editor Script Path Entry -->
+        <Entry Grid.Row="7" Grid.Column="1"
+               Text="{Binding UnityEditorScriptPath, Mode=TwoWay}"
+               VerticalOptions="Center"
+               Margin="0,8,0,0">
+            <Entry.Triggers>
+                <DataTrigger TargetType="Entry"
+                             Binding="{Binding UnityEditorScriptPathError}"
+                             Value="{x:Null}">
+                </DataTrigger>
+                <DataTrigger TargetType="Entry"
+                             Binding="{Binding UnityEditorScriptPathError}"
+                             Value="">
+                </DataTrigger>
+                <DataTrigger TargetType="Entry"
+                             Binding="{Binding UnityEditorScriptPathError, Converter={x:Static x:Boolean.FalseString}}"
+                             Value="False">
+                </DataTrigger>
+            </Entry.Triggers>
+        </Entry>
+
+        <!-- Unity Editor Script Path Error -->
+        <Label Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2"
+               Text="{Binding UnityEditorScriptPathError}"
+               TextColor="Red"
+               FontSize="12"
+               IsVisible="{Binding UnityEditorScriptPathError, Converter={x:Static x:Reference NotNullToBool}}" />
+
+        <!-- Unity Script Path Label -->
+        <Label Grid.Row="9" Grid.Column="0"
+               Text="Unity Script Path:"
+               VerticalOptions="Center"
+               Margin="0,8,0,0" />
+
+        <!-- Unity Script Path Entry -->
+        <Entry Grid.Row="9" Grid.Column="1"
+               Text="{Binding UnityScriptPath, Mode=TwoWay}"
+               VerticalOptions="Center"
+               Margin="0,8,0,0">
+            <Entry.Triggers>
+                <DataTrigger TargetType="Entry"
+                             Binding="{Binding UnityScriptPathError}"
+                             Value="{x:Null}">
+                </DataTrigger>
+                <DataTrigger TargetType="Entry"
+                             Binding="{Binding UnityScriptPathError}"
+                             Value="">
+                </DataTrigger>
+                <DataTrigger TargetType="Entry"
+                             Binding="{Binding UnityScriptPathError, Converter={x:Static x:Boolean.FalseString}}"
+                             Value="False">
+                </DataTrigger>
+            </Entry.Triggers>
+        </Entry>
+
+        <!-- Unity Script Path Error -->
+        <Label Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2"
+               Text="{Binding UnityScriptPathError}"
+               TextColor="Red"
+               FontSize="12"
+               IsVisible="{Binding UnityScriptPathError, Converter={x:Static x:Reference NotNullToBool}}" />
+
+    </Grid>
 </ContentPage>
