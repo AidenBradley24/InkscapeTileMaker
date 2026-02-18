@@ -315,4 +315,10 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 		}
 		TilesetChanged.Invoke(this);
 	}
+
+	public void OpenInExternalEditor()
+	{
+		if (CurrentFile == null) return;
+		_services.GetRequiredService<IInkscapeService>().OpenFileInInkscape(CurrentFile);
+	}
 }

@@ -2,62 +2,17 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    version="1.0"
    viewBox="0 0 128 128"
    width="128"
    height="128"
-   id="svg2"
-   sodipodi:docname="inkscape-tilemaker-logo.svg"
-   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <sodipodi:namedview
-     id="namedview1"
-     pagecolor="#505050"
-     bordercolor="#ffffff"
-     borderopacity="1"
-     inkscape:showpageshadow="0"
-     inkscape:pageopacity="0"
-     inkscape:pagecheckerboard="1"
-     inkscape:deskcolor="#505050"
-     inkscape:zoom="14.03125"
-     inkscape:cx="63.964365"
-     inkscape:cy="58.298441"
-     inkscape:window-width="3840"
-     inkscape:window-height="2036"
-     inkscape:window-x="3828"
-     inkscape:window-y="-12"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="svg2" />
+   id="svg2">
   <defs
      id="defs4">
-    <linearGradient
-       id="linearGradient17"
-       inkscape:collect="always">
-      <stop
-         style="stop-color:#371858;stop-opacity:1;"
-         offset="0"
-         id="stop18" />
-      <stop
-         style="stop-color:#000000;stop-opacity:1;"
-         offset="1"
-         id="stop19" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient16"
-       inkscape:collect="always">
-      <stop
-         style="stop-color:#440055;stop-opacity:1;"
-         offset="0"
-         id="stop16" />
-      <stop
-         style="stop-color:#210028;stop-opacity:1;"
-         offset="1"
-         id="stop17" />
-    </linearGradient>
     <linearGradient
        id="WhiteTransparent"
        gradientUnits="userSpaceOnUse">
@@ -122,11 +77,7 @@
     </filter>
     <filter
        id="filter6017-3"
-       color-interpolation-filters="sRGB"
-       x="-0.017255854"
-       y="-0.017528899"
-       width="1.0345117"
-       height="1.0350578">
+       color-interpolation-filters="sRGB">
       <feGaussianBlur
          id="feGaussianBlur6019-9"
          stdDeviation="0.80546496"
@@ -134,11 +85,7 @@
     </filter>
     <filter
        id="filter6031-0"
-       color-interpolation-filters="sRGB"
-       x="-0.074775365"
-       y="-0.075958553"
-       width="1.1495507"
-       height="1.1519171">
+       color-interpolation-filters="sRGB">
       <feGaussianBlur
          id="feGaussianBlur6033-8"
          stdDeviation="3.4903482"
@@ -178,11 +125,7 @@
     </clipPath>
     <filter
        id="filter8490-0"
-       color-interpolation-filters="sRGB"
-       x="-0.051767563"
-       y="-0.052586698"
-       width="1.1035351"
-       height="1.1051734">
+       color-interpolation-filters="sRGB">
       <feGaussianBlur
          id="feGaussianBlur8492-5"
          stdDeviation="2.4163949"
@@ -249,10 +192,10 @@
        gradientUnits="userSpaceOnUse"
        gradientTransform="matrix(2.0032532,0,0,1.340898,-132.8752,-95.166065)" />
     <filter
-       height="1.2284413"
-       y="-0.11422066"
+       height="1.2284414"
+       y="-0.11422065"
        width="1.1561583"
-       x="-0.078079153"
+       x="-0.078079157"
        id="filter8732-3"
        color-interpolation-filters="sRGB">
       <feGaussianBlur
@@ -295,7 +238,7 @@
        height="1.3508246"
        y="-0.1754123"
        width="1.1485243"
-       x="-0.07426214"
+       x="-0.074262142"
        id="filter8764-9"
        color-interpolation-filters="sRGB">
       <feGaussianBlur
@@ -331,10 +274,10 @@
        xlink:href="#linearGradient8866-0"
        gradientUnits="userSpaceOnUse" />
     <filter
-       height="1.6333958"
-       y="-0.31669791"
-       width="1.1922431"
-       x="-0.096121549"
+       height="1.556464"
+       y="-0.27823201"
+       width="1.1708827"
+       x="-0.085441329"
        id="filter8906-3"
        color-interpolation-filters="sRGB">
       <feGaussianBlur
@@ -365,9 +308,9 @@
     </linearGradient>
     <filter
        height="1.9457178"
-       y="-0.47285892"
-       width="1.1553929"
-       x="-0.077696454"
+       y="-0.47285891"
+       width="1.1397254"
+       x="-0.069862768"
        id="filter8980-1"
        color-interpolation-filters="sRGB">
       <feGaussianBlur
@@ -461,8 +404,8 @@
     </linearGradient>
     <filter
        height="1.3311402"
-       y="-0.16557009"
-       width="1.1523586"
+       y="-0.1655701"
+       width="1.1523587"
        x="-0.076179281"
        id="filter9068-2"
        color-interpolation-filters="sRGB">
@@ -494,11 +437,7 @@
     </linearGradient>
     <filter
        id="filter9298-4"
-       color-interpolation-filters="sRGB"
-       x="-0.0094255291"
-       y="-0.009565116"
-       width="1.0188083"
-       height="1.0191444">
+       color-interpolation-filters="sRGB">
       <feGaussianBlur
          id="feGaussianBlur9300-4"
          stdDeviation="0.32610678"
@@ -527,7 +466,7 @@
        height="1.2446715"
        y="-0.12233575"
        width="1.165018"
-       x="-0.082508983"
+       x="-0.082508981"
        id="filter5983-8"
        color-interpolation-filters="sRGB">
       <feGaussianBlur
@@ -578,11 +517,7 @@
     </linearGradient>
     <filter
        id="filter5845-5"
-       color-interpolation-filters="sRGB"
-       x="-0.067752083"
-       y="-0.053323477"
-       width="1.1355042"
-       height="1.106647">
+       color-interpolation-filters="sRGB">
       <feGaussianBlur
          id="feGaussianBlur5847-5"
          stdDeviation="1.2409356"
@@ -610,11 +545,7 @@
     </linearGradient>
     <filter
        id="filter10997-7-2"
-       color-interpolation-filters="sRGB"
-       x="-0.059367484"
-       y="-0.040286148"
-       width="1.118735"
-       height="1.0805723">
+       color-interpolation-filters="sRGB">
       <feGaussianBlur
          id="feGaussianBlur10999-0-7"
          stdDeviation="2.7696726"
@@ -629,123 +560,6 @@
        xlink:href="#linearGradient10981-3-9"
        gradientUnits="userSpaceOnUse"
        gradientTransform="translate(-130.16572,-83.352786)" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient16"
-       id="radialGradient17"
-       cx="94.218269"
-       cy="32.21381"
-       fx="94.218269"
-       fy="32.21381"
-       r="22.311804"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.76409542,-0.95960195,0.4707432,0.37483533,7.0621133,110.55097)" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient17"
-       id="linearGradient19"
-       x1="72.619156"
-       y1="54.23608"
-       x2="113.39424"
-       y2="12.68597"
-       gradientUnits="userSpaceOnUse" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient16"
-       id="radialGradient17-4"
-       cx="94.218269"
-       cy="32.21381"
-       fx="94.218269"
-       fy="32.21381"
-       r="22.311804"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.76409542,-0.95960195,0.4707432,0.37483533,-3.9468009,123.67569)" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient17"
-       id="linearGradient20"
-       gradientUnits="userSpaceOnUse"
-       x1="72.619156"
-       y1="54.23608"
-       x2="113.39424"
-       y2="12.68597"
-       gradientTransform="translate(-11.008914,13.124721)" />
-    <filter
-       style="color-interpolation-filters:sRGB;"
-       inkscape:label="Drop Shadow"
-       id="filter31"
-       x="-0.2264693"
-       y="-0.2264693"
-       width="1.5021711"
-       height="1.5514035">
-      <feFlood
-         result="flood"
-         in="SourceGraphic"
-         flood-opacity="0.498039"
-         flood-color="rgb(0,0,0)"
-         id="feFlood30" />
-      <feGaussianBlur
-         result="blur"
-         in="SourceGraphic"
-         stdDeviation="3.000000"
-         id="feGaussianBlur30" />
-      <feOffset
-         result="offset"
-         in="blur"
-         dx="2.000000"
-         dy="4.000000"
-         id="feOffset30" />
-      <feComposite
-         result="comp1"
-         operator="in"
-         in="flood"
-         in2="offset"
-         id="feComposite30" />
-      <feComposite
-         result="comp2"
-         operator="over"
-         in="SourceGraphic"
-         in2="comp1"
-         id="feComposite31" />
-    </filter>
-    <filter
-       style="color-interpolation-filters:sRGB;"
-       inkscape:label="Drop Shadow"
-       id="filter33"
-       x="-0.2264693"
-       y="-0.2264693"
-       width="1.5021711"
-       height="1.5514035">
-      <feFlood
-         result="flood"
-         in="SourceGraphic"
-         flood-opacity="0.498039"
-         flood-color="rgb(0,0,0)"
-         id="feFlood31" />
-      <feGaussianBlur
-         result="blur"
-         in="SourceGraphic"
-         stdDeviation="3.000000"
-         id="feGaussianBlur31" />
-      <feOffset
-         result="offset"
-         in="blur"
-         dx="2.000000"
-         dy="4.000000"
-         id="feOffset31" />
-      <feComposite
-         result="comp1"
-         operator="in"
-         in="flood"
-         in2="offset"
-         id="feComposite32" />
-      <feComposite
-         result="comp2"
-         operator="over"
-         in="SourceGraphic"
-         in2="comp1"
-         id="feComposite33" />
-    </filter>
   </defs>
   <style
      type="text/css"
@@ -910,20 +724,4 @@
        id="path10207"
        style="opacity:0.36315792;color:#000000;fill:url(#linearGradient1539);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;visibility:visible;display:inline;overflow:visible;filter:url(#filter10997-7-2);enable-background:accumulate" />
   </g>
-  <rect
-     style="fill:url(#radialGradient17);stroke:url(#linearGradient19);stroke-width:4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke;filter:url(#filter33)"
-     id="rect1"
-     width="40.623608"
-     height="40.623608"
-     x="73.906464"
-     y="11.902005"
-     ry="8.0534525" />
-  <rect
-     style="fill:url(#radialGradient17-4);stroke:url(#linearGradient20);stroke-width:4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke;filter:url(#filter31)"
-     id="rect1-5"
-     width="40.623608"
-     height="40.623608"
-     x="62.897549"
-     y="25.026726"
-     ry="8.0534525" />
 </svg>

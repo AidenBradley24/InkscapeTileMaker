@@ -198,6 +198,11 @@
                 </HorizontalStackLayout>
                 <HorizontalStackLayout Grid.Column="1"
                                        HorizontalOptions="End">
+                    <Button Text="Edit In Inkscape"
+                            VerticalOptions="Start"
+                            FontSize="Micro"
+                            Margin="5,0,0,0"
+                            Command="{Binding EditInInkscapeCommand}" />
                     <Button Text="Reset View"
                         VerticalOptions="Start"
                         FontSize="Micro"

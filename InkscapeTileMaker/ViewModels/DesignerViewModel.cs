@@ -1076,6 +1076,13 @@ namespace InkscapeTileMaker.ViewModels
 			}
 		}
 
+		[RelayCommand]
+		public void EditInInkscape()
+		{
+			if (_tilesetConnection?.CurrentFile == null) return;
+			_tilesetConnection.OpenInExternalEditor();
+		}
+
 		#endregion
 
 

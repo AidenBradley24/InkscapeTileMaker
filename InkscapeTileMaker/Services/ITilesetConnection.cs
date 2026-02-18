@@ -14,5 +14,6 @@
 
 		public Task LoadAsync(FileInfo file);
 
+		public void OpenInExternalEditor();
 	}
 }

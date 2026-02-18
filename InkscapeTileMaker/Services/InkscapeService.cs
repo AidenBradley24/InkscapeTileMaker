@@ -20,5 +20,13 @@ namespace InkscapeTileMaker.Services
 				CreateNoWindow = true,
 			};
 		}
+
+		public void OpenFileInInkscape(FileInfo file)
+		{
+			var startInfo = GetProcessStartInfo();
+			startInfo.CreateNoWindow = false;
+			startInfo.Arguments = $"\"{file.FullName}\"";
+			_ = Process.Start(startInfo);
+		}
 	}
 }
