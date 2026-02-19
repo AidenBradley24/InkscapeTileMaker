@@ -48,6 +48,9 @@ namespace InkscapeTileMaker.ViewModels
 		public partial decimal SelectedZoomLevel { get; set; }
 
 		[ObservableProperty]
+		public partial double TileIconScale { get; set; } = 80;
+
+		[ObservableProperty]
 		public partial PointF PreviewOffset { get; set; }
 
 		[ObservableProperty]
@@ -828,7 +831,7 @@ namespace InkscapeTileMaker.ViewModels
 			canvas.DrawBitmap(transformedBitmap, rect);
 		}
 
-		private void DrawMaterialTilemap(SKCanvas canvas, MaterialTilemap tilemap)
+		private void DrawMaterialTilemap(SKCanvas canvas, Tilemap tilemap)
 		{
 			for (int row = 0; row < tilemap.Height; row++)
 			{

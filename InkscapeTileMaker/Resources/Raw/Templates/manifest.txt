@@ -1,3 +1,2 @@
-﻿GridTemplate.svg
-Layout Test.svg
-MaterialTemplate.svg
+﻿Grid.svg
+DuelGridMaterial.svg

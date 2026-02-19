@@ -5,12 +5,12 @@ using System.Collections.Generic;
 namespace InkscapeTileMaker.Models
 {
 	/// <summary>
-	/// Manages a grid of materials for use in placing material tiles on a duel grid.
-	/// 
+	/// Manages a grid of tiles. Allows the placement of materials and tiles.
 	/// Coordinates (x, y) where (1, 1) is bottom right.
 	/// </summary>
-	public class MaterialTilemap : IEnumerable<(int x, int y, Material? material)>
+	public class Tilemap : IEnumerable<(int x, int y, Material? material)>
 	{
+		// TODO expand this to also allow duel grid and regular grid placement. Also allow material and tile placement on both grids.
 		private readonly Material?[,] _grid;
 
 		public int Width { get; }
@@ -35,7 +35,7 @@ namespace InkscapeTileMaker.Models
 
 		public event Action<(int top, int left, int bottom, int right)> DuelGridAreaChanged = delegate { };
 
-		public MaterialTilemap(int width, int height)
+		public Tilemap(int width, int height)
 		{
 			Width = width;
 			Height = height;

@@ -6,11 +6,11 @@ namespace InkscapeTileMaker.ViewModels
 {
 	public partial class TilemapViewModel : ObservableObject
 	{
-		private readonly MaterialTilemap _tilemap;
+		private readonly Tilemap _tilemap;
 
 		public event Action NeedsRedraw = delegate { };
 
-		public MaterialTilemap Tilemap => _tilemap;
+		public Tilemap Tilemap => _tilemap;
 
 		public int Width => _tilemap.Width;
 		public int Height => _tilemap.Height;
@@ -18,7 +18,7 @@ namespace InkscapeTileMaker.ViewModels
 
 		public TilemapViewModel(int width, int height)
 		{
-			_tilemap = new MaterialTilemap(width, height);
+			_tilemap = new Tilemap(width, height);
 		}
 
 		[RelayCommand]

@@ -17,7 +17,7 @@
 		[Fact]
 		public void MaterialTilemap_Creation_Works()
 		{
-			var tilemap = new MaterialTilemap(10, 10);
+			var tilemap = new Tilemap(10, 10);
 			Assert.NotNull(tilemap);
 			Assert.Equal(10, tilemap.Width);
 			Assert.Equal(10, tilemap.Height);
@@ -26,7 +26,7 @@
 		[Fact]
 		public void Placement_Works()
 		{
-			var tilemap = new MaterialTilemap(10, 10);
+			var tilemap = new Tilemap(10, 10);
 			tilemap[0, 0] = Materials.First(m => m.Name == "Brick");
 			var retrievedMaterial = tilemap[0, 0];
 			Assert.NotNull(retrievedMaterial);
@@ -36,7 +36,7 @@
 		[Fact]
 		public void Placement_OutOfRange()
 		{
-			var tilemap = new MaterialTilemap(5, 5);
+			var tilemap = new Tilemap(5, 5);
 			tilemap[-1, 0] = Materials[0];
 			tilemap[0, -1] = Materials[0];
 			tilemap[5, 0] = Materials[0];
@@ -51,7 +51,7 @@
 		public void GetTilesOnDuelGrid_CoreRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = brick;
 			map[0, 1] = brick;
@@ -69,7 +69,7 @@
 		public void GetTilesOnDuelGrid_TopEdgeRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = null;
 			map[1, 0] = null;
@@ -88,7 +88,7 @@
 		public void GetTilesOnDuelGrid_BottomEdgeRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = brick;
 			map[1, 0] = brick;
@@ -106,7 +106,7 @@
 		public void GetTilesOnDuelGrid_LeftEdgeRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = null;
 			map[1, 0] = brick;
@@ -124,7 +124,7 @@
 		public void GetTilesOnDuelGrid_RightEdgeRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = brick;
 			map[1, 0] = null;
@@ -142,7 +142,7 @@
 		public void GetTilesOnDuelGrid_TopLeftOuterCornerRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = null;
 			map[1, 0] = null;
@@ -160,7 +160,7 @@
 		public void GetTilesOnDuelGrid_TopRightOuterCornerRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = null;
 			map[1, 0] = null;
@@ -178,7 +178,7 @@
 		public void GetTilesOnDuelGrid_BottomLeftOuterCornerRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = null;
 			map[1, 0] = brick;
@@ -196,7 +196,7 @@
 		public void GetTilesOnDuelGrid_BottomRightOuterCornerRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = brick;
 			map[1, 0] = null;
@@ -214,7 +214,7 @@
 		public void GetTilesOnDuelGrid_TopLeftInnerCornerRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = brick;
 			map[1, 0] = brick;
@@ -232,7 +232,7 @@
 		public void GetTilesOnDuelGrid_TopRightInnerCornerRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = brick;
 			map[1, 0] = brick;
@@ -250,7 +250,7 @@
 		public void GetTilesOnDuelGrid_BottomLeftInnerCornerRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = brick;
 			map[1, 0] = null;
@@ -268,7 +268,7 @@
 		public void GetTilesOnDuelGrid_BottomRightInnerCornerRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = null;
 			map[1, 0] = brick;
@@ -286,7 +286,7 @@
 		public void GetTilesOnDuelGrid_DiagonalTLBRRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = brick;
 			map[1, 0] = null;
@@ -304,7 +304,7 @@
 		public void GetTilesOnDuelGrid_DiagonalTRBLRule_Applies()
 		{
 			var brick = Materials.First(m => m.Name == "Brick");
-			var map = new MaterialTilemap(4, 4);
+			var map = new Tilemap(4, 4);
 
 			map[0, 0] = null;
 			map[1, 0] = brick;

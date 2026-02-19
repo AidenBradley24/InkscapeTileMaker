@@ -13,12 +13,12 @@
         <conv:CurrentIsSelectedConverter x:Key="CurrentIsSelectedConverter" />
     </ContentView.Resources>
     <Grid Padding="12"
-          RowDefinitions="Auto,Auto,*,Auto">
+          RowDefinitions="Auto,Auto,*,Auto, Auto">
 
         <!-- Top details section -->
         <Grid Grid.Row="0"
               ColumnDefinitions="Auto,*"
-              RowDefinitions="Auto,Auto"
+              RowDefinitions="Auto,Auto,Auto"
               Padding="0,0,0,12">
             <Label Grid.Row="0"
                    Grid.Column="0"
@@ -44,6 +44,12 @@
                    Text="{Binding TileSize, StringFormat='{}{0.x} x {0.y}'}"
                    VerticalTextAlignment="Center"
                    Margin="0,4,0,0" />
+
+            <Slider Grid.Row="2"
+                    Grid.Column="0"
+                    Minimum="32"
+                    Maximum="128"
+                    Value="{Binding TileIconScale, Mode=TwoWay}" />
         </Grid>
 
         <!-- Tiles flex layout -->
@@ -62,8 +68,8 @@
                             <ctrls:ToolIcon 
                                 Padding="4"
                                 Margin="2"
-                                WidthRequest="50"
-                                HeightRequest="50"
+                                HeightRequest="{Binding BindingContext.TileIconScale, Source={x:Reference TileSet}}"
+                                WidthRequest="{Binding BindingContext.TileIconScale, Source={x:Reference TileSet}}"
                                 ToolName="{Binding Name}"
                                 Source="{Binding PreviewImage}"
                                 Command="{Binding BindingContext.SelectTileCommand, Source={x:Reference TileSet}}"
