@@ -4,7 +4,7 @@ namespace InkscapeTileMaker.Models
 {
 	public class Tile : IComparable<Tile>
 	{
-		// TODO enforce material name is unique, not null or whitespace or empty, only file path valid characters
+		// TODO enforce name is unique, not null or whitespace or empty, only file path valid characters
 		public string Name { get; set; } = "";
 
 		public TileType Type { get; set; } = TileType.Singular;

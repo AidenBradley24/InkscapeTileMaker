@@ -54,8 +54,11 @@ namespace InkscapeTileMaker.ViewModels
 		[NotifyPropertyChangedFor(nameof(SelectedDesignerMode))]
 		public partial TileViewModel? SelectedTile { get; set; }
 
-		[ObservableProperty]
-		public partial Scale TileSize { get; set; }
+		public Scale TileSize => _tilesetConnection?.Tileset?.TileSize ?? new Scale(0, 0);
+		public Scale TileSetPixelSize => _tilesetConnection?.Tileset == null ? new Scale(0, 0) :
+			_tilesetConnection.Tileset.Size;
+		public Scale TileSetSize => _tilesetConnection?.Tileset == null ? new Scale(0, 0) :
+			_tilesetConnection.Tileset.Size / TileSize;
 
 		[ObservableProperty]
 		public partial ObservableCollection<TileViewModel> Tiles { get; set; } = [];
@@ -202,6 +205,10 @@ namespace InkscapeTileMaker.ViewModels
 
 		private void RecalculateTileset(ITilesetConnection conn)
 		{
+			OnPropertyChanged(nameof(TileSize));
+			OnPropertyChanged(nameof(TileSetPixelSize));
+			OnPropertyChanged(nameof(TileSetSize));
+
 			_renderedBitmap?.Dispose();
 			_renderedBitmap = null;
 
@@ -220,7 +227,6 @@ namespace InkscapeTileMaker.ViewModels
 
 			var file = conn.CurrentFile;
 			var tileset = conn.Tileset!;
-			TileSize = tileset.TileSize;
 
 			var newTiles = tileset.GetAllTileViewModels(this);
 			if (Tiles.Count > 0)

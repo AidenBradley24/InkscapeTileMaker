@@ -35,5 +35,15 @@
 		{
 			return new Scale(a.width / b, a.height / b);
 		}
+
+		public static Scale operator *(Scale a, Scale b)
+		{
+			return new Scale(a.width * b.width, a.height * b.height);
+		}
+
+		public static Scale operator /(Scale a, Scale b)
+		{
+			return new Scale(a.width / b.width, a.height / b.height);
+		}
 	}
 }
