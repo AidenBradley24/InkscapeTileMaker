@@ -65,6 +65,11 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 
 			throw new IOException($"Failed to load SVG file after {maxRetries} attempts.", lastException);
 		}
+		catch (Exception ex)
+		{
+			Trace.TraceError("An unknown error occured during loading!");
+			Trace.TraceError(ex.Message);
+		}
 		finally
 		{
 			Interlocked.Exchange(ref isLoading, false);
@@ -296,6 +301,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 					{
 						Name = $"Tile {col},{row}",
 						Type = TileType.Singular,
+						Variant = TileVariant.Core,
 						Allignment = TileAlignment.Core,
 						Row = row,
 						Column = col

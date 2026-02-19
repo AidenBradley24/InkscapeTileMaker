@@ -14,6 +14,7 @@ namespace InkscapeTileMaker.ViewModels
 		public partial ImageSource? PreviewImage { get; set; }
 
 		[ObservableProperty]
+		[NotifyDataErrorInfo]
 		[Required]
 		[MinLength(2)]
 		[MaxLength(50)]
@@ -21,26 +22,77 @@ namespace InkscapeTileMaker.ViewModels
 		public partial string Name { get; set; }
 
 		[ObservableProperty]
+		[NotifyDataErrorInfo]
 		[CustomValidation(typeof(TileViewModel), nameof(ValidatePosition))]
 		public partial (int row, int col) Position { get; set; }
 
 		[ObservableProperty]
 		[NotifyPropertyChangedFor(nameof(IsMaterial))]
+		[NotifyPropertyChangedFor(nameof(VariantOptions))]
 		public partial TileType Type { get; set; }
 
 		[ObservableProperty]
+		[NotifyDataErrorInfo]
+		[CustomValidation(typeof(TileViewModel), nameof(ValidateVariant))]
+		[NotifyPropertyChangedFor(nameof(AllignmentOptions))]
+		public partial TileVariant Variant { get; set; }
+
+		public IList<TileVariant> VariantOptions
+		{
+			get
+			{
+				var list = Type.GetValidVariants().ToList();
+				list.Remove(Variant);
+				list.Insert(0, Variant);
+				return list;
+			}
+		}
+
+		[ObservableProperty]
+		[NotifyDataErrorInfo]
 		[CustomValidation(typeof(TileViewModel), nameof(ValidateAllignment))]
 		public partial TileAlignment Allignment { get; set; }
 
+		public IList<TileAlignment> AllignmentOptions
+		{
+			get
+			{
+				var list = Variant.GetValidAllignments().ToList();
+				list.Remove(Allignment);
+				list.Insert(0, Allignment);
+				return list;
+			}
+		}
+
 		[ObservableProperty]
+		[NotifyDataErrorInfo]
 		[NotifyPropertyChangedFor(nameof(IsMaterial))]
 		[CustomValidation(typeof(TileViewModel), nameof(ValidateMaterialName))]
 		public partial string MaterialName { get; set; }
 
 		public Tile Value => _tile;
 
-		public bool IsMaterial => !string.IsNullOrEmpty(_tile.MaterialName) &&
-			(Type == TileType.MatCore || Type == TileType.MatEdge || Type == TileType.MatOuterCorner || Type == TileType.MatInnerCorner || Type == TileType.MatDiagonal);
+		public bool IsMaterial => Type != TileType.Singular;
+
+		public string? CurrentErrorMessage
+		{
+			get
+			{
+				var errors = GetErrors();
+				if (errors == null || !errors.Any()) return null;
+				var firstError = errors.First().ErrorMessage;
+				int remaining = errors.Count() - 1;
+				if (remaining == 0)
+					return $"Error: {firstError}";
+				else
+					return $"Error: {firstError} (+{remaining})";
+			}
+		}
+
+		public void RunValidation()
+		{
+			ValidateAllProperties();
+		}
 
 		public TileViewModel(Tile tile, DesignerViewModel designerViewModel, Action<Tile> syncFunction)
 		{
@@ -51,8 +103,11 @@ namespace InkscapeTileMaker.ViewModels
 			Name = _tile.Name;
 			Position = (_tile.Row, _tile.Column);
 			Type = _tile.Type;
+			Variant = _tile.Variant;
 			Allignment = _tile.Allignment;
 			MaterialName = _tile.MaterialName;
+
+			ErrorsChanged += (_, _) => OnPropertyChanged(nameof(CurrentErrorMessage));
 		}
 
 		public void Sync()
@@ -77,6 +132,14 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			_designerViewModel.HasUnsavedChanges |= _tile.Type != value;
 			_tile.Type = value;
+			ValidateProperty(Variant, nameof(Variant));
+		}
+
+		partial void OnVariantChanged(TileVariant value)
+		{
+			_designerViewModel.HasUnsavedChanges |= _tile.Variant != value;
+			_tile.Variant = value;
+			ValidateProperty(Allignment, nameof(Allignment));
 		}
 
 		partial void OnAllignmentChanged(TileAlignment value)
@@ -91,42 +154,113 @@ namespace InkscapeTileMaker.ViewModels
 			_tile.MaterialName = value;
 		}
 
-		private static ValidationResult? ValidateNameUnique(string name, ValidationContext context)
+		public static ValidationResult? ValidateNameUnique(string name, ValidationContext context)
 		{
 			var instance = (TileViewModel)context.ObjectInstance;
+
 			foreach (var tile in instance._designerViewModel.Tiles)
 			{
 				if (tile != instance && tile.Name == name)
 				{
-					throw new ValidationException("Tile name must be unique.");
+					return new ValidationResult("Tile name must be unique.");
+				}
+			}
+
+			foreach (var invalidChar in Path.GetInvalidFileNameChars())
+			{
+				if (name.Contains(invalidChar))
+				{
+					return new ValidationResult(
+						$"Tile name cannot contain invalid file name characters (e.g. '{invalidChar}').");
 				}
 			}
 
 			return ValidationResult.Success;
 		}
 
-		private static ValidationResult? ValidatePosition((int row, int col) position, ValidationContext context)
+		public static ValidationResult? ValidatePosition((int row, int col) position, ValidationContext context)
 		{
 			var instance = (TileViewModel)context.ObjectInstance;
 			var size = instance._designerViewModel.TileSetSize;
+
 			if (position.row < 0 || position.row > size.height || position.col < 0 || position.col > size.width)
 			{
-				throw new ValidationException("Tile position must be within the bounds of the tile set.");
+				return new ValidationResult("Tile position must be within the bounds of the tile set.");
 			}
+
 			return ValidationResult.Success;
 		}
 
-		private static ValidationResult? ValidateMaterialName(string materialName, ValidationContext context)
+		public static ValidationResult? ValidateMaterialName(string materialName, ValidationContext context)
 		{
 			var instance = (TileViewModel)context.ObjectInstance;
-			// TODO complete this validation
+			if (!instance.IsMaterial)
+				return ValidationResult.Success;
+
+			if (string.IsNullOrWhiteSpace(materialName))
+			{
+				return new ValidationResult("Material name is required for non-singular tiles.");
+			}
+
+			foreach (var invalidChar in Path.GetInvalidFileNameChars())
+			{
+				if (materialName.Contains(invalidChar))
+				{
+					return new ValidationResult(
+						$"Tile name cannot contain invalid file name characters (e.g. '{invalidChar}').");
+				}
+			}
+
 			return ValidationResult.Success;
 		}
 
-		private static ValidationResult? ValidateAllignment(TileAlignment alignment, ValidationContext context)
+		public static ValidationResult? ValidateAllignment(TileAlignment alignment, ValidationContext context)
 		{
 			var instance = (TileViewModel)context.ObjectInstance;
-			// TODO complete this validation
+
+			var validAlignments = instance.Variant.GetValidAllignments();
+			var isValid = false;
+
+			foreach (var validAlignment in validAlignments)
+			{
+				if (validAlignment == alignment)
+				{
+					isValid = true;
+					break;
+				}
+			}
+
+			if (!isValid)
+			{
+				return new ValidationResult(
+					$"Alignment '{alignment}' is not valid for tile variant '{instance.Variant}'.");
+			}
+
+			return ValidationResult.Success;
+		}
+
+		public static ValidationResult? ValidateVariant(TileVariant variant, ValidationContext context)
+		{
+			var instance = (TileViewModel)context.ObjectInstance;
+
+			var validVariants = instance.Type.GetValidVariants();
+			var isValid = false;
+
+			foreach (var validVariant in validVariants)
+			{
+				if (validVariant == variant)
+				{
+					isValid = true;
+					break;
+				}
+			}
+
+			if (!isValid)
+			{
+				return new ValidationResult(
+					$"Variant '{variant}' is not valid for tile type '{instance.Type}'.");
+			}
+
 			return ValidationResult.Success;
 		}
 	}

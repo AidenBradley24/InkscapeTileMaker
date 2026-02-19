@@ -4,10 +4,11 @@ namespace InkscapeTileMaker.Models
 {
 	public class Tile : IComparable<Tile>
 	{
-		// TODO enforce name is unique, not null or whitespace or empty, only file path valid characters
 		public string Name { get; set; } = "";
 
 		public TileType Type { get; set; } = TileType.Singular;
+
+		public TileVariant Variant { get; set; } = TileVariant.Core;
 
 		public TileAlignment Allignment { get; set; } = TileAlignment.Core;
 
@@ -17,8 +18,6 @@ namespace InkscapeTileMaker.Models
 
 		public int Column { get; set; }
 
-		// TODO enforce material name is not null or whitespace, only file path valid characters (but can be empty)
-		// also make it case-sensitive everywhere
 		public string MaterialName { get; set; } = "";
 
 		public int CompareTo(Tile? other)

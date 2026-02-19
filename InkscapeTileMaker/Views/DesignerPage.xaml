@@ -104,7 +104,7 @@
 
         <Border WidthRequest="400"
                 Margin="10"
-                Stroke="LightGray"
+                Stroke="Transparent"
                 toolkit:DockLayout.DockPosition="Left">
             <Grid ColumnDefinitions="*">
                 <views:TileSetView BindingContext="{Binding .}" 

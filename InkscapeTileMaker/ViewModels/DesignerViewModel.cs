@@ -244,6 +244,11 @@ namespace InkscapeTileMaker.ViewModels
 				Tiles.Add(tile);
 			}
 
+			foreach (var tile in Tiles)
+			{
+				tile.RunValidation();
+			}
+
 			Task.Run(async () =>
 			{
 				try

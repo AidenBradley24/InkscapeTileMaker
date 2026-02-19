@@ -49,6 +49,7 @@ namespace InkscapeTileMaker.Utility
 			{
 				Name = (string?)element.Attribute("name") ?? "",
 				Type = Enum.TryParse<TileType>((string?)element.Attribute("type") ?? "Singular", out var type) ? type : TileType.Singular,
+				Variant = Enum.TryParse<TileVariant>((string?)element.Attribute("variant") ?? "Core", out var variant) ? variant : TileVariant.Core,
 				Allignment = Enum.TryParse<TileAlignment>((string?)element.Attribute("allignment") ?? "Core", out var alignment) ? alignment : TileAlignment.Core,
 				Priority = (int?)element.Attribute("priority") ?? 1,
 				Row = (int?)element.Attribute("row") ?? 0,
@@ -62,6 +63,7 @@ namespace InkscapeTileMaker.Utility
 			return new XElement(InkscapeSvg.tileName,
 				new XAttribute("name", tile.Name),
 				new XAttribute("type", tile.Type.ToString()),
+				new XAttribute("variant", tile.Variant.ToString()),
 				new XAttribute("allignment", tile.Allignment.ToString()),
 				new XAttribute("priority", tile.Priority),
 				new XAttribute("row", tile.Row),

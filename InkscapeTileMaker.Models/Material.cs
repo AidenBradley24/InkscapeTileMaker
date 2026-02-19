@@ -24,13 +24,13 @@ namespace InkscapeTileMaker.Models
 		}
 
 		/// <summary>
-		/// Returns the tile of the specified type.<br/>
-		/// Attempts to return a tile with preferred alignment, but will return any tile of the specified type if none with the preferred alignment exists.<br/>
+		/// Returns the tile of the specified variant.<br/>
+		/// Attempts to return a tile with preferred alignment, but will return any tile of the specified variant if none with the preferred alignment exists.<br/>
 		/// Also accounts for <see cref="Tile.Priority"/>.
 		/// </summary>
-		public Tile? GetTile(TileType type, TileAlignment preferredAlignment)
+		public Tile? GetTile(TileVariant variant, TileAlignment preferredAlignment)
 		{
-			var baseTiles = GetTiles().Where(t => t.Type == type);
+			var baseTiles = GetTiles().Where(t => t.Variant == variant);
 			if (!baseTiles.Any()) return null;
 			var preferredTiles = baseTiles.Where(t => t.Allignment == preferredAlignment);
 			if (preferredTiles.Any())
@@ -64,9 +64,9 @@ namespace InkscapeTileMaker.Models
 			return _name.Equals(other._name, StringComparison.InvariantCultureIgnoreCase);
 		}
 
-		public bool TryGetTileData(TileType type, TileAlignment alignment, [NotNullWhen(true)] out TileData? tileData)
+		public bool TryGetTileData(TileVariant variant, TileAlignment alignment, [NotNullWhen(true)] out TileData? tileData)
 		{
-			var tile = GetTile(type, alignment);
+			var tile = GetTile(variant, alignment);
 			if (tile == null)
 			{
 				tileData = null;

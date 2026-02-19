@@ -112,7 +112,7 @@ namespace InkscapeTileMaker.Models
 			bool ruleApplies = quadsAvailable &&
 							   topRight != null && topLeft != null && bottomRight != null && bottomLeft != null &&
 							   topRight.Equals(topLeft) && topRight.Equals(bottomRight) && topRight.Equals(bottomLeft);
-			if (ruleApplies && topRight!.TryGetTileData(TileType.MatCore, TileAlignment.Core, out var tileData))
+			if (ruleApplies && topRight!.TryGetTileData(TileVariant.Core, TileAlignment.Core, out var tileData))
 			{
 				tiles.Add(tileData.Value);
 				topRightUsed = true;
@@ -129,7 +129,7 @@ namespace InkscapeTileMaker.Models
 			bool ruleApplies = quadsAvailable &&
 							   topLeft != null && topRight != null && bottomLeft != null &&
 							   topLeft.Equals(topRight) && topRight.Equals(bottomLeft);
-			if (ruleApplies && topLeft!.TryGetTileData(TileType.MatInnerCorner, TileAlignment.TopLeftInnerCorner, out var tileData))
+			if (ruleApplies && topLeft!.TryGetTileData(TileVariant.InnerCorner, TileAlignment.TopLeftInnerCorner, out var tileData))
 			{
 				tiles.Add(tileData.Value);
 				topLeftUsed = true;
@@ -142,7 +142,7 @@ namespace InkscapeTileMaker.Models
 			ruleApplies = quadsAvailable &&
 						  topLeft != null && topRight != null && bottomRight != null &&
 						  topLeft.Equals(topRight) && topRight.Equals(bottomRight);
-			if (ruleApplies && topLeft!.TryGetTileData(TileType.MatInnerCorner, TileAlignment.TopRightInnerCorner, out tileData))
+			if (ruleApplies && topLeft!.TryGetTileData(TileVariant.InnerCorner, TileAlignment.TopRightInnerCorner, out tileData))
 			{
 				tiles.Add(tileData.Value);
 				topLeftUsed = true;
@@ -155,7 +155,7 @@ namespace InkscapeTileMaker.Models
 			ruleApplies = quadsAvailable &&
 						  topLeft != null && bottomLeft != null && bottomRight != null &&
 						  topLeft.Equals(bottomLeft) && bottomLeft.Equals(bottomRight);
-			if (ruleApplies && topLeft!.TryGetTileData(TileType.MatInnerCorner, TileAlignment.BottomLeftInnerCorner, out tileData))
+			if (ruleApplies && topLeft!.TryGetTileData(TileVariant.InnerCorner, TileAlignment.BottomLeftInnerCorner, out tileData))
 			{
 				tiles.Add(tileData.Value);
 				topLeftUsed = true;
@@ -168,7 +168,7 @@ namespace InkscapeTileMaker.Models
 			ruleApplies = quadsAvailable &&
 						  topRight != null && bottomLeft != null && bottomRight != null &&
 						  topRight.Equals(bottomLeft) && bottomLeft.Equals(bottomRight);
-			if (ruleApplies && topRight!.TryGetTileData(TileType.MatInnerCorner, TileAlignment.BottomRightInnerCorner, out tileData))
+			if (ruleApplies && topRight!.TryGetTileData(TileVariant.InnerCorner, TileAlignment.BottomRightInnerCorner, out tileData))
 			{
 				tiles.Add(tileData.Value);
 				topRightUsed = true;
@@ -184,7 +184,7 @@ namespace InkscapeTileMaker.Models
 			bool ruleApplies = quadsAvailable &&
 							   topLeft != null && bottomRight != null &&
 							   topLeft.Equals(bottomRight);
-			if (ruleApplies && topLeft!.TryGetTileData(TileType.MatDiagonal, TileAlignment.DiagonalTopLeftToBottomRight, out var tileData))
+			if (ruleApplies && topLeft!.TryGetTileData(TileVariant.Diagonal, TileAlignment.DiagonalTopLeftToBottomRight, out var tileData))
 			{
 				tiles.Add(tileData.Value);
 				topLeftUsed = true;
@@ -196,7 +196,7 @@ namespace InkscapeTileMaker.Models
 			ruleApplies = quadsAvailable &&
 						  topRight != null && bottomLeft != null &&
 						  topRight.Equals(bottomLeft);
-			if (ruleApplies && topRight!.TryGetTileData(TileType.MatDiagonal, TileAlignment.DiagonalTopRightToBottomLeft, out tileData))
+			if (ruleApplies && topRight!.TryGetTileData(TileVariant.Diagonal, TileAlignment.DiagonalTopRightToBottomLeft, out tileData))
 			{
 				tiles.Add(tileData.Value);
 				topRightUsed = true;
@@ -211,7 +211,7 @@ namespace InkscapeTileMaker.Models
 			bool ruleApplies = quadsAvailable &&
 							   bottomLeft != null && bottomRight != null &&
 							   bottomLeft.Equals(bottomRight);
-			if (ruleApplies && bottomLeft!.TryGetTileData(TileType.MatEdge, TileAlignment.TopEdge, out var tileData))
+			if (ruleApplies && bottomLeft!.TryGetTileData(TileVariant.Edge, TileAlignment.TopEdge, out var tileData))
 			{
 				tiles.Add(tileData.Value);
 				bottomLeftUsed = true;
@@ -223,7 +223,7 @@ namespace InkscapeTileMaker.Models
 			ruleApplies = quadsAvailable &&
 						  topLeft != null && topRight != null &&
 						  topLeft.Equals(topRight);
-			if (ruleApplies && topLeft!.TryGetTileData(TileType.MatEdge, TileAlignment.BottomEdge, out tileData))
+			if (ruleApplies && topLeft!.TryGetTileData(TileVariant.Edge, TileAlignment.BottomEdge, out tileData))
 			{
 				tiles.Add(tileData.Value);
 				topLeftUsed = true;
@@ -235,7 +235,7 @@ namespace InkscapeTileMaker.Models
 			ruleApplies = quadsAvailable &&
 						  topRight != null && bottomRight != null &&
 						  topRight.Equals(bottomRight);
-			if (ruleApplies && topRight!.TryGetTileData(TileType.MatEdge, TileAlignment.LeftEdge, out tileData))
+			if (ruleApplies && topRight!.TryGetTileData(TileVariant.Edge, TileAlignment.LeftEdge, out tileData))
 			{
 				tiles.Add(tileData.Value);
 				topRightUsed = true;
@@ -247,7 +247,7 @@ namespace InkscapeTileMaker.Models
 			ruleApplies = quadsAvailable &&
 						  topLeft != null && bottomLeft != null &&
 						  topLeft.Equals(bottomLeft);
-			if (ruleApplies && topLeft!.TryGetTileData(TileType.MatEdge, TileAlignment.RightEdge, out tileData))
+			if (ruleApplies && topLeft!.TryGetTileData(TileVariant.Edge, TileAlignment.RightEdge, out tileData))
 			{
 				tiles.Add(tileData.Value);
 				topLeftUsed = true;
@@ -258,28 +258,28 @@ namespace InkscapeTileMaker.Models
 		private static void CheckOuterCornerRule(List<TileData> tiles, Material? topRight, Material? topLeft, Material? bottomRight, Material? bottomLeft, ref bool topRightUsed, ref bool topLeftUsed, ref bool bottomRightUsed, ref bool bottomLeftUsed)
 		{
 			// Top-left corner
-			if (!bottomRightUsed && bottomRight != null && bottomRight.TryGetTileData(TileType.MatOuterCorner, TileAlignment.TopLeftOuterCorner, out var tileData))
+			if (!bottomRightUsed && bottomRight != null && bottomRight.TryGetTileData(TileVariant.OuterCorner, TileAlignment.TopLeftOuterCorner, out var tileData))
 			{
 				tiles.Add(tileData.Value);
 				topRightUsed = true;
 			}
 
 			// Top-right corner
-			if (!bottomLeftUsed && bottomLeft != null && bottomLeft.TryGetTileData(TileType.MatOuterCorner, TileAlignment.TopRightOuterCorner, out tileData))
+			if (!bottomLeftUsed && bottomLeft != null && bottomLeft.TryGetTileData(TileVariant.OuterCorner, TileAlignment.TopRightOuterCorner, out tileData))
 			{
 				tiles.Add(tileData.Value);
 				topLeftUsed = true;
 			}
 
 			// Bottom-left corner
-			if (!topRightUsed && topRight != null && topRight.TryGetTileData(TileType.MatOuterCorner, TileAlignment.BottomLeftOuterCorner, out tileData))
+			if (!topRightUsed && topRight != null && topRight.TryGetTileData(TileVariant.OuterCorner, TileAlignment.BottomLeftOuterCorner, out tileData))
 			{
 				tiles.Add(tileData.Value);
 				bottomRightUsed = true;
 			}
 
 			// Bottom-right corner
-			if (!topLeftUsed && topLeft != null && topLeft.TryGetTileData(TileType.MatOuterCorner, TileAlignment.BottomRightOuterCorner, out tileData))
+			if (!topLeftUsed && topLeft != null && topLeft.TryGetTileData(TileVariant.OuterCorner, TileAlignment.BottomRightOuterCorner, out tileData))
 			{
 				tiles.Add(tileData.Value);
 				bottomLeftUsed = true;

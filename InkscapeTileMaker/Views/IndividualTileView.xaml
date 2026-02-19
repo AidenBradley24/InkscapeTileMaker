@@ -7,101 +7,106 @@
              x:DataType="vms:DesignerViewModel"
              xmlns:ctrls="clr-namespace:InkscapeTileMaker.Controls"
              xmlns:conv="clr-namespace:InkscapeTileMaker.Converters"
-             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit">
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:behaviors="clr-namespace:InkscapeTileMaker.Behaviors">
 
     <ContentView.Resources>
         <conv:EnumToItemsSourceConverter x:Key="EnumToItemsSourceConverter" />
     </ContentView.Resources>
 
-    <Grid Padding="12"
-          ColumnDefinitions="Auto, *"
-          RowDefinitions="75, 150, Auto, 100, Auto, Auto, Auto, Auto"
-          RowSpacing="12">
+    <VerticalStackLayout Padding="12" Spacing="12">
 
-        <Button Grid.Row="0"
-                Grid.Column="0"
-                Text="Return to Tileset"
-                Command="{Binding ReturnToTileSetCommand}"
-                HorizontalOptions="Start"
-                Margin="0,0,0,8"
-                HeightRequest="50"/>
+        <HorizontalStackLayout Spacing="5" HeightRequest="40">
+            <ctrls:ToolIcon ToolName="Return to Tileset"
+                            Command="{Binding ReturnToTileSetCommand}"
+                            Source="arrow_left.png"
+                            UnselectedOutlineStroke="WhiteSmoke"
+                            BackgroundColor="White"
+                            WidthRequest="40"/>
+            <ctrls:ToolIcon ToolName="Delete"
+                            Command="{Binding DeleteSelectedTileCommand}"
+                            Source="trash.png"
+                            UnselectedOutlineStroke="WhiteSmoke"
+                            BackgroundColor="White"
+                            WidthRequest="40"/>
+        </HorizontalStackLayout>
 
-        <!-- Tile preview -->
-        <Border Grid.Row="1"
-                Grid.Column="0"
-                Grid.ColumnSpan="2"
-                Stroke="LightGray"
+        <Grid IsVisible="{Binding SelectedTile.HasErrors}"
+              BackgroundColor="Orange">
+            <Label Text="{Binding SelectedTile.CurrentErrorMessage}"
+                   TextColor="White"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"
+                   Margin="4"/>
+        </Grid>
+
+        <Grid HeightRequest="128">
+            <Border Stroke="LightGray"
                 StrokeThickness="1"
                 Padding="4"
                 HorizontalOptions="Center"
                 VerticalOptions="Center">
-            <Image Source="{Binding SelectedTile.PreviewImage}"
+                <Image Source="{Binding SelectedTile.PreviewImage}"
                    Aspect="AspectFit"
                    HorizontalOptions="Center"
                    VerticalOptions="Center" />
-        </Border>
+            </Border>
+        </Grid>
 
-        <Label Grid.Row="2"
-               Grid.Column="0"
-               Text="Name:"
-               FontAttributes="Bold"
-               VerticalTextAlignment="Center"
-               Margin="0,0,8,0" />
-        <ctrls:EditableLabel Grid.Row="2"
-                             Grid.Column="1"
-                             Text="{Binding SelectedTile.Name, Mode=TwoWay}" />
-
-        <Label Grid.Row="3"
-               Grid.Column="0"
-               Text="Position:"
+        <Grid ColumnDefinitions="100, *">
+            <Label Grid.Column="0"
+               Text="Tile Set Position"
                FontAttributes="Bold"
                VerticalTextAlignment="Center"
                Margin="0,4,8,0" />
-        <Label Grid.Row="3"
-               Grid.Column="1"
+            <Label Grid.Column="1"
                Text="{Binding SelectedTile.Position, StringFormat='{}{0.col}, {0.row}'}"
                VerticalTextAlignment="Center"
                Margin="0,4,0,0" />
 
-        <HorizontalStackLayout Grid.Row="4"
-                               Grid.Column="0"
-                               Grid.ColumnSpan="2"
-                               Spacing="8"
-                               VerticalOptions="Center"
-                               Margin="0,12,0,0">
-            <Button Text="Delete" Command="{Binding DeleteSelectedTileCommand}"/>
-        </HorizontalStackLayout>
+        </Grid>
 
-        <Picker Grid.Row="5"
-                Grid.Column="0"
-                Grid.ColumnSpan="2"
-                Title="Select Tile Type"
+        <Grid ColumnDefinitions="100, *">
+            <Label Grid.Column="0"
+               Text="Name"
+               FontAttributes="Bold"
+               VerticalTextAlignment="Center"
+               Margin="0,0,8,0" />
+            <ctrls:EditableLabel Grid.Column="1"
+                                 Text="{Binding SelectedTile.Name, Mode=TwoWay}" />
+        </Grid>
+
+        <Picker Title="Tile Type"
                 ItemsSource="{Binding SelectedTile.Type, Converter={StaticResource EnumToItemsSourceConverter}}"
                 SelectedItem="{Binding SelectedTile.Type, Mode=TwoWay}"
                 ItemDisplayBinding="{Binding Converter={StaticResource EnumToStringConverter}}"
                 Margin="0,12,0,0"/>
 
-        <Label Grid.Row="6"
-               Grid.Column="0"
-               Text="Material Name:"
+        <Grid ColumnDefinitions="100, *"
+              IsVisible="{Binding SelectedTile.IsMaterial}">
+            <Label Grid.Column="0"
+               Text="Material Name"
                FontAttributes="Bold"
                VerticalTextAlignment="Center"
                Margin="0,0,8,0"
-               IsVisible="{Binding SelectedTile.Type, Converter={StaticResource UsingMaterialConverter}}"/>
-        <ctrls:EditableLabel Grid.Row="6"
-                             Grid.Column="1"
-                             Text="{Binding SelectedTile.MaterialName, Mode=TwoWay}"
-                             IsVisible="{Binding SelectedTile.Type, Converter={StaticResource UsingMaterialConverter}}"/>
+               />
+            <ctrls:EditableLabel Grid.Column="1"
+                                 Text="{Binding SelectedTile.MaterialName, Mode=TwoWay}"/>
+        </Grid>
 
-        <Picker Grid.Row="7"
-                Grid.Column="0"
-                Grid.ColumnSpan="2"
-                Title="Select Alignment"
-                ItemsSource="{Binding SelectedTile.Allignment, Converter={StaticResource EnumToItemsSourceConverter}}"
-                SelectedItem="{Binding SelectedTile.Allignment, Mode=TwoWay}"
+        <Picker Title="Variant"
+                ItemsSource="{Binding SelectedTile.VariantOptions}"
+                SelectedItem="{Binding SelectedTile.Variant, Mode=TwoWay}"
                 ItemDisplayBinding="{Binding Converter={StaticResource EnumToStringConverter}}"
                 Margin="0,12,0,0"
                 IsVisible="{Binding SelectedTile.IsMaterial}"/>
 
-    </Grid>
+        <Picker Title="Alignment"
+                ItemsSource="{Binding SelectedTile.AllignmentOptions}"
+                SelectedItem="{Binding SelectedTile.Allignment, Mode=TwoWay}"
+                ItemDisplayBinding="{Binding Converter={StaticResource EnumToStringConverter}}"
+                Margin="0,12,0,0"
+                IsVisible="{Binding SelectedTile.IsMaterial}"/>
+    </VerticalStackLayout>
 </ContentView>
