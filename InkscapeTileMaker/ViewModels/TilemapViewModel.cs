@@ -6,25 +6,29 @@ namespace InkscapeTileMaker.ViewModels
 {
 	public partial class TilemapViewModel : ObservableObject
 	{
+		private readonly CompositeTilemap _compositeTilemap;
 		private readonly Tilemap _tilemap;
+		private readonly DuelGridMaterialTilemap _duelGridMaterialTilemap;
 
 		public event Action NeedsRedraw = delegate { };
 
-		public Tilemap Tilemap => _tilemap;
+		public CompositeTilemap Composite => _compositeTilemap;
+		public Tilemap Regular => _tilemap;
+		public DuelGridMaterialTilemap DuelGridMaterial => _duelGridMaterialTilemap;
 
-		public int Width => _tilemap.Width;
-		public int Height => _tilemap.Height;
-
+		public Models.Rect Rect => _compositeTilemap.TileGridRect;
 
 		public TilemapViewModel(int width, int height)
 		{
 			_tilemap = new Tilemap(width, height);
+			_duelGridMaterialTilemap = new DuelGridMaterialTilemap(width, height);
+			_compositeTilemap = new CompositeTilemap(_duelGridMaterialTilemap, _tilemap);
 		}
 
 		[RelayCommand]
-		public void AddSampleMaterial(Material material)
+		public void AddSampleDuelGridMaterial(Material material)
 		{
-			if (Width < 8 || Height < 8) throw new Exception("Tilemap too small for sample material.");
+			if (DuelGridMaterial.Width < 8 || DuelGridMaterial.Height < 8) throw new Exception("Tilemap too small for sample material.");
 
 			(int x, int y)[] positions =
 			[
@@ -36,7 +40,7 @@ namespace InkscapeTileMaker.ViewModels
 				(2, 5), (3, 5)
 			];
 
-			_tilemap.Paint(material, positions);
+			_duelGridMaterialTilemap.Paint(material, positions);
 			NeedsRedraw.Invoke();
 		}
 
@@ -44,6 +48,7 @@ namespace InkscapeTileMaker.ViewModels
 		public void Clear()
 		{
 			_tilemap.Clear();
+			_duelGridMaterialTilemap.Clear();
 			NeedsRedraw.Invoke();
 		}
 	}

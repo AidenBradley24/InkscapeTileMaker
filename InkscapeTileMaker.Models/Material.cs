@@ -12,6 +12,8 @@ namespace InkscapeTileMaker.Models
 
 		public string Name => _name;
 
+		public TileType Type => _tilesProvider().FirstOrDefault(t => t.MaterialName == _name)?.Type ?? TileType.Singular;
+
 		public Material(string name, Func<IEnumerable<Tile>> tilesProvider)
 		{
 			_name = name;
@@ -40,9 +42,9 @@ namespace InkscapeTileMaker.Models
 			return baseTiles.OrderByDescending(t => t.Priority).First();
 		}
 
-		public bool HasTileType(TileType type)
+		public bool HasTileVariant(TileVariant variant)
 		{
-			return GetTiles().Any(t => t.Type == type);
+			return GetTiles().Any(t => t.Variant == variant);
 		}
 
 		public static List<Material> GetAllMaterials(Func<IEnumerable<Tile>> tilesProvider)

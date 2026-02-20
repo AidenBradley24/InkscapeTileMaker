@@ -1,300 +1,122 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace InkscapeTileMaker.Models
 {
 	/// <summary>
-	/// Manages a grid of tiles. Allows the placement of materials and tiles.
-	/// Coordinates (x, y) where (1, 1) is bottom right.
+	/// Represents a grid of tiles. Multiple tiles can occupy the same position. Tiles are returned bottom first.
 	/// </summary>
-	public class Tilemap : IEnumerable<(int x, int y, Material? material)>
+	public sealed class Tilemap : ITilemap
 	{
-		// TODO expand this to also allow duel grid and regular grid placement. Also allow material and tile placement on both grids.
-		private readonly Material?[,] _grid;
-
-		public int Width { get; }
-		public int Height { get; }
-
-		public Material? this[int x, int y]
-		{
-			get
-			{
-				if (x < 0 || x >= Width || y < 0 || y >= Height)
-					return null;
-				return _grid[x, y];
-			}
-			set
-			{
-				if (x < 0 || x >= Width || y < 0 || y >= Height)
-					return;
-				_grid[x, y] = value;
-				DuelGridAreaChanged((y, x, y + 1, x + 1));
-			}
-		}
-
-		public event Action<(int top, int left, int bottom, int right)> DuelGridAreaChanged = delegate { };
+		private readonly Dictionary<(int x, int y), List<TileData>> _tiles;
+		private readonly Rect _rect;
 
 		public Tilemap(int width, int height)
 		{
-			Width = width;
-			Height = height;
-			_grid = new Material[width, height];
+			if (width <= 0) throw new ArgumentOutOfRangeException(nameof(width), "Width must be greater than 0.");
+			if (height <= 0) throw new ArgumentOutOfRangeException(nameof(height), "Height must be greater than 0.");
+
+			_rect = new Rect(0, 0, width - 1, height - 1);
+			_tiles = new Dictionary<(int x, int y), List<TileData>>();
 		}
 
-		public int Paint(Material material, IEnumerable<(int x, int y)> coordinates)
+		public Rect TileGridRect => _rect;
+
+		public event Action<Rect> TilesInAreaChanged = delegate { };
+
+		public IEnumerator<(IReadOnlyList<TileData> overlappingTiles, (int x, int y) position)> GetEnumerator()
 		{
-			int count = 0;
-			foreach (var (x, y) in coordinates)
-			{
-				if (x < 0 || x >= Width || y < 0 || y >= Height)
-					continue;
-				if (_grid[x, y] != null && _grid[x, y]!.Equals(material))
-					continue;
-				_grid[x, y] = material;
-				count++;
-			}
-			DuelGridAreaChanged((0, 0, Height, Width));
-			return count;
+			return _tiles.Select(kvp => (overlappingTiles: (IReadOnlyList<TileData>)kvp.Value, position: kvp.Key)).GetEnumerator();
 		}
 
-		public void Clear()
+		public IReadOnlyList<TileData> GetTilesAt(int x, int y)
 		{
-			for (int y = 0; y < Height; y++)
+			return _tiles.TryGetValue((x, y), out var tiles) ? (IReadOnlyList<TileData>)tiles : Array.Empty<TileData>();
+		}
+
+		public IEnumerable<IReadOnlyList<TileData>> GetTilesInArea(Rect area)
+		{
+			foreach (var (x, y) in area.GetPositions())
 			{
-				for (int x = 0; x < Width; x++)
-				{
-					_grid[x, y] = null;
-				}
+				yield return GetTilesAt(x, y);
 			}
-			DuelGridAreaChanged((0, 0, Height, Width));
 		}
 
 		/// <summary>
-		/// Returns all tiles to compose a material tile on the duel grid at the given coordinates on the material grid in draw order (bottom first).
+		/// Sets the tile at the given position, replacing any existing tiles at that position.
 		/// </summary>
-		public IReadOnlyList<TileData> GetTilesOnDuelGrid(int x, int y)
+		public void SetTileAt(int x, int y, TileData tile)
 		{
-			var tiles = new List<TileData>();
-
-			Material? GetMaterialOrNull(int gx, int gy)
-			{
-				if (gx < 0 || gx >= Width || gy < 0 || gy >= Height)
-					return null;
-				return _grid[gx, gy];
-			}
-
-			Material? topLeft = GetMaterialOrNull(x, y);
-			Material? topRight = GetMaterialOrNull(x + 1, y);
-			Material? bottomLeft = GetMaterialOrNull(x, y + 1);
-			Material? bottomRight = GetMaterialOrNull(x + 1, y + 1);
-
-			// NOTE that some tile names are inverted from material quadrant names.
-			// The tiles are named after how they appear visually (how they're facing) rather than how they're calculated.
-
-			// No two rules can apply per quadrant, so once a rule is applied for a quadrant, no other rules can apply for that quadrant.
-			bool topRightUsed = false;
-			bool topLeftUsed = false;
-			bool bottomRightUsed = false;
-			bool bottomLeftUsed = false;
-
-			CheckCoreRule(tiles, topRight, topLeft, bottomRight, bottomLeft, ref topRightUsed, ref topLeftUsed, ref bottomRightUsed, ref bottomLeftUsed);
-			CheckInnerCornerRule(tiles, topRight, topLeft, bottomRight, bottomLeft, ref topRightUsed, ref topLeftUsed, ref bottomRightUsed, ref bottomLeftUsed);
-			CheckDiagonalRule(tiles, topRight, topLeft, bottomRight, bottomLeft, ref topRightUsed, ref topLeftUsed, ref bottomRightUsed, ref bottomLeftUsed);
-			CheckEdgeRule(tiles, topRight, topLeft, bottomRight, bottomLeft, ref topRightUsed, ref topLeftUsed, ref bottomRightUsed, ref bottomLeftUsed);
-			CheckOuterCornerRule(tiles, topRight, topLeft, bottomRight, bottomLeft, ref topRightUsed, ref topLeftUsed, ref bottomRightUsed, ref bottomLeftUsed);
-			return tiles;
+			_tiles[(x, y)] = new List<TileData> { tile };
+			TilesInAreaChanged(new Rect(x, y, x, y));
 		}
 
-		private static void CheckCoreRule(List<TileData> tiles, Material? topRight, Material? topLeft, Material? bottomRight, Material? bottomLeft, ref bool topRightUsed, ref bool topLeftUsed, ref bool bottomRightUsed, ref bool bottomLeftUsed)
+		/// <summary>
+		/// Adds a tile at the given position, keeping any existing tiles. New tiles are added on top.
+		/// </summary>
+		public void AddTileAt(int x, int y, TileData tile)
 		{
-			bool quadsAvailable = !topRightUsed && !topLeftUsed && !bottomRightUsed && !bottomLeftUsed;
-			bool ruleApplies = quadsAvailable &&
-							   topRight != null && topLeft != null && bottomRight != null && bottomLeft != null &&
-							   topRight.Equals(topLeft) && topRight.Equals(bottomRight) && topRight.Equals(bottomLeft);
-			if (ruleApplies && topRight!.TryGetTileData(TileVariant.Core, TileAlignment.Core, out var tileData))
+			if (!_tiles.TryGetValue((x, y), out var tiles))
 			{
-				tiles.Add(tileData.Value);
-				topRightUsed = true;
-				topLeftUsed = true;
-				bottomRightUsed = true;
-				bottomLeftUsed = true;
+				tiles = new List<TileData>();
+				_tiles[(x, y)] = tiles;
 			}
+
+			tiles.Add(tile);
+			TilesInAreaChanged(new Rect(x, y, x, y));
 		}
 
-		private static void CheckInnerCornerRule(List<TileData> tiles, Material? topRight, Material? topLeft, Material? bottomRight, Material? bottomLeft, ref bool topRightUsed, ref bool topLeftUsed, ref bool bottomRightUsed, ref bool bottomLeftUsed)
+		/// <summary>
+		/// Removes a specific tile at the given position.
+		/// </summary>
+		/// <returns>True if the tile was removed; otherwise false.</returns>
+		public bool RemoveTileAt(int x, int y, TileData tile)
 		{
-			// Top-left inner corner
-			bool quadsAvailable = !topLeftUsed && !topRightUsed && !bottomLeftUsed;
-			bool ruleApplies = quadsAvailable &&
-							   topLeft != null && topRight != null && bottomLeft != null &&
-							   topLeft.Equals(topRight) && topRight.Equals(bottomLeft);
-			if (ruleApplies && topLeft!.TryGetTileData(TileVariant.InnerCorner, TileAlignment.TopLeftInnerCorner, out var tileData))
+			if (!_tiles.TryGetValue((x, y), out var tiles))
 			{
-				tiles.Add(tileData.Value);
-				topLeftUsed = true;
-				topRightUsed = true;
-				bottomLeftUsed = true;
+				return false;
 			}
 
-			// Top-right inner corner
-			quadsAvailable = !topLeftUsed && !topRightUsed && !bottomRightUsed;
-			ruleApplies = quadsAvailable &&
-						  topLeft != null && topRight != null && bottomRight != null &&
-						  topLeft.Equals(topRight) && topRight.Equals(bottomRight);
-			if (ruleApplies && topLeft!.TryGetTileData(TileVariant.InnerCorner, TileAlignment.TopRightInnerCorner, out tileData))
+			var removed = tiles.Remove(tile);
+			if (!removed)
 			{
-				tiles.Add(tileData.Value);
-				topLeftUsed = true;
-				topRightUsed = true;
-				bottomRightUsed = true;
+				return false;
 			}
 
-			// Bottom-left inner corner
-			quadsAvailable = !topLeftUsed && !bottomLeftUsed && !bottomRightUsed;
-			ruleApplies = quadsAvailable &&
-						  topLeft != null && bottomLeft != null && bottomRight != null &&
-						  topLeft.Equals(bottomLeft) && bottomLeft.Equals(bottomRight);
-			if (ruleApplies && topLeft!.TryGetTileData(TileVariant.InnerCorner, TileAlignment.BottomLeftInnerCorner, out tileData))
+			if (tiles.Count == 0)
 			{
-				tiles.Add(tileData.Value);
-				topLeftUsed = true;
-				bottomLeftUsed = true;
-				bottomRightUsed = true;
+				_tiles.Remove((x, y));
 			}
 
-			// Bottom-right inner corner
-			quadsAvailable = !topRightUsed && !bottomLeftUsed && !bottomRightUsed;
-			ruleApplies = quadsAvailable &&
-						  topRight != null && bottomLeft != null && bottomRight != null &&
-						  topRight.Equals(bottomLeft) && bottomLeft.Equals(bottomRight);
-			if (ruleApplies && topRight!.TryGetTileData(TileVariant.InnerCorner, TileAlignment.BottomRightInnerCorner, out tileData))
+			TilesInAreaChanged(new Rect(x, y, x, y));
+			return true;
+		}
+
+		/// <summary>
+		/// Removes all tiles at the given position.
+		/// </summary>
+		public void ClearTilesAt(int x, int y)
+		{
+			if (_tiles.Remove((x, y)))
 			{
-				tiles.Add(tileData.Value);
-				topRightUsed = true;
-				bottomLeftUsed = true;
-				bottomRightUsed = true;
+				TilesInAreaChanged(new Rect(x, y, x, y));
 			}
 		}
 
-		private static void CheckDiagonalRule(List<TileData> tiles, Material? topRight, Material? topLeft, Material? bottomRight, Material? bottomLeft, ref bool topRightUsed, ref bool topLeftUsed, ref bool bottomRightUsed, ref bool bottomLeftUsed)
+		/// <summary>
+		/// Clears all tiles from the tilemap.
+		/// </summary>
+		public void Clear()
 		{
-			// Top-left to bottom-right diagonal
-			bool quadsAvailable = !topLeftUsed && !bottomRightUsed;
-			bool ruleApplies = quadsAvailable &&
-							   topLeft != null && bottomRight != null &&
-							   topLeft.Equals(bottomRight);
-			if (ruleApplies && topLeft!.TryGetTileData(TileVariant.Diagonal, TileAlignment.DiagonalTopLeftToBottomRight, out var tileData))
+			if (_tiles.Count == 0)
 			{
-				tiles.Add(tileData.Value);
-				topLeftUsed = true;
-				bottomRightUsed = true;
+				return;
 			}
 
-			// Top-right to bottom-left diagonal
-			quadsAvailable = !topRightUsed && !bottomLeftUsed;
-			ruleApplies = quadsAvailable &&
-						  topRight != null && bottomLeft != null &&
-						  topRight.Equals(bottomLeft);
-			if (ruleApplies && topRight!.TryGetTileData(TileVariant.Diagonal, TileAlignment.DiagonalTopRightToBottomLeft, out tileData))
-			{
-				tiles.Add(tileData.Value);
-				topRightUsed = true;
-				bottomLeftUsed = true;
-			}
-		}
-
-		private static void CheckEdgeRule(List<TileData> tiles, Material? topRight, Material? topLeft, Material? bottomRight, Material? bottomLeft, ref bool topRightUsed, ref bool topLeftUsed, ref bool bottomRightUsed, ref bool bottomLeftUsed)
-		{
-			// Top edge
-			bool quadsAvailable = !bottomLeftUsed && !bottomRightUsed;
-			bool ruleApplies = quadsAvailable &&
-							   bottomLeft != null && bottomRight != null &&
-							   bottomLeft.Equals(bottomRight);
-			if (ruleApplies && bottomLeft!.TryGetTileData(TileVariant.Edge, TileAlignment.TopEdge, out var tileData))
-			{
-				tiles.Add(tileData.Value);
-				bottomLeftUsed = true;
-				bottomRightUsed = true;
-			}
-
-			// Bottom edge
-			quadsAvailable = !topLeftUsed && !topRightUsed;
-			ruleApplies = quadsAvailable &&
-						  topLeft != null && topRight != null &&
-						  topLeft.Equals(topRight);
-			if (ruleApplies && topLeft!.TryGetTileData(TileVariant.Edge, TileAlignment.BottomEdge, out tileData))
-			{
-				tiles.Add(tileData.Value);
-				topLeftUsed = true;
-				topRightUsed = true;
-			}
-
-			// Left edge
-			quadsAvailable = !topRightUsed && !bottomRightUsed;
-			ruleApplies = quadsAvailable &&
-						  topRight != null && bottomRight != null &&
-						  topRight.Equals(bottomRight);
-			if (ruleApplies && topRight!.TryGetTileData(TileVariant.Edge, TileAlignment.LeftEdge, out tileData))
-			{
-				tiles.Add(tileData.Value);
-				topRightUsed = true;
-				bottomRightUsed = true;
-			}
-
-			// Right edge
-			quadsAvailable = !topLeftUsed && !bottomLeftUsed;
-			ruleApplies = quadsAvailable &&
-						  topLeft != null && bottomLeft != null &&
-						  topLeft.Equals(bottomLeft);
-			if (ruleApplies && topLeft!.TryGetTileData(TileVariant.Edge, TileAlignment.RightEdge, out tileData))
-			{
-				tiles.Add(tileData.Value);
-				topLeftUsed = true;
-				bottomLeftUsed = true;
-			}
-		}
-
-		private static void CheckOuterCornerRule(List<TileData> tiles, Material? topRight, Material? topLeft, Material? bottomRight, Material? bottomLeft, ref bool topRightUsed, ref bool topLeftUsed, ref bool bottomRightUsed, ref bool bottomLeftUsed)
-		{
-			// Top-left corner
-			if (!bottomRightUsed && bottomRight != null && bottomRight.TryGetTileData(TileVariant.OuterCorner, TileAlignment.TopLeftOuterCorner, out var tileData))
-			{
-				tiles.Add(tileData.Value);
-				topRightUsed = true;
-			}
-
-			// Top-right corner
-			if (!bottomLeftUsed && bottomLeft != null && bottomLeft.TryGetTileData(TileVariant.OuterCorner, TileAlignment.TopRightOuterCorner, out tileData))
-			{
-				tiles.Add(tileData.Value);
-				topLeftUsed = true;
-			}
-
-			// Bottom-left corner
-			if (!topRightUsed && topRight != null && topRight.TryGetTileData(TileVariant.OuterCorner, TileAlignment.BottomLeftOuterCorner, out tileData))
-			{
-				tiles.Add(tileData.Value);
-				bottomRightUsed = true;
-			}
-
-			// Bottom-right corner
-			if (!topLeftUsed && topLeft != null && topLeft.TryGetTileData(TileVariant.OuterCorner, TileAlignment.BottomRightOuterCorner, out tileData))
-			{
-				tiles.Add(tileData.Value);
-				bottomLeftUsed = true;
-			}
-		}
-
-		public IEnumerator<(int x, int y, Material? material)> GetEnumerator()
-		{
-			for (int y = 0; y < Height; y++)
-			{
-				for (int x = 0; x < Width; x++)
-				{
-					yield return (x, y, _grid[x, y]);
-				}
-			}
+			_tiles.Clear();
+			TilesInAreaChanged(TileGridRect);
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()

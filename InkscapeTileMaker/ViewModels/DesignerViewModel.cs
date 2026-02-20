@@ -160,6 +160,7 @@ namespace InkscapeTileMaker.ViewModels
 		partial void OnSelectedTileChanged(TileViewModel? value)
 		{
 			CanvasNeedsRedraw.Invoke();
+			OnSelectedPaintToolChanged(SelectedPaintTool);
 		}
 
 		partial void OnHoveredTileChanged((int row, int col)? value)
@@ -190,9 +191,17 @@ namespace InkscapeTileMaker.ViewModels
 		partial void OnSelectedPaintToolChanged(PaintTool value)
 		{
 			if (value == PaintTool.Cursor)
+			{
 				HoveredTileOffset = (0f, 0f);
+			}
+			else if (SelectedTile == null || SelectedTile.Type != TileType.DuelTileMaterial)
+			{
+				HoveredTileOffset = (0f, 0f);
+			}
 			else
+			{
 				HoveredTileOffset = (-0.5f, -0.5f);
+			}
 			CanvasNeedsRedraw.Invoke();
 		}
 
@@ -394,16 +403,16 @@ namespace InkscapeTileMaker.ViewModels
 			if (_renderedBitmap == null) return;
 			if (SelectedTile == null) return;
 
-			var previewRect = GetRectAtScale(new Scale(_inContextTilemap.Width, _inContextTilemap.Height))!.Value;
+			var previewRect = GetRectAtScale(new Scale(_inContextTilemap.Rect.Width, _inContextTilemap.Rect.Height))!.Value;
 
 			SKPaint? majorPaint = null;
 			SKPaint? minorPaint = null;
 
 			if (SelectedTile.Type == TileType.Singular)
 			{
-				for (int row = 0; row < _inContextTilemap.Height; row++)
+				for (int row = 0; row < _inContextTilemap.Rect.Height; row++)
 				{
-					for (int col = 0; col < _inContextTilemap.Width; col++)
+					for (int col = 0; col < _inContextTilemap.Rect.Width; col++)
 					{
 						var tileRect = GetTileRect(row, col);
 						DrawSingleTile(canvas, new TileData() { tile = SelectedTile.Value }, tileRect);
@@ -427,12 +436,12 @@ namespace InkscapeTileMaker.ViewModels
 					PathEffect = SKPathEffect.CreateDash([10, 10], 0),
 				};
 			}
-			else if (SelectedTile.IsMaterial)
+			else if (SelectedTile.Type == TileType.DuelTileMaterial)
 			{
 				var material = new Material(SelectedTile.Value.MaterialName, () => Tiles.Select(t => t.Value));
 				_inContextTilemap.Clear();
-				_inContextTilemap.AddSampleMaterial(material);
-				DrawMaterialTilemap(canvas, _inContextTilemap.Tilemap);
+				_inContextTilemap.AddSampleDuelGridMaterial(material);
+				DrawTilemap(canvas, _inContextTilemap.Composite);
 
 				majorPaint = new SKPaint
 				{
@@ -454,7 +463,7 @@ namespace InkscapeTileMaker.ViewModels
 				if (HoveredTile != null)
 				{
 					var tileRect = GetTileRect(HoveredTile.Value.row, HoveredTile.Value.col);
-					var tiles = _inContextTilemap.Tilemap.GetTilesOnDuelGrid(HoveredTile.Value.col, HoveredTile.Value.row);
+					var tiles = _inContextTilemap.Composite.GetTilesAt(HoveredTile.Value.col, HoveredTile.Value.row);
 					var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
 					if (tile == null)
 					{
@@ -483,9 +492,9 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			if (_renderedBitmap == null) return;
 
-			var previewRect = GetRectAtScale(new Scale(_paintTilemap.Width, _paintTilemap.Height))!.Value;
+			var previewRect = GetRectAtScale(new Scale(_paintTilemap.Rect.Width, _paintTilemap.Rect.Height))!.Value;
 
-			DrawMaterialTilemap(canvas, _paintTilemap.Tilemap);
+			DrawTilemap(canvas, _paintTilemap.Composite);
 
 			if (_tilesetConnection?.Tileset != null)
 			{
@@ -519,7 +528,7 @@ namespace InkscapeTileMaker.ViewModels
 				{
 					case PaintTool.Cursor:
 						{
-							var tiles = _paintTilemap.Tilemap.GetTilesOnDuelGrid(HoveredTile.Value.col, HoveredTile.Value.row);
+							var tiles = _paintTilemap.Composite.GetTilesAt(HoveredTile.Value.col, HoveredTile.Value.row);
 							var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
 							if (tile == null)
 							{
@@ -831,20 +840,16 @@ namespace InkscapeTileMaker.ViewModels
 			canvas.DrawBitmap(transformedBitmap, rect);
 		}
 
-		private void DrawMaterialTilemap(SKCanvas canvas, Tilemap tilemap)
+		private void DrawTilemap(SKCanvas canvas, ITilemap tilemap)
 		{
-			for (int row = 0; row < tilemap.Height; row++)
+			foreach (var (tiles, (x, y)) in tilemap)
 			{
-				for (int col = 0; col < tilemap.Width; col++)
+				if (tiles.Count == 0) continue;
+				SKRect tileRect = GetTileRect(y, x);
+				tileRect.Offset(0.5f, 0.5f);
+				foreach (var tileData in tiles)
 				{
-					var tileDataList = tilemap.GetTilesOnDuelGrid(col, row);
-					if (tileDataList.Count == 0) continue;
-					SKRect tileRect = GetTileRect(row, col);
-					tileRect.Offset(0.5f, 0.5f);
-					foreach (var tileData in tileDataList)
-					{
-						DrawSingleTile(canvas, tileData, tileRect);
-					}
+					DrawSingleTile(canvas, tileData, tileRect);
 				}
 			}
 		}
@@ -951,7 +956,7 @@ namespace InkscapeTileMaker.ViewModels
 				case PreviewMode.InContext:
 					{
 						var tileRect = GetTileRect(row, column);
-						var tiles = _inContextTilemap.Tilemap.GetTilesOnDuelGrid(column, row);
+						var tiles = _inContextTilemap.Composite.GetTilesAt(column, row);
 						var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
 						if (tile == null) return;
 						SelectedTile = Tiles.FirstOrDefault(t => t.Value.Row == tile.Row && t.Value.Column == tile.Column);
@@ -963,7 +968,7 @@ namespace InkscapeTileMaker.ViewModels
 						{
 							case PaintTool.Cursor:
 								{
-									var tiles = _paintTilemap.Tilemap.GetTilesOnDuelGrid(column, row);
+									var tiles = _paintTilemap.Composite.GetTilesAt(column, row);
 									var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
 									if (tile == null) return;
 									SelectedTile = Tiles.FirstOrDefault(t => t.Value.Row == tile.Row && t.Value.Column == tile.Column);
@@ -972,14 +977,32 @@ namespace InkscapeTileMaker.ViewModels
 							case PaintTool.Paint:
 								{
 									if (SelectedTile == null) return;
-									var material = new Material(SelectedTile.Value.MaterialName, () => Tiles.Select(t => t.Value));
-									_paintTilemap.Tilemap[column, row] = material;
+									switch (SelectedTile.Type)
+									{
+										case TileType.Singular:
+											_paintTilemap.Regular.SetTileAt(column, row, new TileData() { tile = SelectedTile.Value });
+											break;
+										case TileType.DuelTileMaterial:
+											_paintTilemap.DuelGridMaterial[column, row] = new Material(SelectedTile.Value.MaterialName, () => Tiles.Select(t => t.Value));
+											break;
+									}
+
 									CanvasNeedsRedraw.Invoke();
 								}
 								break;
 							case PaintTool.Eraser:
 								{
-									_paintTilemap.Tilemap[column, row] = null;
+									if (SelectedTile == null) return;
+									switch (SelectedTile.Type)
+									{
+										case TileType.Singular:
+											_paintTilemap.Regular.ClearTilesAt(column, row);
+											break;
+										case TileType.DuelTileMaterial:
+											_paintTilemap.DuelGridMaterial[column, row] = null;
+											break;
+									}
+
 									CanvasNeedsRedraw.Invoke();
 								}
 								break;
