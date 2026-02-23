@@ -118,10 +118,10 @@ namespace InkscapeTileMaker.ViewModels
 		partial void OnSelectedTemplateChanged(TemplateRecord? value)
 		{
 			if (value == null) return;
-			TileSizeX = value.TileSize.width;
-			TileSizeY = value.TileSize.height;
-			TileSetSizeX = value.TilesetSize.width / TileSizeX;
-			TileSetSizeY = value.TilesetSize.height / TileSizeY;
+			TileSizeX = value.TileSize.Width;
+			TileSizeY = value.TileSize.Height;
+			TileSetSizeX = value.TilesetSize.Width / TileSizeX;
+			TileSetSizeY = value.TilesetSize.Height / TileSizeY;
 		}
 	}
 }

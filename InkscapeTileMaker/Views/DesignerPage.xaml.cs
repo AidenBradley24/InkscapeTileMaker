@@ -144,8 +144,8 @@ namespace InkscapeTileMaker.Views
 			double logicalX = px * previewRect.Value.Width / zoom;
 			double logicalY = py * previewRect.Value.Height / zoom;
 
-			var tileWidth = (double)tileSize.width;
-			var tileHeight = (double)tileSize.height;
+			var tileWidth = (double)tileSize.Width;
+			var tileHeight = (double)tileSize.Height;
 
 			logicalX -= tileWidth / 2;
 			logicalY -= tileHeight / 2;

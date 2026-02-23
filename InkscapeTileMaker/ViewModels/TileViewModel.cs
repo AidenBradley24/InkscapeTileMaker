@@ -183,7 +183,7 @@ namespace InkscapeTileMaker.ViewModels
 			var instance = (TileViewModel)context.ObjectInstance;
 			var size = instance._designerViewModel.TileSetSize;
 
-			if (position.row < 0 || position.row > size.height || position.col < 0 || position.col > size.width)
+			if (position.row < 0 || position.row > size.Height || position.col < 0 || position.col > size.Width)
 			{
 				return new ValidationResult("Tile position must be within the bounds of the tile set.");
 			}

@@ -278,8 +278,8 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
 		if (Tileset is null) throw new InvalidOperationException("Tileset is not loaded.");
 
-		int maxRow = Tileset.Size.height / Tileset.TileSize.height - 1;
-		int maxCol = Tileset.Size.width / Tileset.TileSize.width - 1;
+		int maxRow = Tileset.Size.Height / Tileset.TileSize.Height - 1;
+		int maxCol = Tileset.Size.Width / Tileset.TileSize.Width - 1;
 
 		foreach (var tileElement in _svg.GetAllTileElements())
 		{
@@ -310,8 +310,8 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 					if (!settings.HasFlag(TilesetFillSettings.FillEmptyTiles))
 					{
 						ITilesetRenderingService renderingService = _services.GetRequiredService<ITilesetRenderingService>();
-						bool isEmpty = await renderingService.IsSegmentEmptyAsync(_file!, col * Tileset.TileSize.width, row * Tileset.TileSize.height,
-							(col + 1) * Tileset.TileSize.width, (row + 1) * Tileset.TileSize.height, CancellationToken.None);
+						bool isEmpty = await renderingService.IsSegmentEmptyAsync(_file!, col * Tileset.TileSize.Width, row * Tileset.TileSize.Height,
+							(col + 1) * Tileset.TileSize.Width, (row + 1) * Tileset.TileSize.Height, CancellationToken.None);
 						if (isEmpty) continue;
 					}
 

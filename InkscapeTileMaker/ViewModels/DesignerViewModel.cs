@@ -286,10 +286,11 @@ namespace InkscapeTileMaker.ViewModels
 							return _svgRenderingService.RenderSegmentAsync(
 							file,
 							".png",
-							left: tile.Value.Column * tileset.TileSize.width,
-							top: tile.Value.Row * tileset.TileSize.height,
-							right: (tile.Value.Column + 1) * tileset.TileSize.width,
-							bottom: (tile.Value.Row + 1) * tileset.TileSize.height,
+							left: tile.Value.Column * tileset.TileSize.Width,
+							top: tile.Value.Row * tileset.TileSize.Height,
+							right: (tile.Value.Column + 1) * tileset.TileSize.Width,
+							bottom: (tile.Value.Row + 1) * tileset.TileSize.Height,
+							null,
 							token);
 						});
 					}
@@ -524,8 +525,8 @@ namespace InkscapeTileMaker.ViewModels
 				};
 
 				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.TileSize / 2, 2, majorPaint, minorPaint);
-				previewRect.Bottom -= _tilesetConnection.Tileset.TileSize.height * (float)SelectedZoomLevel;
-				previewRect.Right -= _tilesetConnection.Tileset.TileSize.width * (float)SelectedZoomLevel;
+				previewRect.Bottom -= _tilesetConnection.Tileset.TileSize.Height * (float)SelectedZoomLevel;
+				previewRect.Right -= _tilesetConnection.Tileset.TileSize.Width * (float)SelectedZoomLevel;
 				DrawBorder(canvas, previewRect);
 			}
 
@@ -587,8 +588,8 @@ namespace InkscapeTileMaker.ViewModels
 			return SelectedPreviewMode switch
 			{
 				PreviewMode.Image => GetUnscaledImageRect(),
-				PreviewMode.InContext => new SKRectI(0, 0, TileSize.width * 8, TileSize.height * 8),
-				PreviewMode.Paint => new SKRectI(0, 0, TileSize.width * 8, TileSize.height * 8),
+				PreviewMode.InContext => new SKRectI(0, 0, TileSize.Width * 8, TileSize.Height * 8),
+				PreviewMode.Paint => new SKRectI(0, 0, TileSize.Width * 8, TileSize.Height * 8),
 				_ => null,
 			};
 		}
@@ -622,16 +623,16 @@ namespace InkscapeTileMaker.ViewModels
 				Top = PreviewOffset.Y * zoomFactor,
 				Left = PreviewOffset.X * zoomFactor,
 				Size = new SKSize(
-					scale.width * _tilesetConnection.Tileset.TileSize.width * zoomFactor,
-					scale.height * _tilesetConnection.Tileset.TileSize.height * zoomFactor),
+					scale.Width * _tilesetConnection.Tileset.TileSize.Width * zoomFactor,
+					scale.Height * _tilesetConnection.Tileset.TileSize.Height * zoomFactor),
 			};
 		}
 
 		public SKRect GetTileRect(int row, int column)
 		{
 			if (_tilesetConnection?.Tileset == null) return SKRect.Empty;
-			float width = _tilesetConnection.Tileset.TileSize.width * (float)SelectedZoomLevel;
-			float height = _tilesetConnection.Tileset.TileSize.height * (float)SelectedZoomLevel;
+			float width = _tilesetConnection.Tileset.TileSize.Width * (float)SelectedZoomLevel;
+			float height = _tilesetConnection.Tileset.TileSize.Height * (float)SelectedZoomLevel;
 			float top = height * row + PreviewOffset.Y * (float)SelectedZoomLevel;
 			float left = width * column + PreviewOffset.X * (float)SelectedZoomLevel;
 			float right = left + width;
@@ -643,8 +644,8 @@ namespace InkscapeTileMaker.ViewModels
 		public SKRectI GetUnscaledTileRect(int row, int column)
 		{
 			if (_tilesetConnection?.Tileset == null) return SKRectI.Empty;
-			int width = _tilesetConnection.Tileset.TileSize.width;
-			int height = _tilesetConnection.Tileset.TileSize.height;
+			int width = _tilesetConnection.Tileset.TileSize.Width;
+			int height = _tilesetConnection.Tileset.TileSize.Height;
 			int top = height * row;
 			int left = width * column;
 			int right = left + width;
@@ -674,10 +675,10 @@ namespace InkscapeTileMaker.ViewModels
 		private void DrawGrid(SKCanvas canvas, SKRect rect, Scale spacing, int majorSpacing, SKPaint majorPaint, SKPaint minorPaint)
 		{
 			if (!ShowGridLines) return;
-			if (spacing.width <= 0 || spacing.height <= 0 || SelectedZoomLevel <= 0) return;
+			if (spacing.Width <= 0 || spacing.Height <= 0 || SelectedZoomLevel <= 0) return;
 
-			float sx = spacing.width * (float)SelectedZoomLevel;
-			float sy = spacing.height * (float)SelectedZoomLevel;
+			float sx = spacing.Width * (float)SelectedZoomLevel;
+			float sy = spacing.Height * (float)SelectedZoomLevel;
 
 			// Vertical lines
 			int verticalIndex = 0;
@@ -828,15 +829,15 @@ namespace InkscapeTileMaker.ViewModels
 		private void DrawSingleTile(SKCanvas canvas, TileData tileData, SKRect rect)
 		{
 			if (_renderedBitmap == null) return;
-			using var tileBitmap = new SKBitmap(TileSize.width, TileSize.height);
+			using var tileBitmap = new SKBitmap(TileSize.Width, TileSize.Height);
 			if (!_renderedBitmap.ExtractSubset(tileBitmap, GetUnscaledTileRect(tileData.tile.Row, tileData.tile.Column))) return;
-			using var transformedBitmap = new SKBitmap(TileSize.width, TileSize.height);
+			using var transformedBitmap = new SKBitmap(TileSize.Width, TileSize.Height);
 			using (var tileCanvas = new SKCanvas(transformedBitmap))
 			{
 				tileCanvas.Clear(SKColors.Transparent);
 
-				float cx = TileSize.width / 2f;
-				float cy = TileSize.height / 2f;
+				float cx = TileSize.Width / 2f;
+				float cy = TileSize.Height / 2f;
 
 				var matrix = SKMatrix.Identity;
 				matrix = matrix.PostConcat(SKMatrix.CreateTranslation(-cx, -cy));
@@ -1151,10 +1152,12 @@ namespace InkscapeTileMaker.ViewModels
 			return await _svgRenderingService.RenderSegmentAsync(
 				_tilesetConnection.CurrentFile,
 				extension,
-				left: tile.Column * tileset.TileSize.width,
-				top: tile.Row * tileset.TileSize.height,
-				right: (tile.Column + 1) * tileset.TileSize.width,
-				bottom: (tile.Row + 1) * tileset.TileSize.height, CancellationToken.None);
+				left: tile.Column * tileset.TileSize.Width,
+				top: tile.Row * tileset.TileSize.Height,
+				right: (tile.Column + 1) * tileset.TileSize.Width,
+				bottom: (tile.Row + 1) * tileset.TileSize.Height,
+				null,
+				CancellationToken.None);
 		}
 
 		[RelayCommand]
@@ -1173,10 +1176,11 @@ namespace InkscapeTileMaker.ViewModels
 						using var stream = await _svgRenderingService.RenderSegmentAsync(
 							_tilesetConnection.CurrentFile,
 							".png",
-							left: tvm.Value.Column * tileset.TileSize.width,
-							top: tvm.Value.Row * tileset.TileSize.height,
-							right: (tvm.Value.Column + 1) * tileset.TileSize.width,
-							bottom: (tvm.Value.Row + 1) * tileset.TileSize.height,
+							left: tvm.Value.Column * tileset.TileSize.Width,
+							top: tvm.Value.Row * tileset.TileSize.Height,
+							right: (tvm.Value.Column + 1) * tileset.TileSize.Width,
+							bottom: (tvm.Value.Row + 1) * tileset.TileSize.Height,
+							null,
 							CancellationToken.None);
 						string tileFileName = $"{tvm.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].png";
 						var entry = zip.CreateEntry(tileFileName);
@@ -1192,10 +1196,11 @@ namespace InkscapeTileMaker.ViewModels
 						using var stream = await _svgRenderingService.RenderSegmentAsync(
 							_tilesetConnection.CurrentFile,
 							".png",
-							left: tvm.Value.Column * tileset.TileSize.width,
-							top: tvm.Value.Row * tileset.TileSize.height,
-							right: (tvm.Value.Column + 1) * tileset.TileSize.width,
-							bottom: (tvm.Value.Row + 1) * tileset.TileSize.height,
+							left: tvm.Value.Column * tileset.TileSize.Width,
+							top: tvm.Value.Row * tileset.TileSize.Height,
+							right: (tvm.Value.Column + 1) * tileset.TileSize.Width,
+							bottom: (tvm.Value.Row + 1) * tileset.TileSize.Height,
+							null,
 							CancellationToken.None);
 						string tileFileName = $"{tvm.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].png";
 						var entry = zip.CreateEntry(tileFileName);

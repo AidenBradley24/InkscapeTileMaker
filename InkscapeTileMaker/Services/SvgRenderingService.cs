@@ -79,9 +79,9 @@ namespace InkscapeTileMaker.Services
 			return exportFile.OpenRead();
 		}
 
-		public async Task<Stream> RenderSegmentAsync(FileInfo file, string extension, int left, int top, int right, int bottom, CancellationToken cancellationToken = default)
+		public async Task<Stream> RenderSegmentAsync(FileInfo file, string extension, int left, int top, int right, int bottom, Scale? exportScale = null, CancellationToken cancellationToken = default)
 		{
-			var requestHash = HashCode.Combine(file.FullName, extension, left, top, right, bottom, await ComputeFileHashAsync(file));
+			var requestHash = HashCode.Combine(file.FullName, extension, left, top, right, bottom, exportScale, await ComputeFileHashAsync(file));
 			CheckAndAddToCache(file, requestHash);
 
 			if (!string.IsNullOrWhiteSpace(extension) && extension.StartsWith('.'))
@@ -107,7 +107,8 @@ namespace InkscapeTileMaker.Services
 					$"--export-area={left}:{top}:{right}:{bottom} " +
 					$"--export-type=\"{exportType}\" " +
 					$"--export-filename=\"{exportFile.FullName}\" \"{file.FullName}\""
-						+ (exportType == "svg" ? " --export-plain-svg" : "");
+						+ (exportType == "svg" ? " --export-plain-svg" : "")
+						+ (exportScale.HasValue ? $" --export-width={exportScale.Value.Width} --export-height={exportScale.Value.Height}" : "");
 
 				var process = Process.Start(startInfo) ?? throw new Exception("Failed to start Inkscape process.");
 				try
@@ -143,7 +144,7 @@ namespace InkscapeTileMaker.Services
 
 		public async Task<bool> IsSegmentEmptyAsync(FileInfo file, int left, int top, int right, int bottom, CancellationToken cancellationToken = default)
 		{
-			using var pngStream = await RenderSegmentAsync(file, "png", left, top, right, bottom, cancellationToken);
+			using var pngStream = await RenderSegmentAsync(file, "png", left, top, right, bottom, null, cancellationToken);
 			using var bitmap = SKBitmap.Decode(pngStream) ?? throw new Exception("Failed to decode rendered PNG.");
 			for (int y = 0; y < bitmap.Height; y++)
 			{
