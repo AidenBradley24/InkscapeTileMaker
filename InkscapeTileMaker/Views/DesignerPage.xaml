@@ -57,13 +57,11 @@
 
     <ContentPage.MenuBarItems>
         <MenuBarItem Text="File">
-            <MenuFlyoutItem Text="New Design"
-                             Command="{Binding NewDesignCommand}" />
-            <MenuFlyoutItem Text="Open Design"
-                             Command="{Binding OpenDesignCommand}" />
-            <MenuFlyoutItem Text="Save Design"
+            <MenuFlyoutItem Text="Open/New..."
+                             Command="{Binding OpenLandingCommand}" />
+            <MenuFlyoutItem Text="Save..."
                              Command="{Binding SaveDesignCommand}" />
-            <MenuFlyoutItem Text="Save Design As..."
+            <MenuFlyoutItem Text="Save As..."
                              Command="{Binding SaveDesignAsCommand}" />
             <MenuFlyoutSeparator />
             <MenuFlyoutItem Text="Exit"

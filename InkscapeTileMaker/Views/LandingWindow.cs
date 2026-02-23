@@ -35,7 +35,7 @@ public class LandingWindow : Window, ILandingNavigation, IWindowProvider
 
 	public void CloseWindow()
 	{
-		throw new NotImplementedException();
+		Application.Current?.CloseWindow(this);
 	}
 
 	public async Task GotoLandingPage()

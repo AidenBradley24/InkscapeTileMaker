@@ -9,7 +9,7 @@ namespace InkscapeTileMaker.Models
 	/// Manages a duel grid of materials.
 	/// Coordinates (x, y) where (1, 1) is bottom right.
 	/// </summary>
-	public class DuelGridMaterialTilemap : ITilemap
+	public sealed class DuelGridMaterialTilemap : ITilemap
 	{
 		private readonly Material?[,] _duelGridMaterial;
 

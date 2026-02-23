@@ -90,6 +90,7 @@ namespace InkscapeTileMaker.ViewModels
 
 			var svgFile = new FileInfo(result.FullPath);
 			_windowService.OpenDesignerWindow(svgFile);
+			_windowProvider?.CloseWindow();
 		}
 
 		[RelayCommand]
@@ -110,6 +111,7 @@ namespace InkscapeTileMaker.ViewModels
 			{
 				var svgFile = new FileInfo(result.FilePath);
 				_windowService.OpenDesignerWindow(svgFile);
+				_windowProvider?.CloseWindow();
 			}
 		}
 

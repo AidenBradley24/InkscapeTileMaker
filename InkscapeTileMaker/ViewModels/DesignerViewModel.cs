@@ -859,38 +859,9 @@ namespace InkscapeTileMaker.ViewModels
 		#region Commands
 
 		[RelayCommand]
-		public async Task NewDesign()
+		public async Task OpenLanding()
 		{
-			_windowService.OpenDesignerWindow(svgFile: null);
-		}
-
-		[RelayCommand]
-		public async Task OpenDesign()
-		{
-			var result = await FilePicker.PickAsync(new PickOptions
-			{
-				PickerTitle = "Open SVG design",
-				FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-				{
-					{ DevicePlatform.iOS, new[] { "public.svg" } },
-					{ DevicePlatform.Android, new[] { "image/svg+xml" } },
-					{ DevicePlatform.WinUI, new[] { ".svg" } },
-					{ DevicePlatform.MacCatalyst, new[] { "public.svg" } },
-				})
-			});
-
-			if (result == null)
-			{
-				return;
-			}
-
-			if (!string.Equals(Path.GetExtension(result.FullPath), ".svg", StringComparison.OrdinalIgnoreCase))
-			{
-				return;
-			}
-
-			var svgFile = new FileInfo(result.FullPath);
-			_windowService.OpenDesignerWindow(svgFile);
+			_windowService.OpenLandingWindow();
 		}
 
 		[RelayCommand]

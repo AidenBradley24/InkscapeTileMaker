@@ -36,4 +36,12 @@ public class WindowOpeningService : IWindowOpeningService
 			_ = connection.LoadAsync(file);
 		}
 	}
+
+	public void OpenLandingWindow()
+	{
+		var app = Application.Current;
+		if (app is null) return;
+		var landingWindow = _services.GetRequiredService<LandingWindow>();
+		app.OpenWindow(landingWindow);
+	}
 }
