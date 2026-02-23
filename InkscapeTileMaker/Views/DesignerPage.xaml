@@ -141,7 +141,15 @@
                         ItemsSource="{Binding ZoomLevels}"
                         ItemDisplayBinding="{Binding Converter={StaticResource DecimalToPercentageConverter}}"
                         SelectedItem="{Binding SelectedZoomLevel, Mode=TwoWay}" />
-
+                    <VerticalStackLayout
+                            Spacing="4"
+                            Margin="5,0,0,0">
+                        <Label Text="Grid"
+                               VerticalOptions="Center"
+                               FontSize="Micro" />
+                        <Switch VerticalOptions="Center"
+                                IsToggled="{Binding ShowGridLines, Mode=TwoWay}" />
+                    </VerticalStackLayout>
                     <Border IsVisible="{Binding SelectedPreviewMode, Converter={StaticResource PreviewIsPaintConverter}}"
                             Margin="5" StrokeThickness="0">
                         <Grid RowDefinitions="Auto, 40">

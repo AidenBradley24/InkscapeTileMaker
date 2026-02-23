@@ -48,6 +48,9 @@ namespace InkscapeTileMaker.ViewModels
 		public partial decimal SelectedZoomLevel { get; set; }
 
 		[ObservableProperty]
+		public partial bool ShowGridLines { get; set; } = true;
+
+		[ObservableProperty]
 		public partial double TileIconScale { get; set; } = 80;
 
 		[ObservableProperty]
@@ -148,6 +151,11 @@ namespace InkscapeTileMaker.ViewModels
 		#region Value Changed Handlers
 
 		partial void OnSelectedZoomLevelChanged(decimal value)
+		{
+			CanvasNeedsRedraw.Invoke();
+		}
+
+		partial void OnShowGridLinesChanged(bool value)
 		{
 			CanvasNeedsRedraw.Invoke();
 		}
@@ -665,6 +673,7 @@ namespace InkscapeTileMaker.ViewModels
 
 		private void DrawGrid(SKCanvas canvas, SKRect rect, Scale spacing, int majorSpacing, SKPaint majorPaint, SKPaint minorPaint)
 		{
+			if (!ShowGridLines) return;
 			if (spacing.width <= 0 || spacing.height <= 0 || SelectedZoomLevel <= 0) return;
 
 			float sx = spacing.width * (float)SelectedZoomLevel;
