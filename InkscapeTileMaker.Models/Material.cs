@@ -52,9 +52,9 @@ namespace InkscapeTileMaker.Models
 			var materials = new Dictionary<string, Material>();
 			foreach (var tile in tilesProvider())
 			{
-				if (!string.IsNullOrEmpty(tile.MaterialName) && !materials.ContainsKey(tile.MaterialName.ToLowerInvariant()))
+				if (!string.IsNullOrEmpty(tile.MaterialName) && !materials.ContainsKey(tile.MaterialName))
 				{
-					materials[tile.MaterialName.ToLowerInvariant()] = new Material(tile.MaterialName, tilesProvider);
+					materials[tile.MaterialName] = new Material(tile.MaterialName, tilesProvider);
 				}
 			}
 			return materials.Values.ToList();
@@ -63,7 +63,7 @@ namespace InkscapeTileMaker.Models
 		public bool Equals(Material other)
 		{
 			if (other == null) return false;
-			return _name.Equals(other._name, StringComparison.InvariantCultureIgnoreCase);
+			return _name.Equals(other._name, StringComparison.Ordinal);
 		}
 
 		public bool TryGetTileData(TileVariant variant, TileAlignment alignment, [NotNullWhen(true)] out TileData? tileData)

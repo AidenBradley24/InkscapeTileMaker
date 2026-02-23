@@ -21,11 +21,12 @@
 			// Brick (many tiles), Wood (one), Stone/stone (case variants) => 3 materials
 			var materials = Material.GetAllMaterials(() => tiles);
 
-			Assert.Equal(3, materials.Count);
+			Assert.Equal(4, materials.Count);
 
 			Assert.Contains(materials, m => m.Name == "Brick");
 			Assert.Contains(materials, m => m.Name == "Wood");
 			Assert.Contains(materials, m => m.Name == "Stone");
+			Assert.Contains(materials, m => m.Name == "stone");
 		}
 
 		[Fact]
@@ -34,14 +35,6 @@
 			var materials = Material.GetAllMaterials(() => tiles);
 			Assert.DoesNotContain(materials, m => m.Name == string.Empty);
 			Assert.DoesNotContain(materials, m => m.Name == null);
-		}
-
-		[Fact]
-		public void GetAllMaterials_IsCaseInsensitiveOnMaterialKey()
-		{
-			var materials = Material.GetAllMaterials(() => tiles);
-			var stoneMaterials = materials.Where(m => m.Name.Equals("Stone", StringComparison.OrdinalIgnoreCase));
-			Assert.Single(stoneMaterials);
 		}
 
 		[Fact]
