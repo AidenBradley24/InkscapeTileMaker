@@ -4,15 +4,15 @@
 	{
 		readonly List<Tile> tiles =
 		[
-			new Tile { Name = "CoreTile", MaterialName = "Brick", Variant=TileVariant.Core, Type = TileType.DuelTileMaterial, Row = 0, Column = 0, Allignment = TileAlignment.Core, Priority = 1 },
-			new Tile { Name = "EdgeTile", MaterialName = "Brick", Variant=TileVariant.Edge, Type = TileType.DuelTileMaterial, Row = 0, Column = 1, Allignment = TileAlignment.RightEdge, Priority = 1 },
-			new Tile { Name = "EdgeTile2", MaterialName = "Brick", Variant=TileVariant.Edge, Type = TileType.DuelTileMaterial, Row = 0, Column = 1, Allignment = TileAlignment.BottomEdge, Priority = 2 },
-			new Tile { Name = "CornerTile", MaterialName = "Brick", Variant=TileVariant.OuterCorner, Type = TileType.DuelTileMaterial, Row = 0, Column = 2, Allignment = TileAlignment.TopLeftOuterCorner, Priority = 1 },
+			new Tile { Name = "CoreTile", MaterialName = "Brick", Variant=TileVariant.Core, Type = TileType.DualTileMaterial, Row = 0, Column = 0, Allignment = TileAlignment.Core, Priority = 1 },
+			new Tile { Name = "EdgeTile", MaterialName = "Brick", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Row = 0, Column = 1, Allignment = TileAlignment.RightEdge, Priority = 1 },
+			new Tile { Name = "EdgeTile2", MaterialName = "Brick", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Row = 0, Column = 1, Allignment = TileAlignment.BottomEdge, Priority = 2 },
+			new Tile { Name = "CornerTile", MaterialName = "Brick", Variant=TileVariant.OuterCorner, Type = TileType.DualTileMaterial, Row = 0, Column = 2, Allignment = TileAlignment.TopLeftOuterCorner, Priority = 1 },
 			new Tile { Name = "SingularTile", MaterialName = "Wood", Variant=TileVariant.Core, Type = TileType.Singular, Row = 1, Column = 0, Priority = 1 },
-			new Tile { Name = "NoMaterialTile", MaterialName = string.Empty, Variant=TileVariant.Core, Type = TileType.DuelTileMaterial, Row = 2, Column = 0, Priority = 1 },
-			new Tile { Name = "NullMaterialTile", MaterialName = null, Variant=TileVariant.Core, Type = TileType.DuelTileMaterial, Row = 2, Column = 1, Priority = 1 },
-			new Tile { Name = "StoneCore", MaterialName = "Stone", Variant=TileVariant.Core, Type = TileType.DuelTileMaterial, Row = 3, Column = 0, Priority = 1 },
-			new Tile { Name = "StoneEdge", MaterialName = "stone", Variant=TileVariant.Edge, Type = TileType.DuelTileMaterial, Row = 3, Column = 1, Priority = 1 },
+			new Tile { Name = "NoMaterialTile", MaterialName = string.Empty, Variant=TileVariant.Core, Type = TileType.DualTileMaterial, Row = 2, Column = 0, Priority = 1 },
+			new Tile { Name = "NullMaterialTile", MaterialName = null, Variant=TileVariant.Core, Type = TileType.DualTileMaterial, Row = 2, Column = 1, Priority = 1 },
+			new Tile { Name = "StoneCore", MaterialName = "Stone", Variant=TileVariant.Core, Type = TileType.DualTileMaterial, Row = 3, Column = 0, Priority = 1 },
+			new Tile { Name = "StoneEdge", MaterialName = "stone", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Row = 3, Column = 1, Priority = 1 },
 		];
 
 		[Fact]
@@ -68,9 +68,9 @@
 		{
 			var priorityTiles = new List<Tile>
 			{
-				new Tile { Name = "LowPriority", MaterialName = "PriorityMat", Variant=TileVariant.Edge, Type = TileType.DuelTileMaterial, Allignment = TileAlignment.RightEdge, Priority = 1 },
-				new Tile { Name = "HighPriority", MaterialName = "PriorityMat", Variant=TileVariant.Edge, Type = TileType.DuelTileMaterial, Allignment = TileAlignment.RightEdge, Priority = 10 },
-				new Tile { Name = "OtherAlignment", MaterialName = "PriorityMat", Variant=TileVariant.Edge, Type = TileType.DuelTileMaterial, Allignment = TileAlignment.LeftEdge, Priority = 100 },
+				new Tile { Name = "LowPriority", MaterialName = "PriorityMat", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Allignment = TileAlignment.RightEdge, Priority = 1 },
+				new Tile { Name = "HighPriority", MaterialName = "PriorityMat", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Allignment = TileAlignment.RightEdge, Priority = 10 },
+				new Tile { Name = "OtherAlignment", MaterialName = "PriorityMat", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Allignment = TileAlignment.LeftEdge, Priority = 100 },
 			};
 
 			var material = new Material("PriorityMat", () => priorityTiles);
@@ -84,8 +84,8 @@
 		{
 			var priorityTiles = new List<Tile>
 			{
-				new Tile { Name = "LowPriority", MaterialName = "PriorityMat2", Variant=TileVariant.Edge, Type = TileType.DuelTileMaterial, Allignment = TileAlignment.TopEdge, Priority = 1 },
-				new Tile { Name = "HighPriority", MaterialName = "PriorityMat2", Variant=TileVariant.Edge, Type = TileType.DuelTileMaterial, Allignment = TileAlignment.LeftEdge, Priority = 10 },
+				new Tile { Name = "LowPriority", MaterialName = "PriorityMat2", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Allignment = TileAlignment.TopEdge, Priority = 1 },
+				new Tile { Name = "HighPriority", MaterialName = "PriorityMat2", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Allignment = TileAlignment.LeftEdge, Priority = 10 },
 			};
 
 			var material = new Material("PriorityMat2", () => priorityTiles);

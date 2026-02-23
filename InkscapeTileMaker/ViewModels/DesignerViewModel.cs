@@ -202,7 +202,7 @@ namespace InkscapeTileMaker.ViewModels
 			{
 				HoveredTileOffset = (0f, 0f);
 			}
-			else if (SelectedTile == null || SelectedTile.Type != TileType.DuelTileMaterial)
+			else if (SelectedTile == null || SelectedTile.Type != TileType.DualTileMaterial)
 			{
 				HoveredTileOffset = (0f, 0f);
 			}
@@ -444,11 +444,11 @@ namespace InkscapeTileMaker.ViewModels
 					PathEffect = SKPathEffect.CreateDash([10, 10], 0),
 				};
 			}
-			else if (SelectedTile.Type == TileType.DuelTileMaterial)
+			else if (SelectedTile.Type == TileType.DualTileMaterial)
 			{
 				var material = new Material(SelectedTile.Value.MaterialName, () => Tiles.Select(t => t.Value));
 				_inContextTilemap.Clear();
-				_inContextTilemap.AddSampleDuelGridMaterial(material);
+				_inContextTilemap.AddSampleDualGridMaterial(material);
 				DrawTilemap(canvas, _inContextTilemap.Composite);
 
 				majorPaint = new SKPaint
@@ -962,8 +962,8 @@ namespace InkscapeTileMaker.ViewModels
 										case TileType.Singular:
 											_paintTilemap.Regular.SetTileAt(column, row, new TileData() { tile = SelectedTile.Value });
 											break;
-										case TileType.DuelTileMaterial:
-											_paintTilemap.DuelGridMaterial[column, row] = new Material(SelectedTile.Value.MaterialName, () => Tiles.Select(t => t.Value));
+										case TileType.DualTileMaterial:
+											_paintTilemap.DualGridMaterial[column, row] = new Material(SelectedTile.Value.MaterialName, () => Tiles.Select(t => t.Value));
 											break;
 									}
 
@@ -978,8 +978,8 @@ namespace InkscapeTileMaker.ViewModels
 										case TileType.Singular:
 											_paintTilemap.Regular.ClearTilesAt(column, row);
 											break;
-										case TileType.DuelTileMaterial:
-											_paintTilemap.DuelGridMaterial[column, row] = null;
+										case TileType.DualTileMaterial:
+											_paintTilemap.DualGridMaterial[column, row] = null;
 											break;
 									}
 

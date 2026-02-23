@@ -7,7 +7,7 @@ namespace InkscapeTileMaker.Models
 	public enum TileType
 	{
 		Singular,
-		DuelTileMaterial,
+		DualTileMaterial,
 		// PipeMaterial // TODO have more material types
 	}
 
@@ -23,7 +23,7 @@ namespace InkscapeTileMaker.Models
 			return type switch
 			{
 				TileType.Singular => new[] { TileVariant.Core },
-				TileType.DuelTileMaterial => new[] 
+				TileType.DualTileMaterial => new[] 
 				{ 
 					TileVariant.Core,
 					TileVariant.Edge,

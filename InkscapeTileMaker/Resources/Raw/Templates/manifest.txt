@@ -1,2 +1,2 @@
 ﻿Grid.svg
-DuelGridMaterial.svg
+DualGridMaterial.svg

@@ -6,12 +6,12 @@ using System.Linq;
 namespace InkscapeTileMaker.Models
 {
 	/// <summary>
-	/// Manages a duel grid of materials.
+	/// Manages a dual grid of materials.
 	/// Coordinates (x, y) where (1, 1) is bottom right.
 	/// </summary>
-	public sealed class DuelGridMaterialTilemap : ITilemap
+	public sealed class DualGridMaterialTilemap : ITilemap
 	{
-		private readonly Material?[,] _duelGridMaterial;
+		private readonly Material?[,] _dualGridMaterial;
 
 		public int Width { get; }
 		public int Height { get; }
@@ -24,36 +24,36 @@ namespace InkscapeTileMaker.Models
 			{
 				if (x < 0 || x >= Width || y < 0 || y >= Height)
 					return null;
-				return _duelGridMaterial[x, y];
+				return _dualGridMaterial[x, y];
 			}
 			set
 			{
 				if (x < 0 || x >= Width || y < 0 || y >= Height)
 					return;
-				_duelGridMaterial[x, y] = value;
+				_dualGridMaterial[x, y] = value;
 				TilesInAreaChanged(new Rect(x, y, x + 1, y + 1));
 			}
 		}
 
 		public event Action<Rect> TilesInAreaChanged = delegate { };
 
-		public DuelGridMaterialTilemap(int width, int height)
+		public DualGridMaterialTilemap(int width, int height)
 		{
 			Width = width;
 			Height = height;
-			_duelGridMaterial = new Material[width, height];
+			_dualGridMaterial = new Material[width, height];
 		}
 
-		public int Paint(Material material, IEnumerable<(int x, int y)> coordinatesOnDuelGrid)
+		public int Paint(Material material, IEnumerable<(int x, int y)> coordinatesOnDualGrid)
 		{
 			int count = 0;
-			foreach (var (x, y) in coordinatesOnDuelGrid)
+			foreach (var (x, y) in coordinatesOnDualGrid)
 			{
 				if (x < 0 || x >= Width || y < 0 || y >= Height)
 					continue;
-				if (_duelGridMaterial[x, y] != null && _duelGridMaterial[x, y]!.Equals(material))
+				if (_dualGridMaterial[x, y] != null && _dualGridMaterial[x, y]!.Equals(material))
 					continue;
-				_duelGridMaterial[x, y] = material;
+				_dualGridMaterial[x, y] = material;
 				count++;
 			}
 			TilesInAreaChanged(TileGridRect);
@@ -66,7 +66,7 @@ namespace InkscapeTileMaker.Models
 			{
 				for (int x = 0; x < Width; x++)
 				{
-					_duelGridMaterial[x, y] = null;
+					_dualGridMaterial[x, y] = null;
 				}
 			}
 			TilesInAreaChanged(TileGridRect);
@@ -80,7 +80,7 @@ namespace InkscapeTileMaker.Models
 			{
 				if (gx < 0 || gx >= Width || gy < 0 || gy >= Height)
 					return null;
-				return _duelGridMaterial[gx, gy];
+				return _dualGridMaterial[gx, gy];
 			}
 
 			Material? topLeft = GetMaterialOrNull(x, y);
@@ -122,7 +122,7 @@ namespace InkscapeTileMaker.Models
 			return GetEnumerator();
 		}
 
-		#region Duel Grid Material Tile Rules
+		#region Dual Grid Material Tile Rules
 		private static void CheckCoreRule(List<TileData> tiles, Material? topRight, Material? topLeft, Material? bottomRight, Material? bottomLeft, ref bool topRightUsed, ref bool topLeftUsed, ref bool bottomRightUsed, ref bool bottomLeftUsed)
 		{
 			bool quadsAvailable = !topRightUsed && !topLeftUsed && !bottomRightUsed && !bottomLeftUsed;
