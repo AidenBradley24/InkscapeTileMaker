@@ -2,7 +2,7 @@
 {
 	public struct TileData
 	{
-		public Tile tile;
-		public TileTransformation transformation;
+		public Tile Tile { get; set; }
+		public TileTransformation Transformation { get; set; }
 	}
 }

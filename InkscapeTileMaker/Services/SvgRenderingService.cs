@@ -1,4 +1,5 @@
-﻿using InkscapeTileMaker.Utility;
+﻿using InkscapeTileMaker.Models;
+using InkscapeTileMaker.Utility;
 using SkiaSharp;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
@@ -225,16 +226,16 @@ namespace InkscapeTileMaker.Services
 			var document = XDocument.Load(svgStream);
 			var root = document.Root ?? throw new Exception("Invalid SVG document.");
 			var appDefs = root
-				.Element(XName.Get("defs", InkscapeSvg.svgNamespace.NamespaceName))?
-				.Element(InkscapeSvg.appDefsName);
+				.Element(XName.Get("defs", InkscapeSvg.SvgNamespace.NamespaceName))?
+				.Element(InkscapeSvg.AppDefsName);
 			appDefs?.Remove();
 
-			var existingNs = root.GetNamespaceOfPrefix(InkscapeSvg.appNamespacePrefix);
+			var existingNs = root.GetNamespaceOfPrefix(InkscapeSvg.AppNamespacePrefix);
 			if (existingNs != null)
 			{
 				var attr = root.Attributes()
 					.FirstOrDefault(a => a.IsNamespaceDeclaration &&
-										 a.Name.LocalName == InkscapeSvg.appNamespacePrefix &&
+										 a.Name.LocalName == InkscapeSvg.AppNamespacePrefix &&
 										 a.Value == existingNs.NamespaceName);
 				attr?.Remove();
 			}

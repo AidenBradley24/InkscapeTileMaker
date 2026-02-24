@@ -1,4 +1,4 @@
-﻿using InkscapeTileMaker.Utility;
+﻿using InkscapeTileMaker.Models;
 
 namespace InkscapeTileMaker.Services
 {

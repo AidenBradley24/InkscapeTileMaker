@@ -1,9 +1,20 @@
-﻿namespace InkscapeTileMaker.Utility
+﻿using System;
+
+namespace InkscapeTileMaker.Models
 {
-	public struct Scale(int width, int height)
+	public readonly struct Scale
 	{
-		public int Width { get; set; } = width;
-		public int Height { get; set; } = height;
+		public int Width { get; }
+		public int Height { get; }
+
+		public Scale(int width, int height)
+		{
+			Width = width;
+			Height = height;
+
+			if (width < 0) throw new ArgumentOutOfRangeException(nameof(width), "Width must be non-negative.");
+			if (height < 0) throw new ArgumentOutOfRangeException(nameof(height), "Height must be non-negative.");
+		}
 
 		public override readonly string ToString()
 		{
@@ -43,6 +54,16 @@
 		public override readonly int GetHashCode()
 		{
 			return HashCode.Combine(Width, Height);
+		}
+
+		public static implicit operator (int width, int height)(Scale scale)
+		{
+			return (scale.Width, scale.Height);
+		}
+
+		public static implicit operator Scale((int width, int height) tuple)
+		{
+			return new Scale(tuple.width, tuple.height);
 		}
 	}
 }

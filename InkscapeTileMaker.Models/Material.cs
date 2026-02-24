@@ -76,8 +76,8 @@ namespace InkscapeTileMaker.Models
 			}
 			tileData = new TileData
 			{
-				tile = tile,
-				transformation = TileTransformationHelpers.GetTransformationForAlignment(tile.Allignment, alignment)
+				Tile = tile,
+				Transformation = TileTransformationHelpers.GetTransformationForAlignment(tile.Allignment, alignment)
 			};
 			return true;
 		}

@@ -61,8 +61,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("CoreTile", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.None, tilesOnDualGrid[0].transformation);
+			Assert.Equal("CoreTile", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.None, tilesOnDualGrid[0].Transformation);
 		}
 
 		[Fact]
@@ -79,8 +79,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("EdgeTileRight", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.Rotate90 | TileTransformation.FlipVertical, tilesOnDualGrid[0].transformation);
+			Assert.Equal("EdgeTileRight", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.Rotate90 | TileTransformation.FlipVertical, tilesOnDualGrid[0].Transformation);
 			// 270 degree rotation is the same as 90 degrees + vertical flip
 		}
 
@@ -98,8 +98,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("EdgeTileBottom", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.None, tilesOnDualGrid[0].transformation);
+			Assert.Equal("EdgeTileBottom", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.None, tilesOnDualGrid[0].Transformation);
 		}
 
 		[Fact]
@@ -116,8 +116,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("EdgeTileRight", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.FlipHorizontal, tilesOnDualGrid[0].transformation);
+			Assert.Equal("EdgeTileRight", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.FlipHorizontal, tilesOnDualGrid[0].Transformation);
 		}
 
 		[Fact]
@@ -134,8 +134,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("EdgeTileRight", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.None, tilesOnDualGrid[0].transformation);
+			Assert.Equal("EdgeTileRight", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.None, tilesOnDualGrid[0].Transformation);
 		}
 
 		[Fact]
@@ -152,8 +152,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("OuterCornerTileTL", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.None, tilesOnDualGrid[0].transformation);
+			Assert.Equal("OuterCornerTileTL", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.None, tilesOnDualGrid[0].Transformation);
 		}
 
 		[Fact]
@@ -170,8 +170,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("OuterCornerTileTL", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.FlipHorizontal, tilesOnDualGrid[0].transformation);
+			Assert.Equal("OuterCornerTileTL", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.FlipHorizontal, tilesOnDualGrid[0].Transformation);
 		}
 
 		[Fact]
@@ -188,8 +188,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("OuterCornerTileTL", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.FlipVertical, tilesOnDualGrid[0].transformation);
+			Assert.Equal("OuterCornerTileTL", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.FlipVertical, tilesOnDualGrid[0].Transformation);
 		}
 
 		[Fact]
@@ -206,8 +206,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("OuterCornerTileTL", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.FlipHorizontal | TileTransformation.FlipVertical, tilesOnDualGrid[0].transformation);
+			Assert.Equal("OuterCornerTileTL", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.FlipHorizontal | TileTransformation.FlipVertical, tilesOnDualGrid[0].Transformation);
 		}
 
 		[Fact]
@@ -224,8 +224,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("InnerCornerTileBR", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.FlipVertical | TileTransformation.FlipHorizontal, tilesOnDualGrid[0].transformation);
+			Assert.Equal("InnerCornerTileBR", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.FlipVertical | TileTransformation.FlipHorizontal, tilesOnDualGrid[0].Transformation);
 		}
 
 		[Fact]
@@ -242,8 +242,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("InnerCornerTileBR", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.FlipVertical, tilesOnDualGrid[0].transformation);
+			Assert.Equal("InnerCornerTileBR", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.FlipVertical, tilesOnDualGrid[0].Transformation);
 		}
 
 		[Fact]
@@ -260,8 +260,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("InnerCornerTileBR", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.FlipHorizontal, tilesOnDualGrid[0].transformation);
+			Assert.Equal("InnerCornerTileBR", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.FlipHorizontal, tilesOnDualGrid[0].Transformation);
 		}
 
 		[Fact]
@@ -278,8 +278,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("InnerCornerTileBR", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.None, tilesOnDualGrid[0].transformation);
+			Assert.Equal("InnerCornerTileBR", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.None, tilesOnDualGrid[0].Transformation);
 		}
 
 		[Fact]
@@ -296,8 +296,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("DiagonalTileTLBR", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.None, tilesOnDualGrid[0].transformation);
+			Assert.Equal("DiagonalTileTLBR", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.None, tilesOnDualGrid[0].Transformation);
 		}
 
 		[Fact]
@@ -314,8 +314,8 @@
 			var tilesOnDualGrid = map.GetTilesAt(0, 0);
 
 			Assert.Single(tilesOnDualGrid);
-			Assert.Equal("DiagonalTileTLBR", tilesOnDualGrid[0].tile.Name);
-			Assert.Equal(TileTransformation.FlipHorizontal, tilesOnDualGrid[0].transformation);
+			Assert.Equal("DiagonalTileTLBR", tilesOnDualGrid[0].Tile.Name);
+			Assert.Equal(TileTransformation.FlipHorizontal, tilesOnDualGrid[0].Transformation);
 		}
 	}
 }

@@ -22,8 +22,8 @@ namespace InkscapeTileMaker.Models
 			return type switch
 			{
 				TileType.Singular => new[] { TileVariant.Core },
-				TileType.DualTileMaterial => new[] 
-				{ 
+				TileType.DualTileMaterial => new[]
+				{
 					TileVariant.Core,
 					TileVariant.Edge,
 					TileVariant.InnerCorner,

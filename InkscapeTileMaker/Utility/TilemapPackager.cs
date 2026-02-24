@@ -57,8 +57,8 @@ namespace InkscapeTileMaker.Utility
 
 			int width = _tileSetConnection.Tileset!.TilePixelSize.Width;
 			int height = _tileSetConnection.Tileset!.TilePixelSize.Height;
-			int top = height * tileData.tile.Row;
-			int left = width * tileData.tile.Column;
+			int top = height * tileData.Tile.Row;
+			int left = width * tileData.Tile.Column;
 			int right = left + width;
 			int bottom = top + height;
 
@@ -78,7 +78,7 @@ namespace InkscapeTileMaker.Utility
 
 				var matrix = SKMatrix.Identity;
 				matrix = matrix.PostConcat(SKMatrix.CreateTranslation(-cx, -cy));
-				matrix = matrix.PostConcat(tileData.transformation.ToSKMatrix());
+				matrix = matrix.PostConcat(tileData.Transformation.ToSKMatrix());
 				matrix = matrix.PostConcat(SKMatrix.CreateTranslation(cx, cy));
 
 				tileCanvas.SetMatrix(matrix);

@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using InkscapeTileMaker.Models;
 using InkscapeTileMaker.Services;
 using InkscapeTileMaker.Utility;
 using InkscapeTileMaker.Views;

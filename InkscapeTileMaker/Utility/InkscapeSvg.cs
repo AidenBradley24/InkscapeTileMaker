@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using InkscapeTileMaker.Models;
+using System.Xml.Linq;
 
 namespace InkscapeTileMaker.Utility
 {
@@ -6,30 +7,30 @@ namespace InkscapeTileMaker.Utility
 	{
 		public XDocument Document { get; }
 		public XElement? SvgRoot => Document?.Root;
-		public XElement? NamedView => SvgRoot?.Element(XName.Get("namedview", sodipodiNamespace.NamespaceName));
-		public XElement? Grid => NamedView?.Element(XName.Get("grid", inkscapeNamespace.NamespaceName));
-		public XElement? Defs => SvgRoot?.Element(XName.Get("defs", svgNamespace.NamespaceName));
+		public XElement? NamedView => SvgRoot?.Element(XName.Get("namedview", SodipodiNamespace.NamespaceName));
+		public XElement? Grid => NamedView?.Element(XName.Get("grid", InkscapeNamespace.NamespaceName));
+		public XElement? Defs => SvgRoot?.Element(XName.Get("defs", SvgNamespace.NamespaceName));
 
-		public const string appNamespacePrefix = "tilemaker";
+		public const string AppNamespacePrefix = "tilemaker";
 
-		public static readonly XNamespace appNamespace = "https://github.com/AidenBradley24/InkscapeTileMaker";
-		public static readonly XNamespace inkscapeNamespace = "http://www.inkscape.org/namespaces/inkscape";
-		public static readonly XNamespace sodipodiNamespace = "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd";
-		public static readonly XNamespace svgNamespace = "http://www.w3.org/2000/svg";
+		public static readonly XNamespace AppNamespace = "https://github.com/AidenBradley24/InkscapeTileMaker";
+		public static readonly XNamespace InkscapeNamespace = "http://www.inkscape.org/namespaces/inkscape";
+		public static readonly XNamespace SodipodiNamespace = "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd";
+		public static readonly XNamespace SvgNamespace = "http://www.w3.org/2000/svg";
 
-		public static readonly XName appDefsName = appNamespace + "tilemakerdefs";
-		public static readonly XName tileCollectionName = appNamespace + "tiles";
-		public static readonly XName tileName = appNamespace + "tile";
+		public static readonly XName AppDefsName = AppNamespace + "tilemakerdefs";
+		public static readonly XName TileCollectionName = AppNamespace + "tiles";
+		public static readonly XName TileName = AppNamespace + "tile";
 
 		public InkscapeSvg(Stream srcStream)
 		{
 			Document = XDocument.Load(srcStream);
 			if (SvgRoot is not null)
 			{
-				var existingNs = SvgRoot.GetNamespaceOfPrefix(appNamespacePrefix);
-				if (existingNs == null || existingNs != appNamespace)
+				var existingNs = SvgRoot.GetNamespaceOfPrefix(AppNamespacePrefix);
+				if (existingNs == null || existingNs != AppNamespace)
 				{
-					SvgRoot.SetAttributeValue(XNamespace.Xmlns + appNamespacePrefix, appNamespace.NamespaceName);
+					SvgRoot.SetAttributeValue(XNamespace.Xmlns + AppNamespacePrefix, AppNamespace.NamespaceName);
 				}
 			}
 			srcStream.Dispose();
@@ -45,17 +46,17 @@ namespace InkscapeTileMaker.Utility
 		{
 			if (Document is null) throw new InvalidOperationException("SVG Document is not loaded.");
 			XElement collectionElement = GetOrCreateTileCollectionElement();
-			return collectionElement.Elements(tileName)
+			return collectionElement.Elements(TileName)
 				.FirstOrDefault(t => t.Attribute(XName.Get("row"))?.Value == row.ToString() && t.Attribute(XName.Get("column"))?.Value == col.ToString());
 		}
 
 		public XElement GetOrCreateAppElement()
 		{
 			if (Defs is null) throw new Exception("SVG Document isn't loaded or missing <defs> element.");
-			var appElement = Defs.Element(appDefsName);
+			var appElement = Defs.Element(AppDefsName);
 			if (appElement is null)
 			{
-				appElement = new XElement(appDefsName);
+				appElement = new XElement(AppDefsName);
 				Defs.Add(appElement);
 			}
 			return appElement;
@@ -64,10 +65,10 @@ namespace InkscapeTileMaker.Utility
 		public XElement GetOrCreateTileCollectionElement()
 		{
 			XElement appElement = GetOrCreateAppElement();
-			var collectionElement = appElement.Element(tileCollectionName);
+			var collectionElement = appElement.Element(TileCollectionName);
 			if (collectionElement is null)
 			{
-				collectionElement = new XElement(tileCollectionName);
+				collectionElement = new XElement(TileCollectionName);
 				appElement.Add(collectionElement);
 			}
 			return collectionElement;
@@ -76,7 +77,7 @@ namespace InkscapeTileMaker.Utility
 		public IEnumerable<XElement> GetAllTileElements()
 		{
 			XElement collectionElement = GetOrCreateTileCollectionElement();
-			return collectionElement.Elements(tileName);
+			return collectionElement.Elements(TileName);
 		}
 
 		public Scale GetTileSize()
@@ -87,7 +88,7 @@ namespace InkscapeTileMaker.Utility
 			var empSpacing = Grid.Attribute(XName.Get("empspacing"))?.Value;
 			if (int.TryParse(spacingX, out int width) && int.TryParse(spacingY, out int height) && int.TryParse(empSpacing, out int unitsPerTile))
 			{
-				return new Scale() { Width = width * unitsPerTile, Height = height * unitsPerTile };
+				return new Scale(width * unitsPerTile, height * unitsPerTile);
 			}
 			throw new InvalidDataException("Tile size information is missing or invalid in the SVG grid.");
 		}
@@ -96,7 +97,7 @@ namespace InkscapeTileMaker.Utility
 		{
 			int width = Convert.ToInt32(SvgRoot?.Attribute(XName.Get("width"))?.Value ?? "1");
 			int height = Convert.ToInt32(SvgRoot?.Attribute(XName.Get("height"))?.Value ?? "1");
-			return new Scale() { Width = width, Height = height };
+			return new Scale(width, height);
 		}
 
 		public void SetTileSize(Scale size)

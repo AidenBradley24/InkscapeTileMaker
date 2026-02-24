@@ -3,7 +3,7 @@ using InkscapeTileMaker.Services;
 
 namespace InkscapeTileMaker.Utility.TilesetExporters
 {
-	public class DualTileExporter(string materialName, ITilesetConnection tilesetConnection, ITilesetRenderingService tilesetRenderingService) 
+	public class DualTileExporter(string materialName, ITilesetConnection tilesetConnection, ITilesetRenderingService tilesetRenderingService)
 		: MaterialExporter(materialName, tilesetConnection, tilesetRenderingService)
 	{
 		public override TileType Type => TileType.DualTileMaterial;

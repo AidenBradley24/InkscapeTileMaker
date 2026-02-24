@@ -1,10 +1,7 @@
 ﻿using InkscapeTileMaker.Models;
 using InkscapeTileMaker.Services;
 using InkscapeTileMaker.ViewModels;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Text;
 
 namespace InkscapeTileMaker.Utility
 {

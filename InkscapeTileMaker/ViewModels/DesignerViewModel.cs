@@ -426,7 +426,7 @@ namespace InkscapeTileMaker.ViewModels
 					for (int col = 0; col < _inContextTilemap.Rect.Width; col++)
 					{
 						var tileRect = GetTileRect(row, col);
-						DrawSingleTile(canvas, new TileData() { tile = SelectedTile.Value }, tileRect);
+						DrawSingleTile(canvas, new TileData() { Tile = SelectedTile.Value }, tileRect);
 					}
 				}
 
@@ -475,7 +475,7 @@ namespace InkscapeTileMaker.ViewModels
 				{
 					var tileRect = GetTileRect(HoveredTile.Value.row, HoveredTile.Value.col);
 					var tiles = _inContextTilemap.Composite.GetTilesAt(HoveredTile.Value.col, HoveredTile.Value.row);
-					var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
+					var tile = tiles != null && tiles.Count > 0 ? tiles[0].Tile : null;
 					if (tile == null)
 					{
 						DrawTileX(canvas, tileRect, SKColors.Red.WithAlpha(128));
@@ -540,7 +540,7 @@ namespace InkscapeTileMaker.ViewModels
 					case PaintTool.Cursor:
 						{
 							var tiles = _paintTilemap.Composite.GetTilesAt(HoveredTile.Value.col, HoveredTile.Value.row);
-							var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
+							var tile = tiles != null && tiles.Count > 0 ? tiles[0].Tile : null;
 							if (tile == null)
 							{
 								DrawTileX(canvas, tileRect, SKColors.Red.WithAlpha(128));
@@ -832,7 +832,7 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			if (_renderedBitmap == null) return;
 			using var tileBitmap = new SKBitmap(TilePixelSize.Width, TilePixelSize.Height);
-			if (!_renderedBitmap.ExtractSubset(tileBitmap, GetUnscaledTileRect(tileData.tile.Row, tileData.tile.Column))) return;
+			if (!_renderedBitmap.ExtractSubset(tileBitmap, GetUnscaledTileRect(tileData.Tile.Row, tileData.Tile.Column))) return;
 			using var transformedBitmap = new SKBitmap(TilePixelSize.Width, TilePixelSize.Height);
 			using (var tileCanvas = new SKCanvas(transformedBitmap))
 			{
@@ -843,7 +843,7 @@ namespace InkscapeTileMaker.ViewModels
 
 				var matrix = SKMatrix.Identity;
 				matrix = matrix.PostConcat(SKMatrix.CreateTranslation(-cx, -cy));
-				matrix = matrix.PostConcat(tileData.transformation.ToSKMatrix());
+				matrix = matrix.PostConcat(tileData.Transformation.ToSKMatrix());
 				matrix = matrix.PostConcat(SKMatrix.CreateTranslation(cx, cy));
 
 				tileCanvas.SetMatrix(matrix);
@@ -940,7 +940,7 @@ namespace InkscapeTileMaker.ViewModels
 					{
 						var tileRect = GetTileRect(row, column);
 						var tiles = _inContextTilemap.Composite.GetTilesAt(column, row);
-						var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
+						var tile = tiles != null && tiles.Count > 0 ? tiles[0].Tile : null;
 						if (tile == null) return;
 						SelectedTile = Tiles.FirstOrDefault(t => t.Value.Row == tile.Row && t.Value.Column == tile.Column);
 					}
@@ -952,7 +952,7 @@ namespace InkscapeTileMaker.ViewModels
 							case PaintTool.Cursor:
 								{
 									var tiles = _paintTilemap.Composite.GetTilesAt(column, row);
-									var tile = tiles != null && tiles.Count > 0 ? tiles[0].tile : null;
+									var tile = tiles != null && tiles.Count > 0 ? tiles[0].Tile : null;
 									if (tile == null) return;
 									SelectedTile = Tiles.FirstOrDefault(t => t.Value.Row == tile.Row && t.Value.Column == tile.Column);
 								}
@@ -963,7 +963,7 @@ namespace InkscapeTileMaker.ViewModels
 									switch (SelectedTile.Type)
 									{
 										case TileType.Singular:
-											_paintTilemap.Regular.SetTileAt(column, row, new TileData() { tile = SelectedTile.Value });
+											_paintTilemap.Regular.SetTileAt(column, row, new TileData() { Tile = SelectedTile.Value });
 											break;
 										case TileType.DualTileMaterial:
 											_paintTilemap.DualGridMaterial[column, row] = new Material(SelectedTile.Value.MaterialName, () => Tiles.Select(t => t.Value));
@@ -1247,7 +1247,7 @@ namespace InkscapeTileMaker.ViewModels
 			foreach (var type in Assembly.GetAssembly(typeof(MaterialExporter))!.GetTypes()
 				.Where(t => typeof(MaterialExporter).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract))
 			{
-				var constructor = type.GetConstructor([typeof(string), typeof(ITilesetConnection), typeof(ITilesetRenderingService)]) 
+				var constructor = type.GetConstructor([typeof(string), typeof(ITilesetConnection), typeof(ITilesetRenderingService)])
 					?? throw new Exception($"No valid constructor found for type: {type.FullName}");
 				exporter = (MaterialExporter)constructor.Invoke([material.Name, _tilesetConnection!, _svgRenderingService!]);
 				if (exporter.Type != material.Type) continue;

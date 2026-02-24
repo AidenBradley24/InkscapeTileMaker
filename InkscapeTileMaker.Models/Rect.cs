@@ -11,6 +11,7 @@ namespace InkscapeTileMaker.Models
 		public (int x, int y) Position => (left, top);
 		public int Width => right - left + 1;
 		public int Height => bottom - top + 1;
+		public Scale Scale => new Scale(Width, Height);
 
 		private readonly int left, top, right, bottom;
 
@@ -37,7 +38,7 @@ namespace InkscapeTileMaker.Models
 			}
 		}
 
-		public static Rect operator+(Rect a, Rect b)
+		public static Rect operator +(Rect a, Rect b)
 		{
 			var left = a.Left < b.Left ? a.Left : b.Left;
 			var right = a.Right > b.Right ? a.Right : b.Right;

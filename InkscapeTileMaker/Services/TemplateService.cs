@@ -36,7 +36,7 @@ namespace InkscapeTileMaker.Services
 		public TemplateRecord GetTemplateFromSvgStream(Stream stream)
 		{
 			var svg = new InkscapeSvg(stream);
-			string path = svg.SvgRoot?.Attribute(InkscapeSvg.sodipodiNamespace + "docname")?.Value ?? throw new Exception("no");
+			string path = svg.SvgRoot?.Attribute(InkscapeSvg.SodipodiNamespace + "docname")?.Value ?? throw new Exception("no");
 
 			return new TemplateRecord(Path.GetFileNameWithoutExtension(path), path)
 			{
