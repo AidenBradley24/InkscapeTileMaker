@@ -57,13 +57,13 @@ namespace InkscapeTileMaker.Services
 
 			foreach (var tile in tileset)
 			{
-				int x = tile.Column * tileset.TileSize.Width;
+				int x = tile.Column * tileset.TilePixelSize.Width;
 				// Unity's texture space has (0,0) at bottom-left, while the tileset's row 0 is at top.
 				// We flip the Y so that the top row in the tileset maps to the highest Y in the texture.
-				int y = (tileset.Size.Height - (tile.Row + 1) * tileset.TileSize.Height);
+				int y = (tileset.ImagePixelSize.Height - (tile.Row + 1) * tileset.TilePixelSize.Height);
 
-				int width = tileset.TileSize.Width;
-				int height = tileset.TileSize.Height;
+				int width = tileset.TilePixelSize.Width;
+				int height = tileset.TilePixelSize.Height;
 
 				var spriteNode = new YamlMappingNode
 				{
@@ -147,8 +147,8 @@ namespace InkscapeTileMaker.Services
 						type = t.Type,
 						materialName = t.MaterialName
 					})],
-					tileWidth = tileset.TileSize.Width,
-					tileHeight = tileset.TileSize.Height
+					tileWidth = tileset.TilePixelSize.Width,
+					tileHeight = tileset.TilePixelSize.Height
 				};
 
 				var jsonOptions = new JsonSerializerOptions

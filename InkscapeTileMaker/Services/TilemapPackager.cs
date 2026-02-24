@@ -55,8 +55,8 @@ namespace InkscapeTileMaker.Services
 		{
 			using var tileBitmap = new SKBitmap(tilePixelSize.Width, tilePixelSize.Height);
 
-			int width = _tileSetConnection.Tileset!.TileSize.Width;
-			int height = _tileSetConnection.Tileset!.TileSize.Height;
+			int width = _tileSetConnection.Tileset!.TilePixelSize.Width;
+			int height = _tileSetConnection.Tileset!.TilePixelSize.Height;
 			int top = height * tileData.tile.Row;
 			int left = width * tileData.tile.Column;
 			int right = left + width;
@@ -87,7 +87,7 @@ namespace InkscapeTileMaker.Services
 			canvas.DrawBitmap(transformedBitmap, rect);
 		}
 
-		public SKRect GetTileRect(int row, int column, Scale tilePixelSize)
+		private SKRect GetTileRect(int row, int column, Scale tilePixelSize)
 		{
 			float width = tilePixelSize.Width;
 			float height = tilePixelSize.Height;

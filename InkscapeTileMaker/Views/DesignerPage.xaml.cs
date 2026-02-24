@@ -119,7 +119,7 @@ namespace InkscapeTileMaker.Views
 			if (BindingContext is not DesignerViewModel viewModel) return null;
 			if (point is null) return null;
 
-			var tileSize = viewModel.TileSize;
+			var tileSize = viewModel.TilePixelSize;
 
 			var previewRect = viewModel.GetPreviewRect();
 			if (previewRect is null) return null;

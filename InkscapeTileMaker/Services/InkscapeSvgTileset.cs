@@ -11,9 +11,9 @@ namespace InkscapeTileMaker.Services
 
 		public string Name => Path.GetFileNameWithoutExtension(_connection.CurrentFile?.Name) ?? "";
 
-		public Scale TileSize => _connection.GetTileSize();
+		public Scale TilePixelSize => _connection.GetTileSize();
 
-		public Scale Size => _connection.GetSvgSize();
+		public Scale ImagePixelSize => _connection.GetSvgSize();
 
 		public int Count => _connection.GetTileCount();
 

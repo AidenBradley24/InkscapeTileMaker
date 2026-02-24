@@ -14,9 +14,9 @@ namespace InkscapeTileMaker.Utility
 
 		public string Name { get; set; }
 
-		public Scale TileSize { get; set; }
+		public Scale TilePixelSize { get; set; }
 
-		public Scale Size { get; set; }
+		public Scale ImagePixelSize { get; set; }
 
 		public int Count => _tiles.Count;
 
@@ -25,16 +25,16 @@ namespace InkscapeTileMaker.Utility
 		public TilesetData(string name, Scale tileSize, Scale size)
 		{
 			Name = name;
-			TileSize = tileSize;
-			Size = size;
+			TilePixelSize = tileSize;
+			ImagePixelSize = size;
 			_tiles = [];
 		}
 
 		public TilesetData(ITileset tileset)
 		{
 			Name = tileset.Name;
-			TileSize = tileset.TileSize;
-			Size = tileset.Size;
+			TilePixelSize = tileset.TilePixelSize;
+			ImagePixelSize = tileset.ImagePixelSize;
 			_tiles = [.. tileset];
 		}
 

@@ -7,8 +7,8 @@ namespace InkscapeTileMaker.Services
 	public interface ITileset : ICollection<Tile>
 	{
 		public string Name { get; }
-		public Scale TileSize { get; }
-		public Scale Size { get; }
+		public Scale TilePixelSize { get; }
+		public Scale ImagePixelSize { get; }
 
 		public TileViewModel? GetTileViewModelAt(int row, int column, DesignerViewModel designerViewModel);
 

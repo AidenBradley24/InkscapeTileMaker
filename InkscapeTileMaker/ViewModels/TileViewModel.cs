@@ -211,6 +211,14 @@ namespace InkscapeTileMaker.ViewModels
 				}
 			}
 
+			foreach (var tile in instance._designerViewModel.Tiles)
+			{
+				if (tile.MaterialName == materialName && tile.Type != instance._tile.Type)
+				{
+					return new ValidationResult("Tiles in the same material must have the same type.");
+				}
+			}
+
 			return ValidationResult.Success;
 		}
 
