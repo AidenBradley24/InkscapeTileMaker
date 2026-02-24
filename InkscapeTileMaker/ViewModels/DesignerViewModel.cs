@@ -21,8 +21,8 @@ namespace InkscapeTileMaker.ViewModels
 		private readonly IWindowOpeningService _windowService;
 		private readonly ITilesetRenderingService _svgRenderingService;
 		private readonly IFileSaver _fileSaver;
-		private readonly IUnityPackageService _unityPackageService;
 		private readonly IServiceProvider _serviceProvider;
+		private readonly ISettingsService _settingsService;
 
 		private IWindowProvider? _windowProvider;
 
@@ -117,12 +117,12 @@ namespace InkscapeTileMaker.ViewModels
 			IWindowOpeningService windowService,
 			ITilesetRenderingService renderingService,
 			IFileSaver fileSaver,
-			IUnityPackageService unityPackageService)
+			ISettingsService settingsService)
 		{
 			_windowService = windowService;
 			_svgRenderingService = renderingService;
 			_fileSaver = fileSaver;
-			_unityPackageService = unityPackageService;
+			_settingsService = settingsService;
 			_serviceProvider = serviceProvider;
 
 			_inContextTilemap = new TilemapViewModel(TILEMAP_SCALE, TILEMAP_SCALE);
@@ -1226,7 +1226,8 @@ namespace InkscapeTileMaker.ViewModels
 			var tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.unitypackage"));
 			using (var writer = new UnityPackageWriter(tmpFile.OpenWrite(), leaveOpen: false))
 			{
-				await _unityPackageService.WriteTilesetPackageAsync(writer, _tilesetConnection, _svgRenderingService);
+				var exporter = new UnityPackageExporter(_settingsService);
+				await exporter.WriteTilesetPackageAsync(writer, _tilesetConnection, _svgRenderingService);
 			}
 			using (var fs = tmpFile.OpenRead())
 			{

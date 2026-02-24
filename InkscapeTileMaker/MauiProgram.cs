@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Storage;
 using InkscapeTileMaker.Services;
+using InkscapeTileMaker.Utility.TilesetExporters;
 using InkscapeTileMaker.ViewModels;
 using InkscapeTileMaker.Views;
 using Microsoft.Extensions.Logging;
@@ -40,7 +41,6 @@ namespace InkscapeTileMaker
 			builder.Services.AddSingleton<IFileSaver>(FileSaver.Default);
 			builder.Services.AddSingleton<ITemplateService, TemplateService>();
 			builder.Services.AddTransient<IAppPopupService, AppPopupService>();
-			builder.Services.AddTransient<IUnityPackageService, UnityPackageService>();
 
 			// Windows + pages + viewmodels
 			builder.Services.AddTransient<LandingWindow>()

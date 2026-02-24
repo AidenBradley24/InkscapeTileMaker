@@ -1,8 +1,8 @@
 ﻿using InkscapeTileMaker.Models;
-using InkscapeTileMaker.Utility;
+using InkscapeTileMaker.Services;
 using SkiaSharp;
 
-namespace InkscapeTileMaker.Services
+namespace InkscapeTileMaker.Utility
 {
 	public partial class TilemapPackager
 	{

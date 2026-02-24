@@ -1,20 +1,21 @@
 ﻿using InkscapeTileMaker.Models;
+using InkscapeTileMaker.Services;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using UnityPackageNET;
 using UnityPackageNET.Metadata;
 using YamlDotNet.RepresentationModel;
 
-namespace InkscapeTileMaker.Services
+namespace InkscapeTileMaker.Utility.TilesetExporters
 {
-	public class UnityPackageService : IUnityPackageService
+	public class UnityPackageExporter
 	{
 		private readonly ISettingsService _settingsService;
 
 		private readonly Guid tileMakerImporterScriptGuid = Guid.Parse("a85efa26d4f565242a96b2e7fce398ca");
 		private readonly Guid materialTileScriptGuid = Guid.Parse("06d20ff3289910e4a8fbb03e6ad3d0bf");
 
-		public UnityPackageService(ISettingsService settingsService)
+		public UnityPackageExporter(ISettingsService settingsService)
 		{
 			_settingsService = settingsService;
 		}
