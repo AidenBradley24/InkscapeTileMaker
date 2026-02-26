@@ -11,6 +11,8 @@ namespace InkscapeTileMaker.Utility
 
 		public string Name { get; set; }
 
+		public FileInfo? ImageFile { get; set; }
+
 		public Scale TilePixelSize { get; set; }
 
 		public Scale ImagePixelSize { get; set; }
@@ -19,12 +21,29 @@ namespace InkscapeTileMaker.Utility
 
 		public bool IsReadOnly => false;
 
-		public TilesetData(string name, Scale tileSize, Scale size)
+		public TilesetData(string name, Scale tilePixelSize, Scale imagePixelSize)
 		{
 			Name = name;
-			TilePixelSize = tileSize;
-			ImagePixelSize = size;
+			TilePixelSize = tilePixelSize;
+			ImagePixelSize = imagePixelSize;
 			_tiles = [];
+		}
+
+		public TilesetData(string name, Scale tilePixelSize, Scale imagePixelSize, IEnumerable<Tile> tiles)
+		{
+			Name = name;
+			TilePixelSize = tilePixelSize;
+			ImagePixelSize = imagePixelSize;
+			_tiles = [.. tiles];
+		}
+
+		public TilesetData(string name, Scale tilePixelSize, Scale imagePixelSize, IEnumerable<Tile> tiles, FileInfo file)
+		{
+			Name = name;
+			TilePixelSize = tilePixelSize;
+			ImagePixelSize = imagePixelSize;
+			_tiles = [.. tiles];
+			ImageFile = file;
 		}
 
 		public TilesetData(ITileset tileset)
@@ -37,6 +56,7 @@ namespace InkscapeTileMaker.Utility
 
 		public void Add(Tile item)
 		{
+			if (item == null) return;
 			_tiles.Add(item);
 		}
 

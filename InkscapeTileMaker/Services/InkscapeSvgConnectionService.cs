@@ -302,7 +302,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 						Name = $"Tile {col},{row}",
 						Type = TileType.Singular,
 						Variant = TileVariant.Core,
-						Allignment = TileAlignment.Core,
+						Alignment = TileAlignment.Core,
 						Row = row,
 						Column = col
 					};

@@ -1226,8 +1226,16 @@ namespace InkscapeTileMaker.ViewModels
 			var tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.unitypackage"));
 			using (var writer = new UnityPackageWriter(tmpFile.OpenWrite(), leaveOpen: false))
 			{
-				var exporter = new UnityPackageExporter(_settingsService);
-				await exporter.WriteTilesetPackageAsync(writer, _tilesetConnection, _svgRenderingService);
+				var exporter = new UnityPackageExporter(_settingsService, _tilesetConnection, _svgRenderingService);
+
+				if (_windowProvider == null)
+				{
+					await exporter.WriteTilesetPackageAsync(writer);
+				}
+				else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async progress =>
+				{
+					await exporter.WriteTilesetPackageAsync(writer);
+				});
 			}
 			using (var fs = tmpFile.OpenRead())
 			{

@@ -34,7 +34,7 @@ namespace InkscapeTileMaker.Models
 		{
 			var baseTiles = GetTiles().Where(t => t.Variant == variant);
 			if (!baseTiles.Any()) return null;
-			var preferredTiles = baseTiles.Where(t => t.Allignment == preferredAlignment);
+			var preferredTiles = baseTiles.Where(t => t.Alignment == preferredAlignment);
 			if (preferredTiles.Any())
 			{
 				return preferredTiles.OrderByDescending(t => t.Priority).First();
@@ -60,7 +60,7 @@ namespace InkscapeTileMaker.Models
 			return materials.Values.ToList();
 		}
 
-		public bool Equals(Material other)
+		public bool Equals(Material? other)
 		{
 			if (other == null) return false;
 			return _name.Equals(other._name, StringComparison.Ordinal);
@@ -77,7 +77,7 @@ namespace InkscapeTileMaker.Models
 			tileData = new TileData
 			{
 				Tile = tile,
-				Transformation = TileTransformationHelpers.GetTransformationForAlignment(tile.Allignment, alignment)
+				Transformation = TileTransformationHelpers.GetTransformationForAlignment(tile.Alignment, alignment)
 			};
 			return true;
 		}

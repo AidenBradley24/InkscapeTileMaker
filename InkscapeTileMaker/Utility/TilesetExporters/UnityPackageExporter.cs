@@ -11,33 +11,106 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 	public class UnityPackageExporter
 	{
 		private readonly ISettingsService _settingsService;
+		private readonly ITilesetConnection _tilesetConnection;
+		private readonly ITilesetRenderingService _tilesetRenderingService;
 
-		private readonly Guid tileMakerImporterScriptGuid = Guid.Parse("a85efa26d4f565242a96b2e7fce398ca");
-		private readonly Guid materialTileScriptGuid = Guid.Parse("06d20ff3289910e4a8fbb03e6ad3d0bf");
+		private static readonly Guid TileMakerImporterScriptGuid = Guid.Parse("a85efa26d4f565242a96b2e7fce398ca");
+		private static readonly JsonSerializerOptions _jsonOptions = new()
+		{
+			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+			DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+			IncludeFields = true,
+			WriteIndented = true
+		};
 
-		public UnityPackageExporter(ISettingsService settingsService)
+		public UnityPackageExporter(ISettingsService settingsService, ITilesetConnection tilesetConnection, ITilesetRenderingService renderingService)
 		{
 			_settingsService = settingsService;
+			_tilesetConnection = tilesetConnection;
+			_tilesetRenderingService = renderingService;
 		}
 
-		public async Task WriteTilesetPackageAsync(UnityPackageWriter writer, ITilesetConnection conn, ITilesetRenderingService renderingService)
+		public async Task WriteTilesetPackageAsync(UnityPackageWriter writer)
 		{
-			var tileset = conn.Tileset;
-			var file = conn.CurrentFile;
-			if (tileset == null || conn.Tileset == null || file == null) return;
+			var tileset = _tilesetConnection.Tileset;
+			var file = _tilesetConnection.CurrentFile;
+			if (tileset == null || _tilesetConnection.Tileset == null || file == null) return;
 
-			// create sliced image asset
+			if (!_settingsService.UnityExportTiles)
+			{
+				// only export sliced image
+				using var png = await _tilesetRenderingService.RenderFileAsync(file, ".png");
+				await WriteSlicedImage(writer, png, tileset);
+				return;
+			}
+
+			// export each material seperately
+			await WriteScriptsAsync(writer);
+
+			var materials = Material.GetAllMaterials(() => tileset);
+			if (materials.Count == 0)
+			{
+				using var png = await _tilesetRenderingService.RenderFileAsync(file, ".png");
+				var guid = await WriteSlicedImage(writer, png, tileset);
+				WriteTilesetAsset(writer, tileset, guid);
+				return;
+			}
+
+			foreach (var material in materials)
+			{
+				switch (material.Type)
+				{
+					case TileType.DualTileMaterial:
+						await WriteDualTileMaterial(writer, material);
+						break;
+				}
+			}
+
+			var remaining = tileset.Where(t => !string.IsNullOrWhiteSpace(t.MaterialName)).Distinct().ToList();
+			if (remaining.Count == 0) return;
+			await WritePlainTiles(writer, remaining);
+		}
+
+		private async Task<Guid> WriteSlicedImage(UnityPackageWriter writer, Stream pngStream, ITileset tileset)
+		{
 			string imageLocation = _settingsService.UnityImageExportPath;
 			var imageEntry = UnityPackageEntryFactory.MakeEmptyEntry($"{imageLocation}/{tileset.Name}.png");
-			imageEntry.DataStream = await renderingService.RenderFileAsync(file, ".png");
+			imageEntry.DataStream = pngStream;
 			WriteTextureImporter(imageEntry.Metadata!, tileset);
 			writer.WriteEntry(imageEntry);
-			imageEntry.DataStream.Close();
+			await imageEntry.DataStream.DisposeAsync();
+			return imageEntry.GUID;
+		}
 
-			// create tileset asset
-			if (!_settingsService.UnityExportTiles) return;
-			await WriteScriptsAsync(writer, conn.Tileset.Any(t => !string.IsNullOrWhiteSpace(t.MaterialName)));
-			WriteTilesetAsset(writer, tileset, imageEntry.GUID);
+		private async Task WritePlainTiles(UnityPackageWriter writer, List<Tile> tiles)
+		{
+			var exporter = new PlainTilesetExporter(_tilesetConnection, _tilesetRenderingService);
+			exporter.TilesetSize = new Models.Rect(tiles.Count).Scale;
+			var tmpFile = new FileInfo(Path.GetTempFileName());
+			var tileData = tiles.Select(t => new TileData?(new TileData() { Tile = t, Transformation = TileTransformation.None }));
+			var exportTiles = await exporter.ExportAsync(tmpFile, [.. tileData], _tilesetConnection.Tileset!.TilePixelSize);
+			var tilesetData = new TilesetData(_tilesetConnection.Tileset!.Name, _tilesetConnection.Tileset.TilePixelSize, exporter.TilesetSize * _tilesetConnection.Tileset.TilePixelSize, exportTiles!);
+			using (var png = tmpFile.OpenRead())
+			{
+				var guid = await WriteSlicedImage(writer, png, tilesetData);
+				WriteTilesetAsset(writer, tilesetData, guid);
+			}
+			tmpFile.Delete();
+		}
+
+		private async Task WriteDualTileMaterial(UnityPackageWriter writer, Material material)
+		{
+			var exporter = new DualTileExporter(material.Name, _tilesetConnection, _tilesetRenderingService);
+			var tmpFile = new FileInfo(Path.GetTempFileName());
+			var tiles = await exporter.ExportAsync(tmpFile, _tilesetConnection.Tileset!.TilePixelSize);
+			var tilesetData = new TilesetData(material.Name, _tilesetConnection.Tileset!.TilePixelSize, exporter.TilesetSize * _tilesetConnection.Tileset.TilePixelSize, tiles!);
+			using (var png = tmpFile.OpenRead())
+			{
+				var imageGuid = await WriteSlicedImage(writer, png, tilesetData);
+				WriteTilesetAsset(writer, tilesetData, imageGuid);
+			}
+
+			tmpFile.Delete();
 		}
 
 		private void WriteTextureImporter(UnityAssetMetadata metadata, ITileset tileset)
@@ -108,59 +181,53 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 			{
 				{ "sprites", spritesSequence },
 			};
-
 			importer.Root.Add("spriteSheet", spriteSheetNode);
+
+			var textureSettings = new YamlMappingNode
+			{
+				{ "serializedVersion", new YamlScalarNode("2") },
+				{ "filterMode", new YamlScalarNode("0") },
+				{ "aniso", new YamlScalarNode("1") },
+				{ "mipBias", new YamlScalarNode("0") },
+				{ "wrapU", new YamlScalarNode("1") },
+				{ "wrapV", new YamlScalarNode("1") },
+				{ "wrapW", new YamlScalarNode("1") }
+			};
+			importer.Root.Add("textureSettings", textureSettings);
 		}
 
-		private async Task WriteScriptsAsync(UnityPackageWriter writer, bool writeMaterialTile)
+		private async Task WriteScriptsAsync(UnityPackageWriter writer)
 		{
-			return; // TODO finish unity scripts
 			string editorScriptLocation = _settingsService.UnityEditorScriptPath;
-			using (var fs = await FileSystem.Current.OpenAppPackageFileAsync($"Unity/TileMakerImporter.cs"))
-			{
-				var entry = UnityPackageEntryFactory.MakeEmptyEntry($"{editorScriptLocation}/TileMakerImporter.cs", tileMakerImporterScriptGuid);
-				entry.DataStream = fs;
-				writer.WriteEntry(entry);
-			}
-
-			if (writeMaterialTile)
-			{
-				using var fs = await FileSystem.Current.OpenAppPackageFileAsync($"Unity/MaterialTile.cs");
-				var entry = UnityPackageEntryFactory.MakeEmptyEntry($"{editorScriptLocation}/MaterialTile.cs", materialTileScriptGuid);
-				entry.DataStream = fs;
-				writer.WriteEntry(entry);
-			}
+			using var fs = await FileSystem.Current.OpenAppPackageFileAsync($"Unity/TileMakerImporter.cs");
+			var entry = UnityPackageEntryFactory.MakeEmptyEntry($"{editorScriptLocation}/TileMakerImporter.cs", TileMakerImporterScriptGuid);
+			entry.DataStream = fs;
+			writer.WriteEntry(entry);
 		}
 
-		private void WriteTilesetAsset(UnityPackageWriter writer, ITileset tileset, Guid imageEntryGuid)
+		private void WriteTilesetAsset(UnityPackageWriter writer, ITileset tileset, Guid imageGuid)
 		{
 			var entry = UnityPackageEntryFactory.MakeEmptyEntry($"{_settingsService.UnityImageExportPath}/{tileset.Name}.tmsx");
 			entry.DataStream = new MemoryStream();
 			using (var sw = new StreamWriter(entry.DataStream, leaveOpen: true))
 			{
-				var settings = new TileImporterSettings
+				var settings = new TilesetImporterSettings
 				{
-					imageGuid = imageEntryGuid.ToString("N"),
-					tiles = [.. tileset.Select(t => new TileRecord
+					ImageGuid = imageGuid.ToString("N"),
+					Tiles = [.. tileset.Select(t => new TileRecord
 					{
-						row = t.Row,
-						col = t.Column,
-						type = t.Type,
-						materialName = t.MaterialName
+						Row = t.Row,
+						Col = t.Column,
+						Type = t.Type,
+						Variant = t.Variant,
+						Alignment = t.Alignment,
+						MaterialName = t.MaterialName
 					})],
-					tileWidth = tileset.TilePixelSize.Width,
-					tileHeight = tileset.TilePixelSize.Height
+					TileWidth = tileset.TilePixelSize.Width,
+					TileHeight = tileset.TilePixelSize.Height
 				};
 
-				var jsonOptions = new JsonSerializerOptions
-				{
-					PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-					DefaultIgnoreCondition = JsonIgnoreCondition.Never,
-					IncludeFields = true,
-					WriteIndented = true
-				};
-
-				var json = JsonSerializer.Serialize(settings, jsonOptions);
+				var json = JsonSerializer.Serialize(settings, _jsonOptions);
 				sw.Write(json);
 			}
 			entry.DataStream.Seek(0, SeekOrigin.Begin);
@@ -169,21 +236,24 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 		}
 
 		[System.Serializable]
-		public class TileImporterSettings
+		public class TilesetImporterSettings
 		{
-			public string imageGuid { get; set; } = string.Empty;
-			public TileRecord[] tiles { get; set; } = Array.Empty<TileRecord>();
-			public int tileWidth { get; set; }
-			public int tileHeight { get; set; }
+			public string Name { get; set; } = string.Empty;
+			public string ImageGuid { get; set; } = string.Empty;
+			public TileRecord[] Tiles { get; set; } = Array.Empty<TileRecord>();
+			public int TileWidth { get; set; }
+			public int TileHeight { get; set; }
 		}
 
 		[System.Serializable]
 		public class TileRecord
 		{
-			public int row { get; set; }
-			public int col { get; set; }
-			public TileType type { get; set; }
-			public string materialName { get; set; } = string.Empty;
+			public int Row { get; set; }
+			public int Col { get; set; }
+			public TileType Type { get; set; }
+			public TileVariant Variant { get; set; }
+			public TileAlignment Alignment { get; set; }
+			public string MaterialName { get; set; } = string.Empty;
 		}
 	}
 }

@@ -104,7 +104,7 @@ namespace InkscapeTileMaker.ViewModels
 			Position = (_tile.Row, _tile.Column);
 			Type = _tile.Type;
 			Variant = _tile.Variant;
-			Allignment = _tile.Allignment;
+			Allignment = _tile.Alignment;
 			MaterialName = _tile.MaterialName;
 
 			ErrorsChanged += (_, _) => OnPropertyChanged(nameof(CurrentErrorMessage));
@@ -144,8 +144,8 @@ namespace InkscapeTileMaker.ViewModels
 
 		partial void OnAllignmentChanged(TileAlignment value)
 		{
-			_designerViewModel.HasUnsavedChanges |= _tile.Allignment != value;
-			_tile.Allignment = value;
+			_designerViewModel.HasUnsavedChanges |= _tile.Alignment != value;
+			_tile.Alignment = value;
 		}
 
 		partial void OnMaterialNameChanged(string value)

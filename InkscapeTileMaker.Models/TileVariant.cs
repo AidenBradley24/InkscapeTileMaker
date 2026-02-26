@@ -10,6 +10,7 @@ namespace InkscapeTileMaker.Models
 		InnerCorner,
 		OuterCorner,
 		Diagonal,
+		Void
 	}
 
 	public static class TileVariantExtensions
@@ -21,6 +22,10 @@ namespace InkscapeTileMaker.Models
 				TileVariant.Core => new[]
 				{
 					TileAlignment.Core,
+				},
+				TileVariant.Void => new[]
+				{
+					TileAlignment.Core
 				},
 				TileVariant.Edge => new[]
 				{

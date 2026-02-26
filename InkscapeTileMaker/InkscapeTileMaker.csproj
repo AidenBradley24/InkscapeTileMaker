@@ -36,7 +36,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Resources\Raw\Unity\MaterialTile.cs" />
 	  <Compile Remove="Resources\Raw\Unity\TileMakerImporter.cs" />
 	</ItemGroup>
 

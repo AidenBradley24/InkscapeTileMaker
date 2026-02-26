@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace InkscapeTileMaker.Models
 {
@@ -21,6 +22,28 @@ namespace InkscapeTileMaker.Models
 			this.top = top;
 			this.right = right;
 			this.bottom = bottom;
+		}
+
+		public Rect((int x, int y) position, Scale scale)
+		{
+			this.left = position.x;
+			this.top = position.y;
+			this.right = position.x + scale.Width - 1;
+			this.bottom = position.y + scale.Height - 1;
+		}
+
+		public Rect(Scale scale) : this((0, 0), scale) {}
+
+		/// <summary>
+		/// Get a square rectagle with the specified number of cells, where the width and height are equal and as small as possible to fit all cells. The rectangle will be positioned at the origin (0, 0).
+		/// </summary>
+		public Rect(int minimumCells)
+		{
+			int size = (int)Math.Ceiling(Math.Sqrt(minimumCells));
+			this.left = 0;
+			this.top = 0;
+			this.right = size - 1;
+			this.bottom = size - 1;
 		}
 
 		/// <summary>

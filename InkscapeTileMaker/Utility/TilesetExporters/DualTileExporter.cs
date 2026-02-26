@@ -23,7 +23,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 0,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.OuterCorner,
-					Allignment = TileAlignment.TopRightOuterCorner
+					Alignment = TileAlignment.TopRightOuterCorner
 				},
 				new()
 				{
@@ -33,7 +33,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 1,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.Edge,
-					Allignment = TileAlignment.LeftEdge
+					Alignment = TileAlignment.LeftEdge
 				},
 				new()
 				{
@@ -43,7 +43,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 2,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.InnerCorner,
-					Allignment = TileAlignment.BottomLeftInnerCorner
+					Alignment = TileAlignment.BottomLeftInnerCorner
 				},
 				new()
 				{
@@ -53,7 +53,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 3,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.Edge,
-					Allignment = TileAlignment.TopEdge
+					Alignment = TileAlignment.TopEdge
 				},
 
 				// Row 1
@@ -65,7 +65,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 0,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.Diagonal,
-					Allignment = TileAlignment.DiagonalTopLeftToBottomRight
+					Alignment = TileAlignment.DiagonalTopLeftToBottomRight
 				},
 				new()
 				{
@@ -75,7 +75,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 1,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.InnerCorner,
-					Allignment = TileAlignment.BottomRightInnerCorner
+					Alignment = TileAlignment.BottomRightInnerCorner
 				},
 				new()
 				{
@@ -85,7 +85,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 2,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.Core,
-					Allignment = TileAlignment.Core
+					Alignment = TileAlignment.Core
 				},
 				new()
 				{
@@ -95,7 +95,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 3,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.InnerCorner,
-					Allignment = TileAlignment.TopLeftInnerCorner
+					Alignment = TileAlignment.TopLeftInnerCorner
 				},
 
 				// Row 2
@@ -107,7 +107,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 0,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.OuterCorner,
-					Allignment = TileAlignment.BottomLeftOuterCorner
+					Alignment = TileAlignment.BottomLeftOuterCorner
 				},
 				new()
 				{
@@ -117,7 +117,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 1,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.Edge,
-					Allignment = TileAlignment.BottomEdge
+					Alignment = TileAlignment.BottomEdge
 				},
 				new()
 				{
@@ -127,7 +127,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 2,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.InnerCorner,
-					Allignment = TileAlignment.TopRightInnerCorner
+					Alignment = TileAlignment.TopRightInnerCorner
 				},
 				new()
 				{
@@ -137,11 +137,18 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 3,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.Edge,
-					Allignment = TileAlignment.RightEdge
+					Alignment = TileAlignment.RightEdge
 				},
 
 				// Row 3
-				null,
+				new()
+				{
+					Name = $"{Material.Name}_12",
+					MaterialName = Material.Name,
+					Row = 3,
+					Column = 1,
+					Variant = TileVariant.Void,
+				},
 				new()
 				{
 					Name = $"{Material.Name}_13",
@@ -150,7 +157,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 1,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.OuterCorner,
-					Allignment = TileAlignment.TopLeftOuterCorner
+					Alignment = TileAlignment.TopLeftOuterCorner
 				},
 				new()
 				{
@@ -160,7 +167,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 2,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.Diagonal,
-					Allignment = TileAlignment.DiagonalTopRightToBottomLeft
+					Alignment = TileAlignment.DiagonalTopRightToBottomLeft
 				},
 				new()
 				{
@@ -170,7 +177,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Column = 3,
 					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.OuterCorner,
-					Allignment = TileAlignment.BottomRightOuterCorner
+					Alignment = TileAlignment.BottomRightOuterCorner
 				}
 			];
 		}

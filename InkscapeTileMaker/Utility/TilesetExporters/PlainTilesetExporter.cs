@@ -18,13 +18,13 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 
 		public async Task<Tile?[]> ExportAsync(FileInfo destinationFile, TileData?[] srcTiles, Scale tilePixelSize, CancellationToken cancellationToken = default)
 		{
-			if (srcTiles.Length != TilesetSize.Width * TilesetSize.Height)
+			if (srcTiles.Length > TilesetSize.Width * TilesetSize.Height)
 			{
-				throw new ArgumentException($"Source tiles array length must be equal to the number of tiles in the tileset ({TilesetSize.Width * TilesetSize.Height}).", nameof(srcTiles));
+				throw new ArgumentException($"Source tiles array length must be less than or equal to the number of spaces in the tileset ({TilesetSize.Width * TilesetSize.Height}).", nameof(srcTiles));
 			}
 
 			var tilemap = new Tilemap(TilesetSize.Width, TilesetSize.Height);
-			var positions = new Models.Rect(0, 0, TilesetSize.Width - 1, TilesetSize.Height - 1).GetPositions();
+			var positions = new Models.Rect(TilesetSize).GetPositions();
 
 			Tile?[] orderedTiles = new Tile?[srcTiles.Length];
 			foreach (var (position, tileData) in positions.Zip(srcTiles, (position, tile) => (position, tile)))
@@ -37,7 +37,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 				{
 					Name = tile.Name,
 					Type = TileType.Singular,
-					Allignment = TileAlignment.Core,
+					Alignment = TileAlignment.Core,
 					Row = position.y,
 					Column = position.x
 				};

@@ -1,4 +1,9 @@
 ﻿using System;
+using System.Xml.Serialization;
+
+#if NET5_0_OR_GREATER
+using System.Text.Json.Serialization;
+#endif
 
 namespace InkscapeTileMaker.Models
 {
@@ -10,13 +15,31 @@ namespace InkscapeTileMaker.Models
 
 		public TileVariant Variant { get; set; } = TileVariant.Core;
 
-		public TileAlignment Allignment { get; set; } = TileAlignment.Core;
+		public TileAlignment Alignment { get; set; } = TileAlignment.Core;
 
 		public int Priority { get; set; } = 1;
 
 		public int Row { get; set; }
 
 		public int Column { get; set; }
+
+		[XmlIgnore]
+#if NET5_0_OR_GREATER
+		[JsonIgnore]
+#endif
+		public (int x, int y) Position
+		{
+			get
+			{
+				return (Column, Row);
+			}
+
+			set
+			{
+				Column = value.x;
+				Row = value.y;
+			}
+		}
 
 		public string MaterialName { get; set; } = "";
 
@@ -40,6 +63,21 @@ namespace InkscapeTileMaker.Models
 		public override int GetHashCode()
 		{
 			return HashCode.Combine(Name, Row, Column);
+		}
+
+		public Tile Clone(int row, int column)
+		{
+			return new Tile
+			{
+				Name = this.Name,
+				Type = this.Type,
+				Variant = this.Variant,
+				Alignment = this.Alignment,
+				Priority = this.Priority,
+				Row = row,
+				Column = column,
+				MaterialName = this.MaterialName
+			};
 		}
 	}
 }

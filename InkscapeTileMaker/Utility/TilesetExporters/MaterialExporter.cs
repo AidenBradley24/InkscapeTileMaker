@@ -29,9 +29,14 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 			foreach (var (position, dstTile) in positions.Zip(orderedTiles, (position, tile) => (position, tile)))
 			{
 				if (dstTile is null) continue;
-				var srcTile = Material.GetTile(dstTile.Variant, dstTile.Allignment)
-					?? throw new Exception($"Missing tile alignment: {dstTile.Allignment}");
-				var transformation = TileTransformationHelpers.GetTransformationForAlignment(srcTile.Allignment, dstTile.Allignment);
+				if (dstTile.Variant == TileVariant.Void)
+				{
+					tilemap.SetTileAt(position.x, position.y, new TileData() { Tile = dstTile, Transformation = TileTransformation.None });
+					continue;
+				}
+				var srcTile = Material.GetTile(dstTile.Variant, dstTile.Alignment)
+					?? throw new Exception($"Missing tile alignment: {dstTile.Alignment}");
+				var transformation = TileTransformationHelpers.GetTransformationForAlignment(srcTile.Alignment, dstTile.Alignment);
 				tilemap.SetTileAt(position.x, position.y, new TileData() { Tile = srcTile, Transformation = transformation });
 			}
 

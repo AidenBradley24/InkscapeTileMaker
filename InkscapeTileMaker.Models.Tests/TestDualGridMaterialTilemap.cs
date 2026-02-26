@@ -4,12 +4,12 @@
 	{
 		readonly List<Tile> tiles =
 		[
-			new Tile { Name = "CoreTile", MaterialName = "Brick", Variant=TileVariant.Core, Type = TileType.DualTileMaterial, Row = 0, Column = 0, Allignment = TileAlignment.Core, Priority = 1 },
-			new Tile { Name = "EdgeTileRight", MaterialName = "Brick", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Row = 0, Column = 1, Allignment = TileAlignment.RightEdge, Priority = 2 },
-			new Tile { Name = "EdgeTileBottom", MaterialName = "Brick", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Row = 0, Column = 1, Allignment = TileAlignment.BottomEdge, Priority = 1 },
-			new Tile { Name = "OuterCornerTileTL", MaterialName = "Brick", Variant=TileVariant.OuterCorner, Type = TileType.DualTileMaterial, Row = 0, Column = 2, Allignment = TileAlignment.TopLeftOuterCorner, Priority = 1 },
-			new Tile { Name = "InnerCornerTileBR", MaterialName = "Brick", Variant=TileVariant.InnerCorner, Type = TileType.DualTileMaterial, Row = 0, Column = 3, Allignment = TileAlignment.BottomRightInnerCorner, Priority = 1 },
-			new Tile { Name = "DiagonalTileTLBR", MaterialName = "Brick", Variant=TileVariant.Diagonal, Type = TileType.DualTileMaterial, Row = 0, Column = 4, Allignment = TileAlignment.DiagonalTopLeftToBottomRight, Priority = 1 }
+			new Tile { Name = "CoreTile", MaterialName = "Brick", Variant=TileVariant.Core, Type = TileType.DualTileMaterial, Row = 0, Column = 0, Alignment = TileAlignment.Core, Priority = 1 },
+			new Tile { Name = "EdgeTileRight", MaterialName = "Brick", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Row = 0, Column = 1, Alignment = TileAlignment.RightEdge, Priority = 2 },
+			new Tile { Name = "EdgeTileBottom", MaterialName = "Brick", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Row = 0, Column = 1, Alignment = TileAlignment.BottomEdge, Priority = 1 },
+			new Tile { Name = "OuterCornerTileTL", MaterialName = "Brick", Variant=TileVariant.OuterCorner, Type = TileType.DualTileMaterial, Row = 0, Column = 2, Alignment = TileAlignment.TopLeftOuterCorner, Priority = 1 },
+			new Tile { Name = "InnerCornerTileBR", MaterialName = "Brick", Variant=TileVariant.InnerCorner, Type = TileType.DualTileMaterial, Row = 0, Column = 3, Alignment = TileAlignment.BottomRightInnerCorner, Priority = 1 },
+			new Tile { Name = "DiagonalTileTLBR", MaterialName = "Brick", Variant=TileVariant.Diagonal, Type = TileType.DualTileMaterial, Row = 0, Column = 4, Alignment = TileAlignment.DiagonalTopLeftToBottomRight, Priority = 1 }
 		];
 
 		Material[] Materials => Material.GetAllMaterials(() => tiles).ToArray();

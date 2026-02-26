@@ -1,9 +1,10 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.AssetImporters;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using System.IO;
-using System.Collections.Generic;
 
 namespace TileMaker
 {
@@ -13,28 +14,62 @@ namespace TileMaker
 		[System.Serializable]
 		public class TileImporterSettings
 		{
-			public string imageGuid;
-			public TileRecord[] tiles;
-			public int tileWidth;
-			public int tileHeight;
+			public string Name;
+			public string ImageGuid;
+			public TileRecord[] Tiles;
+			public int TileWidth;
+			public int TileHeight;
 		}
 
 		[System.Serializable]
 		public class TileRecord
 		{
-			public int row;
-			public int col;
-			public TileType type;
-			public string materialName;
+			public int Row;
+			public int Col;
+			public TileType Type;
+			public TileVariant Variant;
+			public TileAlignment Alignment;
+			public string MaterialName;
+
+			// these must be updated with tilemaker enums
 
 			public enum TileType
 			{
 				Singular,
-				MatOuterCorner,
-				MatInnerCorner,
-				MatEdge,
-				MatCore,
-				MatDiagonal
+				DualTileMaterial,
+			}
+
+			public enum TileVariant
+			{
+				Core,
+				Edge,
+				InnerCorner,
+				OuterCorner,
+				Diagonal,
+				Void
+			}
+
+			public enum TileAlignment
+			{
+				Core,
+
+				TopEdge,
+				RightEdge,
+				BottomEdge,
+				LeftEdge,
+
+				TopLeftOuterCorner,
+				TopRightOuterCorner,
+				BottomRightOuterCorner,
+				BottomLeftOuterCorner,
+
+				TopLeftInnerCorner,
+				TopRightInnerCorner,
+				BottomRightInnerCorner,
+				BottomLeftInnerCorner,
+
+				DiagonalTopLeftToBottomRight,
+				DiagonalTopRightToBottomLeft,
 			}
 		}
 
@@ -64,9 +99,9 @@ namespace TileMaker
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
 			var importer = JsonUtility.FromJson<TileImporterSettings>(File.ReadAllText(ctx.assetPath));
-			if (!GUID.TryParse(importer.imageGuid, out var imageGuid))
+			if (!GUID.TryParse(importer.ImageGuid, out var imageGuid))
 			{
-				throw new System.Exception($"unable to get guid of image! \"{importer.imageGuid}\"");
+				throw new System.Exception($"unable to get guid of image! \"{importer.ImageGuid}\"");
 			}
 
 			ctx.DependsOnSourceAsset(imageGuid);
@@ -83,9 +118,9 @@ namespace TileMaker
 				// Convert to a top-left-origin row using the texture height.
 				int textureHeight = sprite.texture.height;
 
-				int col = Mathf.FloorToInt(rect.x / importer.tileWidth);
-				int rowFromBottom = Mathf.FloorToInt(rect.y / importer.tileHeight);
-				int rowFromTop = (textureHeight / importer.tileHeight) - 1 - rowFromBottom;
+				int col = Mathf.FloorToInt(rect.x / importer.TileWidth);
+				int rowFromBottom = Mathf.FloorToInt(rect.y / importer.TileHeight);
+				int rowFromTop = (textureHeight / importer.TileHeight) - 1 - rowFromBottom;
 
 				var key = (rowFromTop, col);
 				if (!spriteLookup.ContainsKey(key))
@@ -94,11 +129,40 @@ namespace TileMaker
 				}
 			}
 
-			foreach (var record in importer.tiles)
+			if (importer.Tiles.Length == 0)
 			{
-				if (!spriteLookup.TryGetValue((record.row, record.col), out var sprite))
+				Debug.LogWarning("No tiles found in importer!");
+				return;
+			}
+
+			if (!importer.Tiles.Select(t => t.Type).All(t => t.Equals(importer.Tiles[0])))
+			{
+				Debug.LogError($"Inconsitant tile types!: \n{string.Join('\n', importer.Tiles.Select(t => t.Type).Distinct())}");
+				return;
+			}
+
+			var tileType = importer.Tiles[0].Type;
+			switch (tileType)
+			{
+				case TileRecord.TileType.Singular:
+					ImportSingularTiles(ctx, importer, spriteLookup);
+					break;
+				case TileRecord.TileType.DualTileMaterial:
+					ImportDualRuleTile(ctx, importer, spriteLookup);
+					break;
+			}
+		}
+
+		private void ImportSingularTiles(
+			AssetImportContext ctx,
+			TileImporterSettings importer,
+			Dictionary<(int row, int col), Sprite> spriteLookup)
+		{
+			foreach (var record in importer.Tiles)
+			{
+				if (!spriteLookup.TryGetValue((record.Row, record.Col), out var sprite))
 				{
-					Debug.LogWarning($"No sprite found for r:{record.row},c:{record.col}");
+					Debug.LogWarning($"No sprite found for r:{record.Row},c:{record.Col}");
 					continue;
 				}
 
@@ -109,5 +173,15 @@ namespace TileMaker
 			}
 		}
 
+		private void ImportDualRuleTile(
+			AssetImportContext ctx,
+			TileImporterSettings importer,
+			Dictionary<(int row, int col), Sprite> spriteLookup)
+		{
+			// attempt to get the skner duel tile
+			Debug.Log("Dual rule tiles require manual import." +
+				"\n\nThis package can be used with duel tiles:" +
+				"\nhttps://github.com/skner-dev/skner.DualGrid");
+		}
 	}
 }

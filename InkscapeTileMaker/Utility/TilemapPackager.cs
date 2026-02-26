@@ -37,7 +37,6 @@ namespace InkscapeTileMaker.Utility
 			{
 				if (tiles.Count == 0) continue;
 				SKRect tileRect = GetTileRect(y, x, tilePixelSize);
-				tileRect.Offset(0.5f, 0.5f);
 				foreach (var tileData in tiles)
 				{
 					await RenderTile(canvas, tileData, tileRect, tilePixelSize, cancellationToken);
