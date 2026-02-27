@@ -6,9 +6,17 @@ namespace InkscapeTileMaker.Services
 {
 	public partial class InkscapeSvgTileset : ITileset, ICollection<Tile>
 	{
-		private readonly InkscapeSvgConnectionService _connection;
+		private readonly InkscapeSvgConnection _connection;
 
-		public string Name => Path.GetFileNameWithoutExtension(_connection.CurrentFile?.Name) ?? "";
+		public string Name
+		{
+			get
+			{
+				var file = _connection.CurrentFile;
+				if (file == null) return string.Empty;
+				return Path.GetFileNameWithoutExtension(file.Name);
+			}
+		}
 
 		public Scale TilePixelSize => _connection.GetTileSize();
 
@@ -18,7 +26,7 @@ namespace InkscapeTileMaker.Services
 
 		public bool IsReadOnly => false;
 
-		public InkscapeSvgTileset(InkscapeSvgConnectionService connection)
+		public InkscapeSvgTileset(InkscapeSvgConnection connection)
 		{
 			_connection = connection;
 		}
@@ -35,7 +43,7 @@ namespace InkscapeTileMaker.Services
 
 		public bool Contains(Tile item)
 		{
-			return _connection.Tiles.Contains(item);
+			return _connection.GetTiles().Contains(item);
 		}
 
 		public void CopyTo(Tile[] array, int arrayIndex)
@@ -50,7 +58,7 @@ namespace InkscapeTileMaker.Services
 
 		public IEnumerator<Tile> GetEnumerator()
 		{
-			return _connection.Tiles.GetEnumerator();
+			return (IEnumerator<Tile>)_connection.GetTiles().GetEnumerator();
 		}
 
 		public bool Remove(Tile item)

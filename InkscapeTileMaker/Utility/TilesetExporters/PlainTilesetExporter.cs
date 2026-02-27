@@ -6,14 +6,12 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 	public class PlainTilesetExporter
 	{
 		private readonly ITilesetConnection _tilesetConnection;
-		private readonly ITilesetRenderingService _tilesetRenderingService;
 
 		public Scale TilesetSize { get; set; } = new(4, 4);
 
-		public PlainTilesetExporter(ITilesetConnection tilesetConnection, ITilesetRenderingService tilesetRenderingService)
+		public PlainTilesetExporter(ITilesetConnection tilesetConnection)
 		{
 			_tilesetConnection = tilesetConnection;
-			_tilesetRenderingService = tilesetRenderingService;
 		}
 
 		public async Task<Tile?[]> ExportAsync(FileInfo destinationFile, TileData?[] srcTiles, Scale tilePixelSize, CancellationToken cancellationToken = default)
@@ -44,7 +42,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 			}
 
 			using var fs = destinationFile.OpenWrite();
-			var tilemapPackager = new TilemapPackager(_tilesetConnection, _tilesetRenderingService);
+			var tilemapPackager = new TilemapPackager(_tilesetConnection);
 			await tilemapPackager.ExportTilemap(tilemap, tilePixelSize, fs, cancellationToken);
 			return orderedTiles;
 		}

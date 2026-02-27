@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace InkscapeTileMaker.Services;
 
-public partial class InkscapeSvgConnectionService : ITilesetConnection
+public partial class InkscapeSvgConnection : ITilesetConnection
 {
 	private readonly IServiceProvider _services;
 	private readonly IWindowProvider _windowProvider;
@@ -15,25 +15,29 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 
 	public ITileset? Tileset { get; private set; }
 
+	public ITilesetRenderingService RenderingService { get; set; }
+
 	public FileInfo? CurrentFile => _file;
 
 	public event Action<ITilesetConnection> TilesetChanged = delegate { };
 
 	private InkscapeSvg? _svg;
-
 	private FileSystemWatcher? _fileWatcher;
+	private bool _isLoading = false;
 
-	private bool isLoading = false;
-
-	public InkscapeSvgConnectionService(IServiceProvider services, IWindowProvider windowProvider)
+	public InkscapeSvgConnection(IServiceProvider services, IWindowProvider windowProvider)
 	{
 		_services = services;
 		_windowProvider = windowProvider;
+
+		var inkscapeService = services.GetRequiredService<IInkscapeService>();
+		var tmpDirService = services.GetRequiredService<ITempDirectoryService>();
+		RenderingService = new SvgRenderingService(inkscapeService, tmpDirService);
 	}
 
 	public async Task LoadAsync(FileInfo file)
 	{
-		if (Interlocked.Exchange(ref isLoading, true) == true) return;
+		if (Interlocked.Exchange(ref _isLoading, true) == true) return;
 
 		try
 		{
@@ -51,7 +55,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 					_svg = new InkscapeSvg(stream);
 					_file = file;
 					Tileset = new InkscapeSvgTileset(this);
-					TilesetChanged.Invoke(this);
+					RaiseTilesetChanged();
 
 					SetupWatcher(file);
 					return;
@@ -72,7 +76,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 		}
 		finally
 		{
-			Interlocked.Exchange(ref isLoading, false);
+			Interlocked.Exchange(ref _isLoading, false);
 		}
 	}
 
@@ -97,12 +101,12 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 						"File Deleted",
 						$"The file {file.FullName} has been deleted. The designer will now be cleared.",
 						"OK");
-				});
 
-				_svg = null;
-				_file = null;
-				Tileset = null;
-				TilesetChanged.Invoke(this);
+					_svg = null;
+					_file = null;
+					Tileset = null;
+					RaiseTilesetChanged();
+				});
 			}
 		};
 
@@ -119,11 +123,12 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 							"File Deleted",
 							$"The file {file.FullName} has been deleted. The designer will now be cleared.",
 							"OK");
+
+						_svg = null;
+						_file = null;
+						Tileset = null;
+						RaiseTilesetChanged();
 					});
-					_svg = null;
-					_file = null;
-					Tileset = null;
-					TilesetChanged.Invoke(this);
 				}
 			}
 		};
@@ -152,7 +157,8 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 	public async Task SaveAsync(FileInfo file)
 	{
 		if (_file is null || _svg is null) return;
-		await _svg.SaveToStreamAsync(file.Open(FileMode.Create, FileAccess.Write));
+		using var fs = file.Open(FileMode.Create, FileAccess.Write, FileShare.None);
+		await _svg.SaveToStreamAsync(fs);
 		_file = file;
 	}
 
@@ -171,19 +177,10 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 		return GetTileViewModel(tile, designerViewModel);
 	}
 
-	public IEnumerable<Tile> Tiles
-	{
-		get
-		{
-			if (_svg is null) return [];
-			return _svg.GetAllTileElements().Select(TileExtensions.GetTileFromXElement);
-		}
-	}
-
 	public TileViewModel[] GetAllTiles(DesignerViewModel designerViewModel)
 	{
 		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
-		return [.. Tiles.Select((t) => GetTileViewModel(t, designerViewModel))];
+		return [.. GetTiles().Select((t) => GetTileViewModel(t, designerViewModel))];
 	}
 
 	private TileViewModel GetTileViewModel(Tile tile, DesignerViewModel designerViewModel)
@@ -198,85 +195,115 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 		});
 	}
 
+	public Tile[] GetTiles()
+	{
+		if (_svg is null) return [];
+		lock (_svg)
+		{
+			return [.. _svg.GetAllTileElements().Select(TileExtensions.GetTileFromXElement)];
+		}
+	}
+
 	public bool AddTile(Tile tile)
 	{
 		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
-		XElement collectionElement = _svg.GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
-		var element = _svg.GetTileElement(tile.Row, tile.Column);
-		if (element is not null)
+		lock (_svg)
 		{
-			// Tile already exists
-			return false;
-		}
-		element = tile.ToXElement();
-		collectionElement.Add(element);
-		TilesetChanged.Invoke(this);
-		return true;
-	}
-
-	public bool AddOrReplaceTile(Tile tile)
-	{
-		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
-		XElement collectionElement = _svg.GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
-		var element = _svg.GetTileElement(tile.Row, tile.Column);
-		if (element is not null)
-		{
-			element.ReplaceWith(tile.ToXElement());
-		}
-		else
-		{
+			XElement collectionElement = _svg.GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
+			var element = _svg.GetTileElement(tile.Row, tile.Column);
+			if (element is not null)
+			{
+				// Tile already exists
+				return false;
+			}
 			element = tile.ToXElement();
 			collectionElement.Add(element);
 		}
-		TilesetChanged.Invoke(this);
+
+		RaiseTilesetChanged();
 		return true;
+	}
+
+	public void AddOrReplaceTile(Tile tile)
+	{
+		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
+		lock (_svg)
+		{
+			XElement collectionElement = _svg!.GetOrCreateTileCollectionElement();
+			var element = _svg.GetTileElement(tile.Row, tile.Column);
+			if (element is not null)
+			{
+				element.ReplaceWith(tile.ToXElement());
+				return;
+			}
+
+			element = tile.ToXElement();
+			collectionElement.Add(element);
+		}
+		RaiseTilesetChanged();
 	}
 
 	public bool RemoveTile(Tile tile)
 	{
 		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
-		XElement collectionElement = _svg.GetOrCreateTileCollectionElement() ?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
-		var element = _svg.GetTileElement(tile.Row, tile.Column);
-		if (element is null)
+		lock (_svg)
 		{
-			// Tile does not exist
-			return false;
+			var element = _svg.GetTileElement(tile.Row, tile.Column);
+			if (element is null)
+			{
+				// Tile does not exist
+				return false;
+			}
+			element.Remove();
 		}
-		element.Remove();
-		TilesetChanged.Invoke(this);
+
+		RaiseTilesetChanged();
 		return true;
 	}
 
 	public void ClearTiles()
 	{
 		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
-		XElement collectionElement = _svg.GetOrCreateTileCollectionElement();
-		collectionElement.RemoveAll();
-		TilesetChanged.Invoke(this);
+		lock (_svg)
+		{
+			XElement collectionElement = _svg.GetOrCreateTileCollectionElement();
+			collectionElement.RemoveAll();
+		}
+		RaiseTilesetChanged();
 	}
 
 	public Scale GetTileSize()
 	{
 		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
-		return _svg.GetTileSize();
+		lock (_svg)
+		{
+			return _svg.GetTileSize();
+		}
 	}
 
 	public Scale GetSvgSize()
 	{
 		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
-		return _svg.GetSvgSize();
+		lock (_svg)
+		{
+			return _svg.GetSvgSize();
+		}
 	}
 
 	public int GetTileCount()
 	{
 		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
-		return _svg.GetAllTileElements().Count();
+		lock (_svg)
+		{
+			return _svg.GetAllTileElements().Count();
+		}
 	}
 
 	public async Task FillTilesAsync(TilesetFillSettings settings, IProgress<double>? progressReporter = default)
 	{
 		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
 		if (Tileset is null) throw new InvalidOperationException("Tileset is not loaded.");
+		if (RenderingService == null) throw new InvalidOperationException("Rendering service is not set.");
 
 		int maxRow = Tileset.ImagePixelSize.Height / Tileset.TilePixelSize.Height - 1;
 		int maxCol = Tileset.ImagePixelSize.Width / Tileset.TilePixelSize.Width - 1;
@@ -288,11 +315,16 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 			if (tile.Column > maxCol) maxCol = tile.Column;
 		}
 
-		for (int row = 0; row <= maxRow; row++)
+		int totalRows = maxRow + 1;
+		int totalCols = maxCol + 1;
+		int totalTiles = totalRows * totalCols;
+
+		for (int row = 0; row < totalRows; row++)
 		{
-			for (int col = 0; col <= maxCol; col++)
+			for (int col = 0; col < totalCols; col++)
 			{
-				progressReporter?.Report((col + row * maxCol) / (double)((maxCol + 1) * (maxRow + 1)));
+				int index = row * totalCols + col;
+				progressReporter?.Report(index / (double)totalTiles);
 
 				var element = _svg.GetTileElement(row, col);
 				if (settings.HasFlag(TilesetFillSettings.ReplaceExisting) || element is null)
@@ -309,8 +341,7 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 
 					if (!settings.HasFlag(TilesetFillSettings.FillEmptyTiles))
 					{
-						ITilesetRenderingService renderingService = _services.GetRequiredService<ITilesetRenderingService>();
-						bool isEmpty = await renderingService.IsSegmentEmptyAsync(_file!, col * Tileset.TilePixelSize.Width, row * Tileset.TilePixelSize.Height,
+						bool isEmpty = await RenderingService.IsSegmentEmptyAsync(_file!, col * Tileset.TilePixelSize.Width, row * Tileset.TilePixelSize.Height,
 							(col + 1) * Tileset.TilePixelSize.Width, (row + 1) * Tileset.TilePixelSize.Height, CancellationToken.None);
 						if (isEmpty) continue;
 					}
@@ -319,12 +350,48 @@ public partial class InkscapeSvgConnectionService : ITilesetConnection
 				}
 			}
 		}
-		TilesetChanged.Invoke(this);
 	}
 
 	public void OpenInExternalEditor()
 	{
 		if (CurrentFile == null) return;
 		_services.GetRequiredService<IInkscapeService>().OpenFileInInkscape(CurrentFile);
+	}
+
+	public Task<Stream> RenderFileAsync(string extension, CancellationToken cancellationToken = default)
+	{
+		if (_file == null) throw new InvalidOperationException("No file loaded to render.");
+		if (RenderingService == null) throw new InvalidOperationException("Rendering service is not set.");
+		return RenderingService.RenderFileAsync(_file, extension, cancellationToken);
+	}
+
+	public Task<Stream> RenderSegmentAsync(string extension, int left, int top, int right, int bottom, Scale? exportScale = null, CancellationToken cancellationToken = default)
+	{
+		if (_file == null) throw new InvalidOperationException("No file loaded to render.");
+		if (RenderingService == null) throw new InvalidOperationException("Rendering service is not set.");
+		return RenderingService.RenderSegmentAsync(_file, extension, left, top, right, bottom, exportScale, cancellationToken);
+	}
+
+	public Task<bool> IsSegmentEmptyAsync(int left, int top, int right, int bottom, CancellationToken cancellationToken = default)
+	{
+		if (_file == null) throw new InvalidOperationException("No file loaded to render.");
+		if (RenderingService == null) throw new InvalidOperationException("Rendering service is not set.");
+		return RenderingService.IsSegmentEmptyAsync(_file, left, top, right, bottom, cancellationToken);
+	}
+
+	private void RaiseTilesetChanged()
+	{
+		var handlers = TilesetChanged;
+		foreach (var handler in handlers.GetInvocationList())
+		{
+			try
+			{
+				handler.DynamicInvoke(this);
+			}
+			catch (Exception ex)
+			{
+				Trace.TraceError($"Error invoking TilesetChanged handler: {ex}");
+			}
+		}
 	}
 }

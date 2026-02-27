@@ -6,12 +6,10 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 	public abstract class MaterialExporter
 	{
 		private readonly ITilesetConnection _tilesetConnection;
-		private readonly ITilesetRenderingService _tilesetRenderingService;
 
-		public MaterialExporter(string materialName, ITilesetConnection tilesetConnection, ITilesetRenderingService tilesetRenderingService)
+		public MaterialExporter(string materialName, ITilesetConnection tilesetConnection)
 		{
 			_tilesetConnection = tilesetConnection;
-			_tilesetRenderingService = tilesetRenderingService;
 			if (_tilesetConnection.Tileset == null) throw new ArgumentException("Tileset connection must have a tileset.", nameof(tilesetConnection));
 			Material = new Material(materialName, () => _tilesetConnection.Tileset);
 		}
@@ -41,7 +39,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 			}
 
 			using var fs = destinationFile.OpenWrite();
-			var tilemapPackager = new TilemapPackager(_tilesetConnection, _tilesetRenderingService);
+			var tilemapPackager = new TilemapPackager(_tilesetConnection);
 			await tilemapPackager.ExportTilemap(tilemap, tilePixelSize, fs, cancellationToken);
 			return orderedTiles;
 		}

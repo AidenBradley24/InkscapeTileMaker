@@ -7,12 +7,10 @@ namespace InkscapeTileMaker.Utility
 	public partial class TilemapPackager
 	{
 		private readonly ITilesetConnection _tileSetConnection;
-		private readonly ITilesetRenderingService _renderingService;
 
-		public TilemapPackager(ITilesetConnection tileSetConnection, ITilesetRenderingService renderingService)
+		public TilemapPackager(ITilesetConnection tileSetConnection)
 		{
 			_tileSetConnection = tileSetConnection;
-			_renderingService = renderingService;
 			if (tileSetConnection.Tileset == null) throw new ArgumentException("Tileset connection must have a tileset.", nameof(tileSetConnection));
 		}
 
@@ -61,7 +59,7 @@ namespace InkscapeTileMaker.Utility
 			int right = left + width;
 			int bottom = top + height;
 
-			using (var pngStream = await _renderingService.RenderSegmentAsync(_tileSetConnection.CurrentFile!, "png", left, top, right, bottom, tilePixelSize, cancellationToken))
+			using (var pngStream = await _tileSetConnection.RenderSegmentAsync("png", left, top, right, bottom, tilePixelSize, cancellationToken))
 			{
 				using var bitmap = SKBitmap.Decode(pngStream);
 				bitmap.CopyTo(tileBitmap);

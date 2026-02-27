@@ -30,12 +30,11 @@ namespace InkscapeTileMaker
 #endif
 
 			// Application services
-			builder.Services.AddTransient<InkscapeSvgConnectionService>();
+			builder.Services.AddTransient<InkscapeSvgConnection>();
 			builder.Services.AddSingleton<IWindowOpeningService, WindowOpeningService>();
 
 			builder.Services.AddSingleton<IInkscapeService, InkscapeService>();
 			builder.Services.AddSingleton<ISettingsService, SettingsService>();
-			builder.Services.AddSingleton<ITilesetRenderingService, SvgRenderingService>();
 			builder.Services.AddSingleton<ITempDirectoryService, TempDirectoryService>();
 			builder.Services.AddSingleton<IFileSaver>(FileSaver.Default);
 			builder.Services.AddSingleton<ITemplateService, TemplateService>();

@@ -71,7 +71,8 @@ namespace InkscapeTileMaker.Utility
 				collectionElement = new XElement(TileCollectionName);
 				appElement.Add(collectionElement);
 			}
-			return collectionElement;
+			return collectionElement
+				?? throw new InvalidOperationException("Unable to get or create tile collection element in SVG.");
 		}
 
 		public IEnumerable<XElement> GetAllTileElements()
@@ -83,13 +84,14 @@ namespace InkscapeTileMaker.Utility
 		public Scale GetTileSize()
 		{
 			if (Grid is null) throw new InvalidOperationException("Grid not in svg");
-			var spacingX = Grid.Attribute(XName.Get("spacingx"))?.Value;
-			var spacingY = Grid.Attribute(XName.Get("spacingy"))?.Value;
-			var empSpacing = Grid.Attribute(XName.Get("empspacing"))?.Value;
+			var spacingX = Grid.Attribute(XName.Get("spacingx"))?.Value ?? "4";
+			var spacingY = Grid.Attribute(XName.Get("spacingy"))?.Value ?? "4";
+			var empSpacing = Grid.Attribute(XName.Get("empspacing"))?.Value ?? "2";
 			if (int.TryParse(spacingX, out int width) && int.TryParse(spacingY, out int height) && int.TryParse(empSpacing, out int unitsPerTile))
 			{
 				return new Scale(width * unitsPerTile, height * unitsPerTile);
 			}
+
 			throw new InvalidDataException("Tile size information is missing or invalid in the SVG grid.");
 		}
 

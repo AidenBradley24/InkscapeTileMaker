@@ -19,7 +19,6 @@ namespace InkscapeTileMaker.ViewModels
 	{
 		private ITilesetConnection? _tilesetConnection;
 		private readonly IWindowOpeningService _windowService;
-		private readonly ITilesetRenderingService _svgRenderingService;
 		private readonly IFileSaver _fileSaver;
 		private readonly IServiceProvider _serviceProvider;
 		private readonly ISettingsService _settingsService;
@@ -115,12 +114,10 @@ namespace InkscapeTileMaker.ViewModels
 
 		public DesignerViewModel(IServiceProvider serviceProvider,
 			IWindowOpeningService windowService,
-			ITilesetRenderingService renderingService,
 			IFileSaver fileSaver,
 			ISettingsService settingsService)
 		{
 			_windowService = windowService;
-			_svgRenderingService = renderingService;
 			_fileSaver = fileSaver;
 			_settingsService = settingsService;
 			_serviceProvider = serviceProvider;
@@ -247,7 +244,6 @@ namespace InkscapeTileMaker.ViewModels
 				return;
 			}
 
-			var file = conn.CurrentFile;
 			var tileset = conn.Tileset!;
 
 			var newTiles = tileset.GetAllTileViewModels(this);
@@ -273,9 +269,10 @@ namespace InkscapeTileMaker.ViewModels
 
 			Task.Run(async () =>
 			{
+				if (_tilesetConnection == null) return;
 				try
 				{
-					using (var stream = await _svgRenderingService.RenderFileAsync(file, ".png"))
+					using (var stream = await _tilesetConnection.RenderFileAsync(".png"))
 					{
 						if (stream.CanSeek) stream.Position = 0;
 						_renderedBitmap = SKBitmap.Decode(stream);
@@ -285,8 +282,7 @@ namespace InkscapeTileMaker.ViewModels
 					{
 						tile.PreviewImage = ImageSource.FromStream(token =>
 						{
-							return _svgRenderingService.RenderSegmentAsync(
-							file,
+							return _tilesetConnection.RenderSegmentAsync(
 							".png",
 							left: tile.Value.Column * tileset.TilePixelSize.Width,
 							top: tile.Value.Row * tileset.TilePixelSize.Height,
@@ -1114,12 +1110,12 @@ namespace InkscapeTileMaker.ViewModels
 
 			if (_windowProvider == null)
 			{
-				using var stream = await _svgRenderingService.RenderFileAsync(_tilesetConnection.CurrentFile, extension);
+				using var stream = await _tilesetConnection.RenderFileAsync(extension);
 				var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.{extension}", stream);
 			}
 			else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async _ =>
 			{
-				using var stream = await _svgRenderingService.RenderFileAsync(_tilesetConnection.CurrentFile, extension);
+				using var stream = await _tilesetConnection.RenderFileAsync(extension);
 				var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.{extension}", stream);
 			});
 		}
@@ -1151,8 +1147,7 @@ namespace InkscapeTileMaker.ViewModels
 			if (_tilesetConnection?.CurrentFile == null || _tilesetConnection.Tileset == null) return null;
 			var tileset = _tilesetConnection.Tileset;
 
-			return await _svgRenderingService.RenderSegmentAsync(
-				_tilesetConnection.CurrentFile,
+			return await _tilesetConnection.RenderSegmentAsync(
 				extension,
 				left: tile.Column * tileset.TilePixelSize.Width,
 				top: tile.Row * tileset.TilePixelSize.Height,
@@ -1175,8 +1170,7 @@ namespace InkscapeTileMaker.ViewModels
 				{
 					foreach (var tvm in Tiles)
 					{
-						using var stream = await _svgRenderingService.RenderSegmentAsync(
-							_tilesetConnection.CurrentFile,
+						using var stream = await _tilesetConnection.RenderSegmentAsync(
 							".png",
 							left: tvm.Value.Column * tileset.TilePixelSize.Width,
 							top: tvm.Value.Row * tileset.TilePixelSize.Height,
@@ -1195,8 +1189,7 @@ namespace InkscapeTileMaker.ViewModels
 					foreach (var (tvm, i) in Tiles.Select((t, i) => (t, i)))
 					{
 						progress.Report((double)i / Tiles.Count);
-						using var stream = await _svgRenderingService.RenderSegmentAsync(
-							_tilesetConnection.CurrentFile,
+						using var stream = await _tilesetConnection.RenderSegmentAsync(
 							".png",
 							left: tvm.Value.Column * tileset.TilePixelSize.Width,
 							top: tvm.Value.Row * tileset.TilePixelSize.Height,
@@ -1226,7 +1219,7 @@ namespace InkscapeTileMaker.ViewModels
 			var tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.unitypackage"));
 			using (var writer = new UnityPackageWriter(tmpFile.OpenWrite(), leaveOpen: false))
 			{
-				var exporter = new UnityPackageExporter(_settingsService, _tilesetConnection, _svgRenderingService);
+				var exporter = new UnityPackageExporter(_settingsService, _tilesetConnection);
 
 				if (_windowProvider == null)
 				{
@@ -1257,7 +1250,7 @@ namespace InkscapeTileMaker.ViewModels
 			{
 				var constructor = type.GetConstructor([typeof(string), typeof(ITilesetConnection), typeof(ITilesetRenderingService)])
 					?? throw new Exception($"No valid constructor found for type: {type.FullName}");
-				exporter = (MaterialExporter)constructor.Invoke([material.Name, _tilesetConnection!, _svgRenderingService!]);
+				exporter = (MaterialExporter)constructor.Invoke([material.Name, _tilesetConnection]);
 				if (exporter.Type != material.Type) continue;
 			}
 

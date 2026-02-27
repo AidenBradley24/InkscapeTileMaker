@@ -32,7 +32,7 @@ namespace InkscapeTileMaker.Models
 			this.bottom = position.y + scale.Height - 1;
 		}
 
-		public Rect(Scale scale) : this((0, 0), scale) {}
+		public Rect(Scale scale) : this((0, 0), scale) { }
 
 		/// <summary>
 		/// Get a square rectagle with the specified number of cells, where the width and height are equal and as small as possible to fit all cells. The rectangle will be positioned at the origin (0, 0).
