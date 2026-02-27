@@ -65,7 +65,7 @@
                     BindableLayout.ItemsSource="{Binding Tiles}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="vms:TileViewModel">
-                            <ctrls:ToolIcon 
+                            <ctrls:ToolIcon x:Name="{Binding Name}"
                                 Padding="4"
                                 Margin="2"
                                 HeightRequest="{Binding BindingContext.TileIconScale, Source={x:Reference TileSet}}"

@@ -171,10 +171,13 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 	public TileViewModel? GetTile(int row, int col, DesignerViewModel designerViewModel)
 	{
 		if (_svg is null) return null;
-		var element = _svg.GetTileElement(row, col);
-		if (element is null) return null;
-		var tile = TileExtensions.GetTileFromXElement(element);
-		return GetTileViewModel(tile, designerViewModel);
+		lock (_svg)
+		{
+			var element = _svg.GetTileElement(row, col);
+			if (element is null) return null;
+			var tile = TileExtensions.GetTileFromXElement(element);
+			return GetTileViewModel(tile, designerViewModel);
+		}
 	}
 
 	public TileViewModel[] GetAllTiles(DesignerViewModel designerViewModel)

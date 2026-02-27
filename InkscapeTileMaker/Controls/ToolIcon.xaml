@@ -36,6 +36,12 @@
                     CommandParameter="{Binding CommandParameter, Source={x:Reference Root}}"
                     Text=""
                     Padding="0" />
+            <ActivityIndicator HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               IsRunning="{Binding Source={x:Reference IconImage}, Path=IsLoading}"
+                               IsVisible="{Binding Source={x:Reference IconImage}, Path=IsLoading}"
+                               InputTransparent="True"
+                               Color="{DynamicResource PrimaryDark}"/>
         </Grid>
     </Border>
 </ContentView>

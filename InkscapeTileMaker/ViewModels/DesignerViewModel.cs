@@ -101,7 +101,7 @@ namespace InkscapeTileMaker.ViewModels
 		[ObservableProperty]
 		public partial PaintTool SelectedPaintTool { get; set; } = PaintTool.Cursor;
 
-		public string Title => FileName != null ? $"Inkscape Tile Maker - {FileName}" + (HasUnsavedChanges ? " *" : "") : "Inkscape Tile Maker";
+		public string Title => FileName != null ? $"{FileName} - Inkscape Tile Maker" + (HasUnsavedChanges ? " *" : "") : "Inkscape Tile Maker";
 
 		private SKBitmap? _renderedBitmap;
 		private readonly ConcurrentDictionary<(int row, int col), SKBitmap> _tileBitmaps = [];
@@ -137,13 +137,13 @@ namespace InkscapeTileMaker.ViewModels
 
 		public void SetTilesetConnection(ITilesetConnection connection)
 		{
-			_tilesetConnection?.TilesetChanged -= OnTilesetChanged;
+			_tilesetConnection?.TilesetChanged -= _ => OnTilesetChanged();
 
 			_tilesetConnection = connection;
-			_tilesetConnection.TilesetChanged += OnTilesetChanged;
+			_tilesetConnection.TilesetChanged += _ => OnTilesetChanged();
 			if (_tilesetConnection.Tileset != null)
 			{
-				OnTilesetChanged(_tilesetConnection);
+				OnTilesetChanged();
 			}
 		}
 
@@ -214,15 +214,15 @@ namespace InkscapeTileMaker.ViewModels
 
 		#endregion
 
-		private void OnTilesetChanged(ITilesetConnection conn)
+		private void OnTilesetChanged()
 		{
 			MainThread.BeginInvokeOnMainThread(() =>
 			{
-				RecalculateTileset(conn);
+				RecalculateTileset();
 			});
 		}
 
-		private void RecalculateTileset(ITilesetConnection conn)
+		private void RecalculateTileset()
 		{
 			OnPropertyChanged(nameof(TilePixelSize));
 			OnPropertyChanged(nameof(TileSetPixelSize));
@@ -237,16 +237,14 @@ namespace InkscapeTileMaker.ViewModels
 			}
 			_tileBitmaps.Clear();
 
-			FileName = conn.CurrentFile?.Name;
-			if (conn.CurrentFile == null)
+			FileName = _tilesetConnection?.CurrentFile?.Name;
+			if (_tilesetConnection == null || _tilesetConnection.CurrentFile == null || _tilesetConnection.Tileset == null)
 			{
 				Tiles.Clear();
 				return;
 			}
 
-			var tileset = conn.Tileset!;
-
-			var newTiles = tileset.GetAllTileViewModels(this);
+			var newTiles = _tilesetConnection.Tileset.GetAllTileViewModels(this);
 			if (Tiles.Count > 0)
 			{
 				if (SelectedTile != null)
@@ -267,35 +265,48 @@ namespace InkscapeTileMaker.ViewModels
 				tile.RunValidation();
 			}
 
-			Task.Run(async () =>
+			MainThread.BeginInvokeOnMainThread(async () =>
 			{
-				if (_tilesetConnection == null) return;
-				try
+				if (_windowProvider == null)
 				{
-					using (var stream = await _tilesetConnection.RenderFileAsync(".png"))
-					{
-						if (stream.CanSeek) stream.Position = 0;
-						_renderedBitmap = SKBitmap.Decode(stream);
-					}
-
-					foreach (var tile in Tiles)
-					{
-						tile.PreviewImage = ImageSource.FromStream(token =>
-						{
-							return _tilesetConnection.RenderSegmentAsync(
-							".png",
-							left: tile.Value.Column * tileset.TilePixelSize.Width,
-							top: tile.Value.Row * tileset.TilePixelSize.Height,
-							right: (tile.Value.Column + 1) * tileset.TilePixelSize.Width,
-							bottom: (tile.Value.Row + 1) * tileset.TilePixelSize.Height,
-							null,
-							token);
-						});
-					}
-					await MainThread.InvokeOnMainThreadAsync(CanvasNeedsRedraw);
+					await RenderPreviews();
 				}
-				catch (OperationCanceledException) { }
+				else await _windowProvider.PopupService.ShowProgressOnTaskAsync(
+					"Rendering Preview", isIndeterminate: true,
+					_ => RenderPreviews());
 			});
+		}
+
+		private async Task RenderPreviews()
+		{
+			if (_tilesetConnection == null || _tilesetConnection.CurrentFile == null || _tilesetConnection.Tileset == null) return;
+			try
+			{
+				using (var stream = await _tilesetConnection.RenderFileAsync(".png"))
+				{
+					if (stream.CanSeek) stream.Position = 0;
+					_renderedBitmap = SKBitmap.Decode(stream);
+				}
+
+				var tilePixelSize = _tilesetConnection.Tileset.TilePixelSize;
+
+				foreach (var tile in Tiles)
+				{
+					tile.PreviewImage = ImageSource.FromStream(token =>
+					{
+						return _tilesetConnection.RenderSegmentAsync(
+						".png",
+						left: tile.Value.Column * tilePixelSize.Width,
+						top: tile.Value.Row * tilePixelSize.Height,
+						right: (tile.Value.Column + 1) * tilePixelSize.Width,
+						bottom: (tile.Value.Row + 1) * tilePixelSize.Height,
+						null,
+						token);
+					});
+				}
+				await MainThread.InvokeOnMainThreadAsync(CanvasNeedsRedraw);
+			}
+			catch (OperationCanceledException) { }
 		}
 
 		public void RenderCanvas(SKCanvas canvas, int width, int height) // note that this must run synchronously
