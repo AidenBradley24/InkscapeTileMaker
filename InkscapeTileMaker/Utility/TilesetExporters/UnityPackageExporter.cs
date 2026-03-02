@@ -14,6 +14,8 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 		private readonly ITilesetConnection _tilesetConnection;
 
 		private static readonly Guid TileMakerImporterScriptGuid = Guid.Parse("a85efa26d4f565242a96b2e7fce398ca");
+		private static readonly Guid TileMakerSettingsScriptGuid = Guid.Parse("a55ea99f8cc2f5c43824cd2f0079f75f");
+
 		private static readonly JsonSerializerOptions _jsonOptions = new()
 		{
 			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -45,7 +47,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 			// export each material seperately
 			await WriteScriptsAsync(writer);
 
-			var materials = Material.GetAllMaterials(() => tileset);
+			var materials = Material.GetAllMaterials(() => tileset).ToDictionary(t => t.Name);
 			if (materials.Count == 0)
 			{
 				using var png = await _tilesetConnection.RenderFileAsync(".png");
@@ -54,7 +56,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 				return;
 			}
 
-			foreach (var material in materials)
+			foreach (var material in materials.Values)
 			{
 				switch (material.Type)
 				{
@@ -64,7 +66,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 				}
 			}
 
-			var remaining = tileset.Where(t => !string.IsNullOrWhiteSpace(t.MaterialName)).Distinct().ToList();
+			var remaining = tileset.Where(t => string.IsNullOrWhiteSpace(t.MaterialName) || !materials.ContainsKey(t.MaterialName)).ToList();
 			if (remaining.Count == 0) return;
 			await WritePlainTiles(writer, remaining);
 		}
@@ -197,10 +199,19 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 		private async Task WriteScriptsAsync(UnityPackageWriter writer)
 		{
 			string editorScriptLocation = _settingsService.UnityEditorScriptPath;
-			using var fs = await FileSystem.Current.OpenAppPackageFileAsync($"Unity/TileMakerImporter.cs");
-			var entry = UnityPackageEntryFactory.MakeEmptyEntry($"{editorScriptLocation}/TileMakerImporter.cs", TileMakerImporterScriptGuid);
-			entry.DataStream = fs;
-			writer.WriteEntry(entry);
+			string scriptLocation = _settingsService.UnityScriptPath;
+			using (var fs = await FileSystem.Current.OpenAppPackageFileAsync($"Unity/TileMakerImporter.cs"))
+			{
+				var entry = UnityPackageEntryFactory.MakeEmptyEntry($"{editorScriptLocation}/TileMakerImporter.cs", TileMakerImporterScriptGuid);
+				entry.DataStream = fs;
+				writer.WriteEntry(entry);
+			}
+			using (var fs = await FileSystem.Current.OpenAppPackageFileAsync("Unity/TileMakerSettings.cs"))
+			{
+				var entry = UnityPackageEntryFactory.MakeEmptyEntry($"{scriptLocation}/TileMakerSettings.cs", TileMakerSettingsScriptGuid);
+				entry.DataStream = fs;
+				writer.WriteEntry(entry);
+			}
 		}
 
 		private void WriteTilesetAsset(UnityPackageWriter writer, ITileset tileset, Guid imageGuid)
@@ -211,6 +222,7 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 			{
 				var settings = new TilesetImporterSettings
 				{
+					Name = tileset.Name,
 					ImageGuid = imageGuid.ToString("N"),
 					Tiles = [.. tileset.Select(t => new TileRecord
 					{

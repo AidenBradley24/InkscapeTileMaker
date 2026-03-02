@@ -47,7 +47,7 @@ namespace InkscapeTileMaker.Models
 			return GetTiles().Any(t => t.Variant == variant);
 		}
 
-		public static List<Material> GetAllMaterials(Func<IEnumerable<Tile>> tilesProvider)
+		public static HashSet<Material> GetAllMaterials(Func<IEnumerable<Tile>> tilesProvider)
 		{
 			var materials = new Dictionary<string, Material>();
 			foreach (var tile in tilesProvider())
@@ -57,7 +57,7 @@ namespace InkscapeTileMaker.Models
 					materials[tile.MaterialName] = new Material(tile.MaterialName, tilesProvider);
 				}
 			}
-			return materials.Values.ToList();
+			return materials.Values.ToHashSet();
 		}
 
 		public bool Equals(Material? other)
@@ -80,6 +80,11 @@ namespace InkscapeTileMaker.Models
 				Transformation = TileTransformationHelpers.GetTransformationForAlignment(tile.Alignment, alignment)
 			};
 			return true;
+		}
+
+		public override int GetHashCode()
+		{
+			return _name.GetHashCode(StringComparison.Ordinal);
 		}
 	}
 }

@@ -12,24 +12,24 @@ namespace TileMaker
 	public class TileMakerImporter : ScriptedImporter
 	{
 		[System.Serializable]
-		public class TileImporterSettings
+		public class TilesetImporterSettings
 		{
-			public string Name;
-			public string ImageGuid;
-			public TileRecord[] Tiles;
-			public int TileWidth;
-			public int TileHeight;
+			public string name;
+			public string imageGuid;
+			public TileRecord[] tiles;
+			public int tileWidth;
+			public int tileHeight;
 		}
 
 		[System.Serializable]
 		public class TileRecord
 		{
-			public int Row;
-			public int Col;
-			public TileType Type;
-			public TileVariant Variant;
-			public TileAlignment Alignment;
-			public string MaterialName;
+			public int row;
+			public int col;
+			public TileType type;
+			public TileVariant variant;
+			public TileAlignment alignment;
+			public string materialName;
 
 			// these must be updated with tilemaker enums
 
@@ -98,10 +98,10 @@ namespace TileMaker
 
 		public override void OnImportAsset(AssetImportContext ctx)
 		{
-			var importer = JsonUtility.FromJson<TileImporterSettings>(File.ReadAllText(ctx.assetPath));
-			if (!GUID.TryParse(importer.ImageGuid, out var imageGuid))
+			var importer = JsonUtility.FromJson<TilesetImporterSettings>(File.ReadAllText(ctx.assetPath));
+			if (!GUID.TryParse(importer.imageGuid, out var imageGuid))
 			{
-				throw new System.Exception($"unable to get guid of image! \"{importer.ImageGuid}\"");
+				throw new System.Exception($"unable to get guid of image! \"{importer.imageGuid}\"");
 			}
 
 			ctx.DependsOnSourceAsset(imageGuid);
@@ -118,9 +118,9 @@ namespace TileMaker
 				// Convert to a top-left-origin row using the texture height.
 				int textureHeight = sprite.texture.height;
 
-				int col = Mathf.FloorToInt(rect.x / importer.TileWidth);
-				int rowFromBottom = Mathf.FloorToInt(rect.y / importer.TileHeight);
-				int rowFromTop = (textureHeight / importer.TileHeight) - 1 - rowFromBottom;
+				int col = Mathf.FloorToInt(rect.x / importer.tileWidth);
+				int rowFromBottom = Mathf.FloorToInt(rect.y / importer.tileHeight);
+				int rowFromTop = (textureHeight / importer.tileHeight) - 1 - rowFromBottom;
 
 				var key = (rowFromTop, col);
 				if (!spriteLookup.ContainsKey(key))
@@ -129,19 +129,19 @@ namespace TileMaker
 				}
 			}
 
-			if (importer.Tiles.Length == 0)
+			if (importer.tiles.Length == 0)
 			{
 				Debug.LogWarning("No tiles found in importer!");
 				return;
 			}
 
-			if (!importer.Tiles.Select(t => t.Type).All(t => t.Equals(importer.Tiles[0])))
+			if (!importer.tiles.Select(t => t.type).All(t => t == importer.tiles[0].type))
 			{
-				Debug.LogError($"Inconsitant tile types!: \n{string.Join('\n', importer.Tiles.Select(t => t.Type).Distinct())}");
+				Debug.LogError($"Inconsitant tile types!: \n{string.Join('\n', importer.tiles.Select(t => t.type).Distinct())}");
 				return;
 			}
 
-			var tileType = importer.Tiles[0].Type;
+			var tileType = importer.tiles[0].type;
 			switch (tileType)
 			{
 				case TileRecord.TileType.Singular:
@@ -151,18 +151,26 @@ namespace TileMaker
 					ImportDualRuleTile(ctx, importer, spriteLookup);
 					break;
 			}
+
+			var root = ScriptableObject.CreateInstance<TileMakerSettings>();
+			root.name = string.IsNullOrEmpty(importer.name)
+				? Path.GetFileNameWithoutExtension(ctx.assetPath)
+				: importer.name;
+
+			ctx.AddObjectToAsset("Root", root);
+			ctx.SetMainObject(root);
 		}
 
 		private void ImportSingularTiles(
 			AssetImportContext ctx,
-			TileImporterSettings importer,
+			TilesetImporterSettings importer,
 			Dictionary<(int row, int col), Sprite> spriteLookup)
 		{
-			foreach (var record in importer.Tiles)
+			foreach (var record in importer.tiles)
 			{
-				if (!spriteLookup.TryGetValue((record.Row, record.Col), out var sprite))
+				if (!spriteLookup.TryGetValue((record.row, record.col), out var sprite))
 				{
-					Debug.LogWarning($"No sprite found for r:{record.Row},c:{record.Col}");
+					Debug.LogWarning($"No sprite found for r:{record.row},c:{record.col}");
 					continue;
 				}
 
@@ -175,7 +183,7 @@ namespace TileMaker
 
 		private void ImportDualRuleTile(
 			AssetImportContext ctx,
-			TileImporterSettings importer,
+			TilesetImporterSettings importer,
 			Dictionary<(int row, int col), Sprite> spriteLookup)
 		{
 			// attempt to get the skner duel tile

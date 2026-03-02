@@ -146,7 +146,8 @@ namespace InkscapeTileMaker.Utility.TilesetExporters
 					Name = $"{Material.Name}_12",
 					MaterialName = Material.Name,
 					Row = 3,
-					Column = 1,
+					Column = 0,
+					Type = TileType.DualTileMaterial,
 					Variant = TileVariant.Void,
 				},
 				new()

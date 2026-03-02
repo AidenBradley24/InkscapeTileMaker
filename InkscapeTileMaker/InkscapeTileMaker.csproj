@@ -37,6 +37,7 @@
 
 	<ItemGroup>
 	  <Compile Remove="Resources\Raw\Unity\TileMakerImporter.cs" />
+	  <Compile Remove="Resources\Raw\Unity\TileMakerSettings.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
