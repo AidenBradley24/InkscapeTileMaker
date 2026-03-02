@@ -101,7 +101,7 @@ namespace InkscapeTileMaker.ViewModels
 		[ObservableProperty]
 		public partial PaintTool SelectedPaintTool { get; set; } = PaintTool.Cursor;
 
-		public string Title => FileName != null ? $"{FileName} - Inkscape Tile Maker" + (HasUnsavedChanges ? " *" : "") : "Inkscape Tile Maker";
+		public string Title => FileName != null ? (HasUnsavedChanges ? "*" : "" + $"{FileName} - Inkscape Tile Maker") : "Inkscape Tile Maker";
 
 		private SKBitmap? _renderedBitmap;
 		private readonly ConcurrentDictionary<(int row, int col), SKBitmap> _tileBitmaps = [];

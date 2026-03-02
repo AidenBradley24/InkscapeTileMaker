@@ -47,28 +47,28 @@ namespace InkscapeTileMaker.Utility
 			if (element.Name != InkscapeSvg.TileName) throw new ArgumentException("Invalid element name", nameof(element));
 			return new Tile
 			{
-				Name = (string?)element.Attribute("name") ?? "",
-				Type = Enum.TryParse<TileType>((string?)element.Attribute("type") ?? "Singular", out var type) ? type : TileType.Singular,
-				Variant = Enum.TryParse<TileVariant>((string?)element.Attribute("variant") ?? "Core", out var variant) ? variant : TileVariant.Core,
-				Alignment = Enum.TryParse<TileAlignment>((string?)element.Attribute("allignment") ?? "Core", out var alignment) ? alignment : TileAlignment.Core,
-				Priority = (int?)element.Attribute("priority") ?? 1,
-				Row = (int?)element.Attribute("row") ?? 0,
-				Column = (int?)element.Attribute("column") ?? 0,
-				MaterialName = (string?)element.Attribute("materialname") ?? ""
+				Name = (string?)element.Attribute(TileXNames.Name) ?? "",
+				Type = Enum.TryParse<TileType>((string?)element.Attribute(TileXNames.Type) ?? "Singular", out var type) ? type : TileType.Singular,
+				Variant = Enum.TryParse<TileVariant>((string?)element.Attribute(TileXNames.Variant) ?? "Core", out var variant) ? variant : TileVariant.Core,
+				Alignment = Enum.TryParse<TileAlignment>((string?)element.Attribute(TileXNames.Alignment) ?? "Core", out var alignment) ? alignment : TileAlignment.Core,
+				Priority = (int?)element.Attribute(TileXNames.Priority) ?? 1,
+				Row = (int?)element.Attribute(TileXNames.Row) ?? 0,
+				Column = (int?)element.Attribute(TileXNames.Column) ?? 0,
+				MaterialName = (string?)element.Attribute(TileXNames.MaterialName) ?? ""
 			};
 		}
 
 		public static XElement ToXElement(this Tile tile)
 		{
 			return new XElement(InkscapeSvg.TileName,
-				new XAttribute("name", tile.Name),
-				new XAttribute("type", tile.Type.ToString()),
-				new XAttribute("variant", tile.Variant.ToString()),
-				new XAttribute("allignment", tile.Alignment.ToString()),
-				new XAttribute("priority", tile.Priority),
-				new XAttribute("row", tile.Row),
-				new XAttribute("column", tile.Column),
-				new XAttribute("materialname", tile.MaterialName)
+				new XAttribute(TileXNames.Name, tile.Name),
+				new XAttribute(TileXNames.Type, tile.Type.ToString()),
+				new XAttribute(TileXNames.Variant, tile.Variant.ToString()),
+				new XAttribute(TileXNames.Alignment, tile.Alignment.ToString()),
+				new XAttribute(TileXNames.Priority, tile.Priority),
+				new XAttribute(TileXNames.Row, tile.Row),
+				new XAttribute(TileXNames.Column, tile.Column),
+				new XAttribute(TileXNames.MaterialName, tile.MaterialName)
 			);
 		}
 	}

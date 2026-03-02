@@ -182,8 +182,14 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 
 	public TileViewModel[] GetAllTiles(DesignerViewModel designerViewModel)
 	{
-		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
-		return [.. GetTiles().Select((t) => GetTileViewModel(t, designerViewModel))];
+		if (_svg is null) return [];
+		lock (_svg)
+		{
+			return _svg.GetAllTileElements()
+				.Select(TileExtensions.GetTileFromXElement)
+				.Select((t) => GetTileViewModel(t, designerViewModel))
+				.ToArray();
+		}
 	}
 
 	private TileViewModel GetTileViewModel(Tile tile, DesignerViewModel designerViewModel)
@@ -203,7 +209,19 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 		if (_svg is null) return [];
 		lock (_svg)
 		{
-			return [.. _svg.GetAllTileElements().Select(TileExtensions.GetTileFromXElement)];
+			return _svg.GetAllTileElements()
+				.Select(TileExtensions.GetTileFromXElement)
+				.ToArray();
+		}
+	}
+
+	public bool CheckContainsTile(Tile tile)
+	{
+		if (_svg is null) return false;
+		lock (_svg)
+		{
+			var element = _svg.GetTileElement(tile.Row, tile.Column);
+			return element is not null && element.Attribute(TileXNames.Name)?.Value == tile.Name;
 		}
 	}
 

@@ -43,7 +43,7 @@ namespace InkscapeTileMaker.Services
 
 		public bool Contains(Tile item)
 		{
-			return _connection.GetTiles().Contains(item);
+			return _connection.CheckContainsTile(item);
 		}
 
 		public void CopyTo(Tile[] array, int arrayIndex)
@@ -58,7 +58,7 @@ namespace InkscapeTileMaker.Services
 
 		public IEnumerator<Tile> GetEnumerator()
 		{
-			return (IEnumerator<Tile>)_connection.GetTiles().GetEnumerator();
+			return ((IEnumerable<Tile>)_connection.GetTiles()).GetEnumerator();
 		}
 
 		public bool Remove(Tile item)
