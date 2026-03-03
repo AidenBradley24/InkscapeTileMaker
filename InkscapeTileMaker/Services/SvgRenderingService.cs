@@ -145,7 +145,7 @@ namespace InkscapeTileMaker.Services
 
 		public async Task<bool> IsSegmentEmptyAsync(FileInfo file, int left, int top, int right, int bottom, CancellationToken cancellationToken = default)
 		{
-			using var pngStream = await RenderSegmentAsync(file, "png", left, top, right, bottom, null, cancellationToken);
+			using var pngStream = await RenderSegmentAsync(file, "png", left, top, right, bottom, new Scale(16, 16), cancellationToken);
 			using var bitmap = SKBitmap.Decode(pngStream) ?? throw new Exception("Failed to decode rendered PNG.");
 			for (int y = 0; y < bitmap.Height; y++)
 			{

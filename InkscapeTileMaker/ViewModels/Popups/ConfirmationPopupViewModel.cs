@@ -6,7 +6,7 @@ namespace InkscapeTileMaker.ViewModels.Popups
 {
 	public partial class ConfirmationPopupViewModel : ObservableObject
 	{
-		public IPopupCloser? PopupView { get; set; }
+		public IAppPopup? PopupView { get; set; }
 
 		[ObservableProperty] public partial string Title { get; set; } = "Confirm";
 		[ObservableProperty] public partial string Message { get; set; } = "(message)";
@@ -19,14 +19,14 @@ namespace InkscapeTileMaker.ViewModels.Popups
 		public void Confirm()
 		{
 			Result = true;
-			PopupView?.RequestClose();
+			PopupView?.ClosePopup();
 		}
 
 		[RelayCommand]
 		public void Cancel()
 		{
 			Result = false;
-			PopupView?.RequestClose();
+			PopupView?.ClosePopup();
 		}
 	}
 }

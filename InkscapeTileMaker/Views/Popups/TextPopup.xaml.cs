@@ -4,7 +4,7 @@ using InkscapeTileMaker.ViewModels.Popups;
 
 namespace InkscapeTileMaker.Views.Popups;
 
-public partial class TextPopup : Popup, IPopupCloser
+public partial class TextPopup : Popup, IAppPopup
 {
 	public TextPopup(TextPopupViewModel vm)
 	{
@@ -12,7 +12,7 @@ public partial class TextPopup : Popup, IPopupCloser
 		BindingContext = vm;
 	}
 
-	public async Task RequestClose()
+	public async Task ClosePopup()
 	{
 		await CloseAsync();
 	}

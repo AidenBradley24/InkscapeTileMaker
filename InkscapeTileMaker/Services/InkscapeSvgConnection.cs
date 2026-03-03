@@ -264,6 +264,27 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 		RaiseTilesetChanged();
 	}
 
+	public void AddOrReplaceTiles(IEnumerable<Tile> tiles)
+	{
+		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
+		lock (_svg)
+		{
+			XElement collectionElement = _svg.GetOrCreateTileCollectionElement();
+			foreach (var tile in tiles)
+			{
+				var element = _svg.GetTileElement(tile.Row, tile.Column);
+				if (element is not null)
+				{
+					element.ReplaceWith(tile.ToXElement());
+					continue;
+				}
+				element = tile.ToXElement();
+				collectionElement.Add(element);
+			}
+		}
+		RaiseTilesetChanged();
+	}
+
 	public bool RemoveTile(Tile tile)
 	{
 		if (_svg is null) throw new InvalidOperationException("SVG Document is not loaded.");
@@ -340,6 +361,7 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 		int totalCols = maxCol + 1;
 		int totalTiles = totalRows * totalCols;
 
+		var additions = new List<Tile>();
 		for (int row = 0; row < totalRows; row++)
 		{
 			for (int col = 0; col < totalCols; col++)
@@ -367,10 +389,12 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 						if (isEmpty) continue;
 					}
 
-					AddOrReplaceTile(newTile);
+					additions.Add(newTile);
 				}
 			}
 		}
+
+		AddOrReplaceTiles(additions);
 	}
 
 	public void OpenInExternalEditor()

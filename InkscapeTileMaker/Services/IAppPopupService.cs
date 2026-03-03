@@ -8,4 +8,9 @@
 
 		public Task ShowProgressOnTaskAsync(string message, bool isIndeterminate, Func<IProgress<double>, Task> progressAction);
 	}
+
+	public interface IAppPopup
+	{
+		public Task ClosePopup();
+	}
 }

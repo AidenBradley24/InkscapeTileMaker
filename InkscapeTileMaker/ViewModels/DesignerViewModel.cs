@@ -101,7 +101,7 @@ namespace InkscapeTileMaker.ViewModels
 		[ObservableProperty]
 		public partial PaintTool SelectedPaintTool { get; set; } = PaintTool.Cursor;
 
-		public string Title => FileName != null ? (HasUnsavedChanges ? "*" : "" + $"{FileName} - Inkscape Tile Maker") : "Inkscape Tile Maker";
+		public string Title => FileName != null ? ((HasUnsavedChanges ? "*" : "") + $"{FileName} - Inkscape Tile Maker") : "Inkscape Tile Maker";
 
 		private SKBitmap? _renderedBitmap;
 		private readonly ConcurrentDictionary<(int row, int col), SKBitmap> _tileBitmaps = [];
@@ -111,6 +111,8 @@ namespace InkscapeTileMaker.ViewModels
 		public event Action CloseRequested = delegate { };
 
 		const int TILEMAP_SCALE = 12;
+
+		private bool _showRenderMessage;
 
 		public DesignerViewModel(IServiceProvider serviceProvider,
 			IWindowOpeningService windowService,
@@ -128,6 +130,7 @@ namespace InkscapeTileMaker.ViewModels
 			_paintTilemap.NeedsRedraw += () => CanvasNeedsRedraw.Invoke();
 
 			SelectedZoomLevel = 1.0m;
+			_showRenderMessage = true;
 		}
 
 		public void RegisterWindow(IWindowProvider windowProvider)
@@ -267,7 +270,7 @@ namespace InkscapeTileMaker.ViewModels
 
 			MainThread.BeginInvokeOnMainThread(async () =>
 			{
-				if (_windowProvider == null)
+				if (_windowProvider == null || !_showRenderMessage)
 				{
 					await RenderPreviews();
 				}
@@ -1044,6 +1047,7 @@ namespace InkscapeTileMaker.ViewModels
 			if (ReplaceExistingTiles) settings |= TilesetFillSettings.ReplaceExisting;
 			if (FillEmptyTiles) settings |= TilesetFillSettings.FillEmptyTiles;
 
+			_showRenderMessage = false;
 			if (_windowProvider == null)
 			{
 				await _tilesetConnection.Tileset.FillTilesAsync(settings);
@@ -1053,6 +1057,7 @@ namespace InkscapeTileMaker.ViewModels
 				await _tilesetConnection.Tileset.FillTilesAsync(settings, progress);
 			});
 
+			_showRenderMessage = true;
 			HasUnsavedChanges = true;
 		}
 

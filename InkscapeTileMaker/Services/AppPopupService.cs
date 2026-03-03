@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Extensions;
-
 using InkscapeTileMaker.ViewModels.Popups;
 using InkscapeTileMaker.Views.Popups;
 
@@ -9,10 +8,12 @@ namespace InkscapeTileMaker.Services
 	public class AppPopupService : IAppPopupService
 	{
 		private readonly IWindowProvider _windowProvider;
+		private readonly SemaphoreSlim _progressSemaphore;
 
 		public AppPopupService(IWindowProvider windowProvider)
 		{
 			_windowProvider = windowProvider;
+			_progressSemaphore = new SemaphoreSlim(1);
 		}
 
 		public async Task<bool> ShowConfirmationAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel")
@@ -48,6 +49,7 @@ namespace InkscapeTileMaker.Services
 
 		public async Task ShowProgressOnTaskAsync(string message, bool isIndeterminate, Func<IProgress<double>, Task> progressAction)
 		{
+			await _progressSemaphore.WaitAsync();
 			var vm = new ProgressPopupViewModel()
 			{
 				Message = message,
@@ -61,10 +63,22 @@ namespace InkscapeTileMaker.Services
 			};
 
 			var popupTask = PopupExtensions.ShowPopupAsync(_windowProvider.NavPage, view, opts);
-			var workTask = progressAction.Invoke(vm.ProgressReporter);
-			await workTask.ConfigureAwait(continueOnCapturedContext: false);
-			await MainThread.InvokeOnMainThreadAsync(view.RequestClose);
-			await popupTask.ConfigureAwait(continueOnCapturedContext: false);
+
+			try
+			{
+				await progressAction.Invoke(vm.ProgressReporter)
+					.ConfigureAwait(continueOnCapturedContext: false);
+			}
+			catch (Exception ex)
+			{
+				await _windowProvider.NavPage.DisplayAlertAsync("Error", $"An error occurred while performing the operation.\n\n{ex.Message}", "OK");
+			}
+			finally
+			{
+				await MainThread.InvokeOnMainThreadAsync(view.ClosePopup);
+				await popupTask.ConfigureAwait(continueOnCapturedContext: false);
+				_progressSemaphore.Release();
+			}
 		}
 	}
 }

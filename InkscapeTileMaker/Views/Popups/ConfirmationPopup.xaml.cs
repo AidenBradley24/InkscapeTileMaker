@@ -4,7 +4,7 @@ using InkscapeTileMaker.ViewModels.Popups;
 
 namespace InkscapeTileMaker.Views.Popups;
 
-public partial class ConfirmationPopup : Popup, IPopupCloser
+public partial class ConfirmationPopup : Popup, IAppPopup
 {
 	public ConfirmationPopup(ConfirmationPopupViewModel vm)
 	{
@@ -13,7 +13,7 @@ public partial class ConfirmationPopup : Popup, IPopupCloser
 		vm.PopupView = this;
 	}
 
-	public async Task RequestClose()
+	public async Task ClosePopup()
 	{
 		await CloseAsync();
 	}
