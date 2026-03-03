@@ -15,7 +15,7 @@ namespace InkscapeTileMaker.Models
 
 	public static class TileVariantExtensions
 	{
-		public static IEnumerable<TileAlignment> GetValidAllignments(this TileVariant variant)
+		public static IEnumerable<TileAlignment> GetValidAlignments(this TileVariant variant)
 		{
 			return variant switch
 			{

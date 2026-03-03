@@ -17,14 +17,14 @@
     </linearGradient>
     <tilemaker:tilemakerdefs>
       <tilemaker:tiles>
-        <tilemaker:tile name="Basic Outer Corner" type="DualTileMaterial" variant="OuterCorner" allignment="TopLeftOuterCorner" priority="1" row="0" column="0" materialname="Basic" />
-        <tilemaker:tile name="Edge" type="DualTileMaterial" variant="Edge" allignment="BottomEdge" priority="1" row="0" column="1" materialname="Basic" />
-        <tilemaker:tile name="Inner Corner" type="DualTileMaterial" variant="InnerCorner" allignment="BottomRightInnerCorner" priority="1" row="0" column="2" materialname="Basic" />
-        <tilemaker:tile name="Basic Core" type="DualTileMaterial" variant="Core" allignment="Core" priority="1" row="0" column="3" materialname="Basic" />
-        <tilemaker:tile name="Diagonal" type="DualTileMaterial" variant="Diagonal" allignment="DiagonalTopRightToBottomLeft" priority="1" row="1" column="0" materialname="Basic" />
-        <tilemaker:tile name="Wall Edge" type="DualTileMaterial" variant="Edge" allignment="TopEdge" priority="1" row="1" column="1" materialname="Basic" />
-        <tilemaker:tile name="Wall Inner Corner" type="DualTileMaterial" variant="InnerCorner" allignment="TopLeftInnerCorner" priority="1" row="1" column="2" materialname="Basic" />
-        <tilemaker:tile name="Wall Outer Corner" type="DualTileMaterial" variant="OuterCorner" allignment="BottomLeftOuterCorner" priority="1" row="2" column="2" materialname="Basic" />
+        <tilemaker:tile name="Basic Outer Corner" type="DualTileMaterial" variant="OuterCorner" allignment="TopLeftOuterCorner" secondaryalignments="TopRightOuterCorner" priority="1" row="0" column="0" materialname="Basic" />
+        <tilemaker:tile name="Edge" type="DualTileMaterial" variant="Edge" allignment="BottomEdge" secondaryalignments="TopEdge,RightEdge" priority="1" row="0" column="1" materialname="Basic" />
+        <tilemaker:tile name="Inner Corner" type="DualTileMaterial" variant="InnerCorner" allignment="BottomRightInnerCorner" secondaryalignments="TopLeftInnerCorner" priority="1" row="0" column="2" materialname="Basic" />
+        <tilemaker:tile name="Basic Core" type="DualTileMaterial" variant="Core" allignment="Core" secondaryalignments="" priority="1" row="0" column="3" materialname="Basic" />
+        <tilemaker:tile name="Diagonal" type="DualTileMaterial" variant="Diagonal" allignment="DiagonalTopRightToBottomLeft" secondaryalignments="DiagonalTopLeftToBottomRight" priority="1" row="1" column="0" materialname="Basic" />
+        <tilemaker:tile name="Wall Edge" type="DualTileMaterial" variant="Edge" allignment="TopEdge" secondaryalignments="" priority="2" row="1" column="1" materialname="Basic" />
+        <tilemaker:tile name="Wall Inner Corner" type="DualTileMaterial" variant="InnerCorner" allignment="TopLeftInnerCorner" secondaryalignments="TopRightInnerCorner" priority="2" row="1" column="2" materialname="Basic" />
+        <tilemaker:tile name="Wall Outer Corner" type="DualTileMaterial" variant="OuterCorner" allignment="BottomLeftOuterCorner" secondaryalignments="TopLeftOuterCorner" priority="2" row="2" column="2" materialname="Basic" />
       </tilemaker:tiles>
     </tilemaker:tilemakerdefs>
     <linearGradient inkscape:collect="always" xlink:href="#linearGradient4" id="linearGradient5" x1="190.6506" y1="384.42725" x2="190.6506" y2="416.05377" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1,0,0,1.5624999,0,-216.14045)" />

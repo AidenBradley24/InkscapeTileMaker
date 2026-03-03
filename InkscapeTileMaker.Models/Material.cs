@@ -26,20 +26,30 @@ namespace InkscapeTileMaker.Models
 		}
 
 		/// <summary>
-		/// Returns the tile of the specified variant.<br/>
-		/// Attempts to return a tile with preferred alignment, but will return any tile of the specified variant if none with the preferred alignment exists.<br/>
-		/// Also accounts for <see cref="Tile.Priority"/>.
+		/// Returns the tile of the specified variant.
 		/// </summary>
+		/// <remarks>
+		/// If the prefered alignment isn't available, returns the best match accounting for secondary alignments and priority.<br/>
+		/// If no tile of the specified variant is available, returns null.
+		/// </remarks>
 		public Tile? GetTile(TileVariant variant, TileAlignment preferredAlignment)
 		{
 			var baseTiles = GetTiles().Where(t => t.Variant == variant);
 			if (!baseTiles.Any()) return null;
-			var preferredTiles = baseTiles.Where(t => t.Alignment == preferredAlignment);
+
+			var preferredTiles = baseTiles.Where(t => t.Alignment == preferredAlignment).OrderByDescending(t => t.Priority);
 			if (preferredTiles.Any())
 			{
-				return preferredTiles.OrderByDescending(t => t.Priority).First();
+				return preferredTiles.First();
 			}
-			return baseTiles.OrderByDescending(t => t.Priority).First();
+
+			preferredTiles = baseTiles.Where(t => t.SecondaryAlignments.Contains(preferredAlignment)).OrderByDescending(t => t.Priority);
+			if (preferredTiles.Any())
+			{
+				return preferredTiles.First();
+			}
+
+			return null;
 		}
 
 		public bool HasTileVariant(TileVariant variant)

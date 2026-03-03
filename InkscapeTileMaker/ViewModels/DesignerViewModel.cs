@@ -277,6 +277,8 @@ namespace InkscapeTileMaker.ViewModels
 				else await _windowProvider.PopupService.ShowProgressOnTaskAsync(
 					"Rendering Preview", isIndeterminate: true,
 					_ => RenderPreviews());
+
+				_showRenderMessage = false;
 			});
 		}
 
@@ -1047,7 +1049,6 @@ namespace InkscapeTileMaker.ViewModels
 			if (ReplaceExistingTiles) settings |= TilesetFillSettings.ReplaceExisting;
 			if (FillEmptyTiles) settings |= TilesetFillSettings.FillEmptyTiles;
 
-			_showRenderMessage = false;
 			if (_windowProvider == null)
 			{
 				await _tilesetConnection.Tileset.FillTilesAsync(settings);
@@ -1057,7 +1058,6 @@ namespace InkscapeTileMaker.ViewModels
 				await _tilesetConnection.Tileset.FillTilesAsync(settings, progress);
 			});
 
-			_showRenderMessage = true;
 			HasUnsavedChanges = true;
 		}
 

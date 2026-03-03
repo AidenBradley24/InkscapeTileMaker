@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Models;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace InkscapeTileMaker.ViewModels
@@ -34,7 +36,7 @@ namespace InkscapeTileMaker.ViewModels
 		[ObservableProperty]
 		[NotifyDataErrorInfo]
 		[CustomValidation(typeof(TileViewModel), nameof(ValidateVariant))]
-		[NotifyPropertyChangedFor(nameof(AllignmentOptions))]
+		[NotifyPropertyChangedFor(nameof(AlignmentOptions))]
 		public partial TileVariant Variant { get; set; }
 
 		public IList<TileVariant> VariantOptions
@@ -50,17 +52,47 @@ namespace InkscapeTileMaker.ViewModels
 
 		[ObservableProperty]
 		[NotifyDataErrorInfo]
-		[CustomValidation(typeof(TileViewModel), nameof(ValidateAllignment))]
-		public partial TileAlignment Allignment { get; set; }
+		[CustomValidation(typeof(TileViewModel), nameof(ValidateAlignment))]
+		public partial TileAlignment Alignment { get; set; }
 
-		public IList<TileAlignment> AllignmentOptions
+		public IList<TileAlignment> AlignmentOptions
 		{
 			get
 			{
-				var list = Variant.GetValidAllignments().ToList();
-				list.Remove(Allignment);
-				list.Insert(0, Allignment);
+				var list = Variant.GetValidAlignments().ToList();
+				list.Remove(Alignment);
+				list.Insert(0, Alignment);
 				return list;
+			}
+		}
+
+		[ObservableProperty]
+		[NotifyDataErrorInfo]
+		[CustomValidation(typeof(TileViewModel), nameof(ValidateSecondaryAlignments))]
+		public partial ObservableCollection<TileAlignment> SecondaryAlignments { get; set; }
+
+		[ObservableProperty]
+		[NotifyPropertyChangedFor(nameof(PriorityString))]
+		public partial int Priority { get; set; }
+
+		public string PriorityString
+		{
+			get => Priority.ToString();
+			set
+			{
+				if (int.TryParse(value, out int result))
+				{
+					Priority = result;
+				}
+				else if (value == "")
+				{
+					Priority = 0;
+				}
+				else
+				{
+					Priority = 1;
+					OnPropertyChanged(nameof(PriorityString));
+				}
 			}
 		}
 
@@ -104,8 +136,10 @@ namespace InkscapeTileMaker.ViewModels
 			Position = (_tile.Row, _tile.Column);
 			Type = _tile.Type;
 			Variant = _tile.Variant;
-			Allignment = _tile.Alignment;
+			Alignment = _tile.Alignment;
+			SecondaryAlignments = new ObservableCollection<TileAlignment>(_tile.SecondaryAlignments);
 			MaterialName = _tile.MaterialName;
+			Priority = _tile.Priority;
 
 			ErrorsChanged += (_, _) => OnPropertyChanged(nameof(CurrentErrorMessage));
 		}
@@ -139,19 +173,64 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			_designerViewModel.HasUnsavedChanges |= _tile.Variant != value;
 			_tile.Variant = value;
-			ValidateProperty(Allignment, nameof(Allignment));
+			ValidateProperty(Alignment, nameof(Alignment));
+			ValidateProperty(SecondaryAlignments, nameof(SecondaryAlignments));
 		}
 
-		partial void OnAllignmentChanged(TileAlignment value)
+		partial void OnAlignmentChanged(TileAlignment value)
 		{
 			_designerViewModel.HasUnsavedChanges |= _tile.Alignment != value;
 			_tile.Alignment = value;
+		}
+
+		partial void OnSecondaryAlignmentsChanged(ObservableCollection<TileAlignment> value)
+		{
+			if (value is not null)
+			{
+				value.CollectionChanged += SecondaryAlignment_Changed;
+			}
+
+			OnSecondaryAlignmentsCollectionChanged();
+		}
+
+		private void SecondaryAlignment_Changed(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+		{
+			ValidateProperty(SecondaryAlignments, nameof(SecondaryAlignments));
+			OnSecondaryAlignmentsCollectionChanged();
+		}
+
+		void OnSecondaryAlignmentsCollectionChanged()
+		{
+			_designerViewModel.HasUnsavedChanges |= !_tile.SecondaryAlignments.SequenceEqual(SecondaryAlignments);
+			_tile.SecondaryAlignments.Clear();
+			_tile.SecondaryAlignments.AddRange(SecondaryAlignments);
+		}
+
+		partial void OnPriorityChanged(int value)
+		{
+			_designerViewModel.HasUnsavedChanges |= _tile.Priority != value;
+			_tile.Priority = value;
 		}
 
 		partial void OnMaterialNameChanged(string value)
 		{
 			_designerViewModel.HasUnsavedChanges |= _tile.MaterialName != value;
 			_tile.MaterialName = value;
+		}
+
+		[RelayCommand]
+		public void AddSecondaryAlignment()
+		{
+			var alignments = Variant.GetValidAlignments().Except([Alignment, .. SecondaryAlignments]);
+			if (!alignments.Any()) return;
+			SecondaryAlignments.Add(alignments.First());
+		}
+
+		[RelayCommand]
+		public void RemoveSecondaryAlignment()
+		{
+			if (SecondaryAlignments.Count == 0) return;
+			SecondaryAlignments.RemoveAt(SecondaryAlignments.Count - 1);
 		}
 
 		public static ValidationResult? ValidateNameUnique(string name, ValidationContext context)
@@ -222,11 +301,11 @@ namespace InkscapeTileMaker.ViewModels
 			return ValidationResult.Success;
 		}
 
-		public static ValidationResult? ValidateAllignment(TileAlignment alignment, ValidationContext context)
+		public static ValidationResult? ValidateAlignment(TileAlignment alignment, ValidationContext context)
 		{
 			var instance = (TileViewModel)context.ObjectInstance;
 
-			var validAlignments = instance.Variant.GetValidAllignments();
+			var validAlignments = instance.Variant.GetValidAlignments();
 			var isValid = false;
 
 			foreach (var validAlignment in validAlignments)
@@ -242,6 +321,23 @@ namespace InkscapeTileMaker.ViewModels
 			{
 				return new ValidationResult(
 					$"Alignment '{alignment}' is not valid for tile variant '{instance.Variant}'.");
+			}
+
+			return ValidationResult.Success;
+		}
+
+		public static ValidationResult? ValidateSecondaryAlignments(ObservableCollection<TileAlignment> alignments, ValidationContext context)
+		{
+			if (alignments == null) return ValidationResult.Success;
+			var instance = (TileViewModel)context.ObjectInstance;
+			var validAlignments = instance.Variant.GetValidAlignments().Except([instance.Alignment]);
+			foreach (var alignment in alignments)
+			{
+				if (!validAlignments.Contains(alignment))
+				{
+					return new ValidationResult(
+						$"Secondary alignment '{alignment}' is not valid for tile variant '{instance.Variant}'.");
+				}
 			}
 
 			return ValidationResult.Success;

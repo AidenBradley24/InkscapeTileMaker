@@ -12,5 +12,6 @@ namespace InkscapeTileMaker.Utility
 		public static readonly XName Row = "row";
 		public static readonly XName Column = "column";
 		public static readonly XName MaterialName = "materialname";
+		public static readonly XName SecondaryAlignments = "secondaryalignments";
 	}
 }

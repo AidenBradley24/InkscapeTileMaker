@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 #if NET5_0_OR_GREATER
@@ -16,6 +17,16 @@ namespace InkscapeTileMaker.Models
 		public TileVariant Variant { get; set; } = TileVariant.Core;
 
 		public TileAlignment Alignment { get; set; } = TileAlignment.Core;
+
+		public List<TileAlignment> SecondaryAlignments
+		{
+			get;
+#if NET5_0_OR_GREATER
+			init;
+#else
+			set;
+#endif
+		} = new List<TileAlignment>();
 
 		public int Priority { get; set; } = 1;
 
@@ -73,10 +84,11 @@ namespace InkscapeTileMaker.Models
 				Type = this.Type,
 				Variant = this.Variant,
 				Alignment = this.Alignment,
-				Priority = this.Priority,
 				Row = row,
 				Column = column,
-				MaterialName = this.MaterialName
+				MaterialName = this.MaterialName,
+				SecondaryAlignments = new List<TileAlignment>(this.SecondaryAlignments),
+				Priority = this.Priority
 			};
 		}
 	}

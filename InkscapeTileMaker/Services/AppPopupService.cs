@@ -49,7 +49,7 @@ namespace InkscapeTileMaker.Services
 
 		public async Task ShowProgressOnTaskAsync(string message, bool isIndeterminate, Func<IProgress<double>, Task> progressAction)
 		{
-			await _progressSemaphore.WaitAsync();
+			await _progressSemaphore.WaitAsync().ConfigureAwait(false);
 			var vm = new ProgressPopupViewModel()
 			{
 				Message = message,
@@ -62,7 +62,12 @@ namespace InkscapeTileMaker.Services
 				CanBeDismissedByTappingOutsideOfPopup = false
 			};
 
-			var popupTask = PopupExtensions.ShowPopupAsync(_windowProvider.NavPage, view, opts);
+			Task popupTask = MainThread.InvokeOnMainThreadAsync(async () =>
+			{
+				await PopupExtensions
+					.ShowPopupAsync(_windowProvider.NavPage, view, opts)
+					.ConfigureAwait(false);
+			});
 
 			try
 			{
@@ -71,12 +76,16 @@ namespace InkscapeTileMaker.Services
 			}
 			catch (Exception ex)
 			{
-				await _windowProvider.NavPage.DisplayAlertAsync("Error", $"An error occurred while performing the operation.\n\n{ex.Message}", "OK");
+				await MainThread.InvokeOnMainThreadAsync(() => _windowProvider.NavPage.DisplayAlertAsync("Error", $"An error occurred while performing the operation.\n\n{ex.Message}", "OK"));
 			}
 			finally
 			{
-				await MainThread.InvokeOnMainThreadAsync(view.ClosePopup);
-				await popupTask.ConfigureAwait(continueOnCapturedContext: false);
+				await MainThread
+					.InvokeOnMainThreadAsync(() => view.ClosePopup())
+					.ConfigureAwait(false);
+
+				await popupTask.ConfigureAwait(false);
+
 				_progressSemaphore.Release();
 			}
 		}
