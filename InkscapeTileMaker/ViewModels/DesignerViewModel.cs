@@ -98,6 +98,9 @@ namespace InkscapeTileMaker.ViewModels
 		private readonly TilemapViewModel _inContextTilemap;
 		private readonly TilemapViewModel _paintTilemap;
 
+		private CancellationTokenSource? _tilesetChangedDebouceCts;
+		private static readonly TimeSpan TilesetChangedDebounceDelay = TimeSpan.FromMilliseconds(100);
+
 		[ObservableProperty]
 		public partial PaintTool SelectedPaintTool { get; set; } = PaintTool.Cursor;
 
@@ -219,9 +222,21 @@ namespace InkscapeTileMaker.ViewModels
 
 		private void OnTilesetChanged()
 		{
-			MainThread.BeginInvokeOnMainThread(() =>
+			var cts = new CancellationTokenSource();
+			var previousCts = Interlocked.Exchange(ref _tilesetChangedDebouceCts, cts);
+			previousCts?.Cancel();
+
+			var token = cts.Token;
+
+			_ = Task.Run(async () =>
 			{
-				RecalculateTileset();
+				try
+				{
+					await Task.Delay(TilesetChangedDebounceDelay, token);
+					if (token.IsCancellationRequested) return;
+					await MainThread.InvokeOnMainThreadAsync(RecalculateTileset);
+				}
+				catch (TaskCanceledException) { }
 			});
 		}
 
