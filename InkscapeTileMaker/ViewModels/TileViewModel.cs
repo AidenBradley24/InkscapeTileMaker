@@ -54,7 +54,6 @@ namespace InkscapeTileMaker.ViewModels
 		[ObservableProperty]
 		[NotifyDataErrorInfo]
 		[CustomValidation(typeof(TileViewModel), nameof(ValidateAlignment))]
-		[NotifyPropertyChangedFor(nameof(AlignmentOptions))]
 		[NotifyPropertyChangedFor(nameof(SecondaryAlignmentOptions))]
 		public partial TileAlignment Alignment { get; set; }
 
@@ -323,6 +322,12 @@ namespace InkscapeTileMaker.ViewModels
 				var alignment = item as TileAlignment?;
 				if (alignment != null && !validAlignments.Contains(alignment.Value))
 				{
+					if (alignment == instance.Alignment)
+					{
+						return new ValidationResult(
+							$"Primary alignment '{instance.Alignment}' cannot be a secondary alignment.");
+					}
+
 					return new ValidationResult(
 						$"Secondary alignment '{item}' is not valid for tile variant '{instance.Variant}'.");
 				}

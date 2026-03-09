@@ -84,14 +84,65 @@
 		{
 			var priorityTiles = new List<Tile>
 			{
-				new Tile { Name = "LowPriority", MaterialName = "PriorityMat2", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Alignment = TileAlignment.TopEdge, Priority = 1 },
-				new Tile { Name = "HighPriority", MaterialName = "PriorityMat2", Variant=TileVariant.Edge, Type = TileType.DualTileMaterial, Alignment = TileAlignment.LeftEdge, Priority = 10 },
+				new Tile
+				{
+					Name = "LowPriority",
+					MaterialName = "PriorityMat2",
+					Variant=TileVariant.Edge,
+					Type = TileType.DualTileMaterial,
+					Alignment = TileAlignment.TopEdge,
+					Priority = 1,
+					SecondaryAlignments = [TileAlignment.RightEdge]
+				},
+				new Tile
+				{
+					Name = "HighPriority",
+					MaterialName = "PriorityMat2",
+					Variant=TileVariant.Edge,
+					Type = TileType.DualTileMaterial,
+					Alignment = TileAlignment.LeftEdge,
+					Priority = 10,
+					SecondaryAlignments = [TileAlignment.RightEdge]
+				},
 			};
 
 			var material = new Material("PriorityMat2", () => priorityTiles);
 			var result = material.GetTile(TileVariant.Edge, TileAlignment.RightEdge);
 			Assert.NotNull(result);
 			Assert.Equal("HighPriority", result!.Name);
+		}
+
+		[Fact]
+		public void GetTile_UsesLowerPriority_NotPartOfSecondaryAlignments()
+		{
+			var priorityTiles = new List<Tile>
+			{
+				new Tile
+				{
+					Name = "LowPriority",
+					MaterialName = "PriorityMat2",
+					Variant=TileVariant.Edge,
+					Type = TileType.DualTileMaterial,
+					Alignment = TileAlignment.TopEdge,
+					Priority = 1,
+					SecondaryAlignments = [TileAlignment.RightEdge]
+				},
+				new Tile
+				{
+					Name = "HighPriority",
+					MaterialName = "PriorityMat2",
+					Variant=TileVariant.Edge,
+					Type = TileType.DualTileMaterial,
+					Alignment = TileAlignment.LeftEdge,
+					Priority = 10,
+					SecondaryAlignments = []
+				},
+			};
+
+			var material = new Material("PriorityMat2", () => priorityTiles);
+			var result = material.GetTile(TileVariant.Edge, TileAlignment.RightEdge);
+			Assert.NotNull(result);
+			Assert.Equal("LowPriority", result!.Name);
 		}
 	}
 }
