@@ -13,6 +13,7 @@
 
     <ContentView.Resources>
         <conv:EnumToItemsSourceConverter x:Key="EnumToItemsSourceConverter" />
+        <toolkit:IsListNotNullOrEmptyConverter x:Key="IsListNotNullOrEmptyConverter" />
     </ContentView.Resources>
 
     <!-- Use Grid so the ScrollView row gets a bounded height and can scroll -->
@@ -94,8 +95,7 @@
 
         <!-- Row 5: scrollable content -->
         <ScrollView Grid.Row="5"
-                    Orientation="Vertical"
-                    VerticalOptions="FillAndExpand">
+                    Orientation="Vertical">
             <VerticalStackLayout Padding="12" Spacing="12">
 
                 <Picker Title="Tile Type"
@@ -144,40 +144,19 @@
                 </Grid>
 
                 <Grid RowDefinitions="100, *"
-                      ColumnDefinitions="*, 30, 30"
-                      IsVisible="{Binding SelectedTile.IsMaterial}">
+                      ColumnDefinitions="*"
+                      IsVisible="{Binding SelectedTile.SecondaryAlignmentOptions, Converter={StaticResource IsListNotNullOrEmptyConverter}}">
                     <Label Grid.Row="0"
                            Grid.Column="0"
                            Text="Secondary Alignments"
                            FontAttributes="Bold"
                            VerticalTextAlignment="Center"
                            Margin="0,0,8,0" />
-                    <ctrls:ToolIcon Grid.Row="0"
-                                    Grid.Column="1"
-                                    Source="plus_small.png"
-                                    Command="{Binding SelectedTile.AddSecondaryAlignmentCommand}"
-                                    WidthRequest="30"
-                                    HeightRequest="30" />
-                    <ctrls:ToolIcon Grid.Row="0"
-                                    Grid.Column="2"
-                                    Source="minus_small.png"
-                                    Command="{Binding SelectedTile.RemoveSecondaryAlignmentCommand}"
-                                    WidthRequest="30"
-                                    HeightRequest="30" />
-                    <CollectionView Grid.Row="1"
-                                    Grid.Column="0"
-                                    Grid.ColumnSpan="3"
-                                    ItemsSource="{Binding SelectedTile.SecondaryAlignments}"
-                                    SelectionMode="None">
-                        <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="models:TileAlignment">
-                                <Picker Title=""
-                                        ItemsSource="{Binding BindingContext.SelectedTile.AlignmentOptions, Source={x:Reference IndividualTile}}"
-                                        SelectedItem="{Binding ., Mode=TwoWay}"
-                                        ItemDisplayBinding="{Binding Converter={StaticResource EnumToStringConverter}}" />
-                            </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
+                    <ctrls:MultiPicker Grid.Row="1"
+                                       Items="{Binding SelectedTile.SecondaryAlignmentOptions}"
+                                       SelectedItems="{Binding SelectedTile.SecondaryAlignments, Mode=TwoWay}"
+                                       ItemDisplayBinding="{Binding Converter={StaticResource EnumToStringConverter}}">
+                    </ctrls:MultiPicker>
                 </Grid>
 
             </VerticalStackLayout>

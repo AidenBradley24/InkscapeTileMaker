@@ -63,6 +63,9 @@
 	  <MauiXaml Update="Controls\EditableLabel.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="Controls\MultiPicker.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Controls\ToolIcon.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>

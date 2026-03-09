@@ -1,8 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Models;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.Collections;
 
 namespace InkscapeTileMaker.ViewModels
 {
@@ -37,6 +37,7 @@ namespace InkscapeTileMaker.ViewModels
 		[NotifyDataErrorInfo]
 		[CustomValidation(typeof(TileViewModel), nameof(ValidateVariant))]
 		[NotifyPropertyChangedFor(nameof(AlignmentOptions))]
+		[NotifyPropertyChangedFor(nameof(SecondaryAlignmentOptions))]
 		public partial TileVariant Variant { get; set; }
 
 		public IList<TileVariant> VariantOptions
@@ -53,6 +54,8 @@ namespace InkscapeTileMaker.ViewModels
 		[ObservableProperty]
 		[NotifyDataErrorInfo]
 		[CustomValidation(typeof(TileViewModel), nameof(ValidateAlignment))]
+		[NotifyPropertyChangedFor(nameof(AlignmentOptions))]
+		[NotifyPropertyChangedFor(nameof(SecondaryAlignmentOptions))]
 		public partial TileAlignment Alignment { get; set; }
 
 		public IList<TileAlignment> AlignmentOptions
@@ -66,10 +69,25 @@ namespace InkscapeTileMaker.ViewModels
 			}
 		}
 
+		public IList<TileAlignment> SecondaryAlignmentOptions
+		{
+			get
+			{
+				var validAlignments = Variant.GetValidAlignments().Except([Alignment]);
+				var list = validAlignments.ToList();
+				foreach (TileAlignment alignment in SecondaryAlignments)
+				{
+					list.Remove(alignment);
+					list.Insert(0, alignment);
+				}
+				return list;
+			}
+		}
+
 		[ObservableProperty]
 		[NotifyDataErrorInfo]
 		[CustomValidation(typeof(TileViewModel), nameof(ValidateSecondaryAlignments))]
-		public partial ObservableCollection<TileAlignment> SecondaryAlignments { get; set; }
+		public partial IList SecondaryAlignments { get; set; }
 
 		[ObservableProperty]
 		[NotifyPropertyChangedFor(nameof(PriorityString))]
@@ -137,7 +155,7 @@ namespace InkscapeTileMaker.ViewModels
 			Type = _tile.Type;
 			Variant = _tile.Variant;
 			Alignment = _tile.Alignment;
-			SecondaryAlignments = new ObservableCollection<TileAlignment>(_tile.SecondaryAlignments);
+			SecondaryAlignments = new List<TileAlignment>(_tile.SecondaryAlignments);
 			MaterialName = _tile.MaterialName;
 			Priority = _tile.Priority;
 
@@ -183,27 +201,11 @@ namespace InkscapeTileMaker.ViewModels
 			_tile.Alignment = value;
 		}
 
-		partial void OnSecondaryAlignmentsChanged(ObservableCollection<TileAlignment> value)
+		partial void OnSecondaryAlignmentsChanged(IList value)
 		{
-			if (value is not null)
-			{
-				value.CollectionChanged += SecondaryAlignment_Changed;
-			}
-
-			OnSecondaryAlignmentsCollectionChanged();
-		}
-
-		private void SecondaryAlignment_Changed(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-		{
-			ValidateProperty(SecondaryAlignments, nameof(SecondaryAlignments));
-			OnSecondaryAlignmentsCollectionChanged();
-		}
-
-		void OnSecondaryAlignmentsCollectionChanged()
-		{
-			_designerViewModel.HasUnsavedChanges |= !_tile.SecondaryAlignments.SequenceEqual(SecondaryAlignments);
+			_designerViewModel.HasUnsavedChanges |= !_tile.SecondaryAlignments.SequenceEqual(SecondaryAlignments.Cast<TileAlignment>());
 			_tile.SecondaryAlignments.Clear();
-			_tile.SecondaryAlignments.AddRange(SecondaryAlignments);
+			_tile.SecondaryAlignments.AddRange(SecondaryAlignments.Cast<TileAlignment>());
 		}
 
 		partial void OnPriorityChanged(int value)
@@ -216,21 +218,6 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			_designerViewModel.HasUnsavedChanges |= _tile.MaterialName != value;
 			_tile.MaterialName = value;
-		}
-
-		[RelayCommand]
-		public void AddSecondaryAlignment()
-		{
-			var alignments = Variant.GetValidAlignments().Except([Alignment, .. SecondaryAlignments]);
-			if (!alignments.Any()) return;
-			SecondaryAlignments.Add(alignments.First());
-		}
-
-		[RelayCommand]
-		public void RemoveSecondaryAlignment()
-		{
-			if (SecondaryAlignments.Count == 0) return;
-			SecondaryAlignments.RemoveAt(SecondaryAlignments.Count - 1);
 		}
 
 		public static ValidationResult? ValidateNameUnique(string name, ValidationContext context)
@@ -326,17 +313,18 @@ namespace InkscapeTileMaker.ViewModels
 			return ValidationResult.Success;
 		}
 
-		public static ValidationResult? ValidateSecondaryAlignments(ObservableCollection<TileAlignment> alignments, ValidationContext context)
+		public static ValidationResult? ValidateSecondaryAlignments(IList alignments, ValidationContext context)
 		{
 			if (alignments == null) return ValidationResult.Success;
 			var instance = (TileViewModel)context.ObjectInstance;
 			var validAlignments = instance.Variant.GetValidAlignments().Except([instance.Alignment]);
-			foreach (var alignment in alignments)
+			foreach (var item in alignments)
 			{
-				if (!validAlignments.Contains(alignment))
+				var alignment = item as TileAlignment?;
+				if (alignment != null && !validAlignments.Contains(alignment.Value))
 				{
 					return new ValidationResult(
-						$"Secondary alignment '{alignment}' is not valid for tile variant '{instance.Variant}'.");
+						$"Secondary alignment '{item}' is not valid for tile variant '{instance.Variant}'.");
 				}
 			}
 
