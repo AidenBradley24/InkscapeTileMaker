@@ -32,7 +32,10 @@ namespace InkscapeTileMaker.Services
 				CanBeDismissedByTappingOutsideOfPopup = false
 			};
 
-			await PopupExtensions.ShowPopupAsync(_windowProvider.NavPage, view, opts);
+			await _windowProvider.NavPage.Dispatcher.DispatchAsync(async () =>
+			{
+				await PopupExtensions.ShowPopupAsync(_windowProvider.NavPage, view, opts);
+			});
 			return vm.Result;
 		}
 
@@ -44,7 +47,10 @@ namespace InkscapeTileMaker.Services
 			};
 
 			var view = new TextPopup(vm);
-			await PopupExtensions.ShowPopupAsync(_windowProvider.NavPage, view, PopupOptions.Empty);
+			await _windowProvider.NavPage.Dispatcher.DispatchAsync(async () =>
+			{
+				await PopupExtensions.ShowPopupAsync(_windowProvider.NavPage, view, PopupOptions.Empty);
+			});
 		}
 
 		public async Task ShowProgressOnTaskAsync(string message, bool isIndeterminate, Func<IProgress<double>, Task> progressAction)
@@ -62,7 +68,7 @@ namespace InkscapeTileMaker.Services
 				CanBeDismissedByTappingOutsideOfPopup = false
 			};
 
-			Task popupTask = MainThread.InvokeOnMainThreadAsync(async () =>
+			Task popupTask = _windowProvider.NavPage.Dispatcher.DispatchAsync(async () =>
 			{
 				await PopupExtensions
 					.ShowPopupAsync(_windowProvider.NavPage, view, opts)
@@ -76,12 +82,12 @@ namespace InkscapeTileMaker.Services
 			}
 			catch (Exception ex)
 			{
-				await MainThread.InvokeOnMainThreadAsync(() => _windowProvider.NavPage.DisplayAlertAsync("Error", $"An error occurred while performing the operation.\n\n{ex.Message}", "OK"));
+				await _windowProvider.NavPage.Dispatcher.DispatchAsync(() => _windowProvider.NavPage.DisplayAlertAsync("Error", $"An error occurred while performing the operation.\n\n{ex.Message}", "OK"));
 			}
 			finally
 			{
-				await MainThread
-					.InvokeOnMainThreadAsync(() => view.ClosePopup())
+				await _windowProvider.NavPage.Dispatcher
+					.DispatchAsync(() => view.ClosePopup())
 					.ConfigureAwait(false);
 
 				await popupTask.ConfigureAwait(false);

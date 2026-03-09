@@ -25,6 +25,7 @@ namespace InkscapeTileMaker.ViewModels
 
 		[ObservableProperty]
 		[NotifyDataErrorInfo]
+		[NotifyPropertyChangedFor(nameof(PositionDisplay))]
 		[CustomValidation(typeof(TileViewModel), nameof(ValidatePosition))]
 		public partial (int row, int col) Position { get; set; }
 
@@ -122,6 +123,8 @@ namespace InkscapeTileMaker.ViewModels
 		public Tile Value => _tile;
 
 		public bool IsMaterial => Type != TileType.Singular;
+
+		public string PositionDisplay => $"{Position.col}, {Position.row}";
 
 		public string? CurrentErrorMessage
 		{

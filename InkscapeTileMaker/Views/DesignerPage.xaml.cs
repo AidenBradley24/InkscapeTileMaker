@@ -9,20 +9,66 @@ namespace InkscapeTileMaker.Views
 		bool isPanning, isLeftClicking;
 		int _canvasPixelWidth;
 		int _canvasPixelHeight;
+		bool _isCanvasRedrawHooked;
 
 		public DesignerPage(DesignerViewModel vm)
 		{
 			InitializeComponent();
 			BindingContext = vm;
-			vm.CanvasNeedsRedraw += PreviewCanvasView.InvalidateSurface;
+
+			Loaded += OnLoaded;
+			Unloaded += OnUnloaded;
+
+			HookCanvasRedraw();
 		}
 
-		~DesignerPage()
+		private void OnLoaded(object? sender, EventArgs e)
 		{
+			HookCanvasRedraw();
+		}
+
+		private void OnUnloaded(object? sender, EventArgs e)
+		{
+			UnhookCanvasRedraw();
+		}
+
+		protected override void OnHandlerChanging(HandlerChangingEventArgs args)
+		{
+			if (args.OldHandler is not null)
+			{
+				UnhookCanvasRedraw();
+			}
+
+			base.OnHandlerChanging(args);
+		}
+
+		private void HookCanvasRedraw()
+		{
+			if (_isCanvasRedrawHooked)
+			{
+				return;
+			}
+
+			if (BindingContext is DesignerViewModel viewModel)
+			{
+				viewModel.CanvasNeedsRedraw += PreviewCanvasView.InvalidateSurface;
+				_isCanvasRedrawHooked = true;
+			}
+		}
+
+		private void UnhookCanvasRedraw()
+		{
+			if (!_isCanvasRedrawHooked)
+			{
+				return;
+			}
+
 			if (BindingContext is DesignerViewModel viewModel)
 			{
 				viewModel.CanvasNeedsRedraw -= PreviewCanvasView.InvalidateSurface;
 			}
+
+			_isCanvasRedrawHooked = false;
 		}
 
 		private void OnPreviewCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)

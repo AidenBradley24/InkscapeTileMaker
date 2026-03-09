@@ -41,7 +41,7 @@
 
             <Label Grid.Row="1"
                    Grid.Column="1"
-                   Text="{Binding TilePixelSize, StringFormat='{}{0.x} x {0.y}'}"
+                   Text="{Binding TilePixelSize}"
                    VerticalTextAlignment="Center"
                    Margin="0,4,0,0" />
 

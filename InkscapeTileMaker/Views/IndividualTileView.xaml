@@ -74,7 +74,7 @@
                    VerticalTextAlignment="Center"
                    Margin="0,4,8,0" />
             <Label Grid.Column="1"
-                   Text="{Binding SelectedTile.Position, StringFormat='{}{0.col}, {0.row}'}"
+                   Text="{Binding SelectedTile.PositionDisplay}"
                    VerticalTextAlignment="Center"
                    Margin="0,4,0,0" />
         </Grid>

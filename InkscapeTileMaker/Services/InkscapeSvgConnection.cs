@@ -24,6 +24,7 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 	private InkscapeSvg? _svg;
 	private FileSystemWatcher? _fileWatcher;
 	private bool _isLoading = false;
+	private bool _isDisposed;
 
 	public InkscapeSvgConnection(IServiceProvider services, IWindowProvider windowProvider)
 	{
@@ -37,6 +38,8 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 
 	public async Task LoadAsync(FileInfo file)
 	{
+		ObjectDisposedException.ThrowIf(_isDisposed, this);
+
 		if (Interlocked.Exchange(ref _isLoading, true) == true) return;
 
 		try
@@ -82,6 +85,11 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 
 	private void SetupWatcher(FileInfo file)
 	{
+		if (_isDisposed)
+		{
+			return;
+		}
+
 		_fileWatcher?.Dispose();
 
 		_fileWatcher = new FileSystemWatcher(file.DirectoryName!, file.Name)
@@ -93,9 +101,14 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 
 		_fileWatcher.Deleted += async (_, _) =>
 		{
+			if (_isDisposed)
+			{
+				return;
+			}
+
 			if (!File.Exists(file.FullName))
 			{
-				await MainThread.InvokeOnMainThreadAsync(async () =>
+				await _windowProvider.NavPage.Dispatcher.DispatchAsync(async () =>
 				{
 					await _windowProvider.NavPage.DisplayAlertAsync(
 						"File Deleted",
@@ -112,12 +125,17 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 
 		_fileWatcher.Renamed += async (_, e) =>
 		{
+			if (_isDisposed)
+			{
+				return;
+			}
+
 			// If the original file name was changed, treat it as a deletion of the current file
 			if (string.Equals(e.OldFullPath, file.FullName, StringComparison.OrdinalIgnoreCase))
 			{
 				if (!File.Exists(file.FullName))
 				{
-					await MainThread.InvokeOnMainThreadAsync(async () =>
+					await _windowProvider.NavPage.Dispatcher.DispatchAsync(async () =>
 					{
 						await _windowProvider.NavPage.DisplayAlertAsync(
 							"File Deleted",
@@ -135,6 +153,11 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 
 		_fileWatcher.Changed += async (_, _) =>
 		{
+			if (_isDisposed)
+			{
+				return;
+			}
+
 			await Task.Delay(200);
 			try
 			{
@@ -143,7 +166,7 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 			catch (IOException)
 			{
 				Trace.WriteLine($"File {file.FullName} is currently inaccessible. Changes will be loaded when the file becomes available.");
-				await MainThread.InvokeOnMainThreadAsync(async () =>
+				await _windowProvider.NavPage.Dispatcher.DispatchAsync(async () =>
 				{
 					await _windowProvider.NavPage.DisplayAlertAsync(
 						"File Inaccessible",
@@ -438,5 +461,20 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 				Trace.TraceError($"Error invoking TilesetChanged handler: {ex}");
 			}
 		}
+	}
+
+	public void Dispose()
+	{
+		if (_isDisposed)
+		{
+			return;
+		}
+
+		_isDisposed = true;
+		_fileWatcher?.Dispose();
+		_fileWatcher = null;
+		_svg = null;
+		_file = null;
+		Tileset = null;
 	}
 }

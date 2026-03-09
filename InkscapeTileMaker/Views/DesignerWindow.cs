@@ -4,6 +4,7 @@ using InkscapeTileMaker.ViewModels;
 #if WINDOWS
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
+using System.Diagnostics;
 #endif
 
 namespace InkscapeTileMaker.Views;
@@ -12,6 +13,13 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 {
 	private readonly NavigationPage _nav;
 	private readonly AppPopupService _popupService;
+	private bool _isClosePromptActive;
+	private bool _isClosing;
+
+#if WINDOWS
+	private AppWindow? _appWindow;
+	private bool _allowNativeClose;
+#endif
 
 	public IAppPopupService PopupService => _popupService;
 
@@ -39,29 +47,93 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 #endif
 	}
 
-	private async void OnCloseRequested()
+	private void OnCloseRequested()
 	{
-		if (BindingContext is DesignerViewModel viewModel && viewModel.HasUnsavedChanges)
+		_ = RequestCloseAsync();
+	}
+
+	private async Task RequestCloseAsync()
+	{
+		if (_isClosing || _isClosePromptActive)
 		{
-			bool shouldClose = await Page!.DisplayAlertAsync(
-				"Close Designer",
-				"Are you sure you want to close the designer? Unsaved changes will be lost.",
-				"Yes",
-				"No"
-			);
-			if (!shouldClose) return;
+			return;
 		}
 
-		Microsoft.Maui.Controls.Application.Current?.CloseWindow(this);
+		var dispatcher = Dispatcher ?? Page?.Dispatcher;
+		if (dispatcher == null)
+		{
+			return;
+		}
+
+		await dispatcher.DispatchAsync(async () =>
+		{
+			if (_isClosing || _isClosePromptActive)
+			{
+				return;
+			}
+
+			try
+			{
+				_isClosePromptActive = true;
+
+				if (BindingContext is DesignerViewModel viewModel && viewModel.HasUnsavedChanges)
+				{
+					bool shouldClose = await Page!.DisplayAlertAsync(
+						"Close Designer",
+						"Are you sure you want to close the designer? Unsaved changes will be lost.",
+						"Yes",
+						"No"
+					);
+
+					if (!shouldClose)
+					{
+						return;
+					}
+				}
+
+				_isClosing = true;
+
+#if WINDOWS
+				_allowNativeClose = true;
+#endif
+
+				Microsoft.Maui.Controls.Application.Current?.CloseWindow(this);
+			}
+			catch (Exception ex)
+			{
+				_isClosing = false;
+#if WINDOWS
+				_allowNativeClose = false;
+#endif
+				Trace.WriteLine($"Error during close request: {ex.Message}");
+				Trace.WriteLine(ex);
+			}
+			finally
+			{
+				_isClosePromptActive = false;
+			}
+		});
 	}
 
 	protected override void OnDestroying()
 	{
 		base.OnDestroying();
+
 		if (BindingContext is DesignerViewModel viewModel)
 		{
 			viewModel.CloseRequested -= OnCloseRequested;
+			viewModel.Dispose();
 		}
+
+#if WINDOWS
+		HandlerChanged -= OnHandlerChangedForWindows;
+
+		if (_appWindow != null)
+		{
+			_appWindow.Closing -= OnAppWindowClosing;
+			_appWindow = null;
+		}
+#endif
 	}
 
 	public void CloseWindow()
@@ -75,7 +147,6 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 		var mauiWindow = this.Handler?.PlatformView as Microsoft.UI.Xaml.Window;
 		if (mauiWindow == null)
 		{
-			// Delay until handler is created
 			HandlerChanged += OnHandlerChangedForWindows;
 			return;
 		}
@@ -98,13 +169,20 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 	private void HookWindowClose(Microsoft.UI.Xaml.Window mauiWindow)
 	{
 		var windowId = Win32Interop.GetWindowIdFromWindow(WinRT.Interop.WindowNative.GetWindowHandle(mauiWindow));
-		var appWindow = AppWindow.GetFromWindowId(windowId);
+		_appWindow = AppWindow.GetFromWindowId(windowId);
+		_appWindow.Closing -= OnAppWindowClosing;
+		_appWindow.Closing += OnAppWindowClosing;
+	}
 
-		appWindow.Closing += async (AppWindow sender, AppWindowClosingEventArgs args) =>
+	private void OnAppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)
+	{
+		if (_allowNativeClose)
 		{
-			args.Cancel = true;
-			OnCloseRequested();
-		};
+			return;
+		}
+
+		args.Cancel = true;
+		OnCloseRequested();
 	}
 #endif
 }

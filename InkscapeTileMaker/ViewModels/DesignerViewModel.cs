@@ -15,7 +15,7 @@ using UnityPackageNET;
 
 namespace InkscapeTileMaker.ViewModels
 {
-	public partial class DesignerViewModel : ObservableObject
+	public partial class DesignerViewModel : ObservableObject, IDisposable
 	{
 		private ITilesetConnection? _tilesetConnection;
 		private readonly IWindowOpeningService _windowService;
@@ -108,10 +108,21 @@ namespace InkscapeTileMaker.ViewModels
 
 		private SKBitmap? _renderedBitmap;
 		private readonly ConcurrentDictionary<(int row, int col), SKBitmap> _tileBitmaps = [];
+		private bool _isDisposed;
 
 		public event Action CanvasNeedsRedraw = delegate { };
 
 		public event Action CloseRequested = delegate { };
+
+		private void HandleTilesetChanged(ITilesetConnection _)
+		{
+			if (_isDisposed)
+			{
+				return;
+			}
+
+			OnTilesetChanged();
+		}
 
 		const int TILEMAP_SCALE = 12;
 
@@ -143,10 +154,14 @@ namespace InkscapeTileMaker.ViewModels
 
 		public void SetTilesetConnection(ITilesetConnection connection)
 		{
-			_tilesetConnection?.TilesetChanged -= _ => OnTilesetChanged();
+			if (_tilesetConnection != null)
+			{
+				_tilesetConnection.TilesetChanged -= HandleTilesetChanged;
+				_tilesetConnection.Dispose();
+			}
 
 			_tilesetConnection = connection;
-			_tilesetConnection.TilesetChanged += _ => OnTilesetChanged();
+			_tilesetConnection.TilesetChanged += HandleTilesetChanged;
 			if (_tilesetConnection.Tileset != null)
 			{
 				OnTilesetChanged();
@@ -222,9 +237,15 @@ namespace InkscapeTileMaker.ViewModels
 
 		private void OnTilesetChanged()
 		{
+			if (_isDisposed)
+			{
+				return;
+			}
+
 			var cts = new CancellationTokenSource();
 			var previousCts = Interlocked.Exchange(ref _tilesetChangedDebouceCts, cts);
 			previousCts?.Cancel();
+			previousCts?.Dispose();
 
 			var token = cts.Token;
 
@@ -242,6 +263,11 @@ namespace InkscapeTileMaker.ViewModels
 
 		private void RecalculateTileset()
 		{
+			if (_isDisposed)
+			{
+				return;
+			}
+
 			OnPropertyChanged(nameof(TilePixelSize));
 			OnPropertyChanged(nameof(TileSetPixelSize));
 			OnPropertyChanged(nameof(TileSetSize));
@@ -285,6 +311,11 @@ namespace InkscapeTileMaker.ViewModels
 
 			MainThread.BeginInvokeOnMainThread(async () =>
 			{
+				if (_isDisposed)
+				{
+					return;
+				}
+
 				if (_windowProvider == null || !_showRenderMessage)
 				{
 					await RenderPreviews();
@@ -297,8 +328,44 @@ namespace InkscapeTileMaker.ViewModels
 			});
 		}
 
+		public void Dispose()
+		{
+			if (_isDisposed)
+			{
+				return;
+			}
+
+			_isDisposed = true;
+
+			var cts = Interlocked.Exchange(ref _tilesetChangedDebouceCts, null);
+			cts?.Cancel();
+			cts?.Dispose();
+
+			if (_tilesetConnection != null)
+			{
+				_tilesetConnection.TilesetChanged -= HandleTilesetChanged;
+				_tilesetConnection.Dispose();
+				_tilesetConnection = null;
+			}
+
+			_windowProvider = null;
+			CanvasNeedsRedraw = delegate { };
+			CloseRequested = delegate { };
+
+			// Avoid disposing Skia resources during WinUI shutdown.
+			// The canvas may still be tearing down, and aggressive disposal here can cause native access violations.
+			_renderedBitmap = null;
+
+			_tileBitmaps.Clear();
+		}
+
 		private async Task RenderPreviews()
 		{
+			if (_isDisposed)
+			{
+				return;
+			}
+
 			if (_tilesetConnection == null || _tilesetConnection.CurrentFile == null || _tilesetConnection.Tileset == null) return;
 			try
 			{
@@ -324,7 +391,11 @@ namespace InkscapeTileMaker.ViewModels
 						token);
 					});
 				}
-				await MainThread.InvokeOnMainThreadAsync(CanvasNeedsRedraw);
+
+				if (!_isDisposed)
+				{
+					await MainThread.InvokeOnMainThreadAsync(CanvasNeedsRedraw);
+				}
 			}
 			catch (OperationCanceledException) { }
 		}
