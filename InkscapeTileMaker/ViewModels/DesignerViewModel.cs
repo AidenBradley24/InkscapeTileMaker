@@ -15,7 +15,7 @@ using UnityPackageNET;
 
 namespace InkscapeTileMaker.ViewModels
 {
-	public partial class DesignerViewModel : ObservableObject, IDisposable
+	public partial class DesignerViewModel : ObservableObject, IAsyncDisposable
 	{
 		private ITilesetConnection? _tilesetConnection;
 		private readonly IWindowOpeningService _windowService;
@@ -61,11 +61,12 @@ namespace InkscapeTileMaker.ViewModels
 		[NotifyPropertyChangedFor(nameof(SelectedDesignerMode))]
 		public partial TileViewModel? SelectedTile { get; set; }
 
-		public Scale TilePixelSize => _tilesetConnection?.Tileset?.TilePixelSize ?? new Scale(0, 0);
-		public Scale TileSetPixelSize => _tilesetConnection?.Tileset == null ? new Scale(0, 0) :
-			_tilesetConnection.Tileset.ImagePixelSize;
-		public Scale TileSetSize => _tilesetConnection?.Tileset == null ? new Scale(0, 0) :
-			_tilesetConnection.Tileset.ImagePixelSize / TilePixelSize;
+		public Scale TilePixelSize => _cachedTilePixelSize;
+		private Scale _cachedTilePixelSize;
+		public Scale ImagePixelSize => _cachedImagePixelSize;
+		private Scale _cachedImagePixelSize;
+		public Scale TileSetSize => _cachedTileSetSize;
+		private Scale _cachedTileSetSize;
 
 		[ObservableProperty]
 		public partial ObservableCollection<TileViewModel> Tiles { get; set; } = [];
@@ -108,19 +109,18 @@ namespace InkscapeTileMaker.ViewModels
 
 		private SKBitmap? _renderedBitmap;
 		private readonly ConcurrentDictionary<(int row, int col), SKBitmap> _tileBitmaps = [];
-		private bool _isDisposed;
 
+		const int ACTIVE = 1, DISPOSAL = 2;
+		private readonly CancellationTokenSource _disposeCts = new();
+		private int _disposeState = ACTIVE;
+		private int _activeOperationCount = 0;
+		private readonly TaskCompletionSource<object?> _disposeCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+		private int _refreshVersion = 0;
 		public event Action CanvasNeedsRedraw = delegate { };
-
-		public event Action CloseRequested = delegate { };
 
 		private void HandleTilesetChanged(ITilesetConnection _)
 		{
-			if (_isDisposed)
-			{
-				return;
-			}
-
+			if (_disposeState == DISPOSAL) return;
 			OnTilesetChanged();
 		}
 
@@ -145,6 +145,38 @@ namespace InkscapeTileMaker.ViewModels
 
 			SelectedZoomLevel = 1.0m;
 			_showRenderMessage = true;
+		}
+
+		private void ThrowIfDisposed()
+		{
+			bool disposed = Volatile.Read(ref _disposeState) == DISPOSAL;
+			ObjectDisposedException.ThrowIf(disposed, this);
+		}
+
+		private bool CheckIfDisposed()
+		{
+			return Volatile.Read(ref _disposeState) == DISPOSAL;
+		}
+
+		private void BeginOperation()
+		{
+			ThrowIfDisposed();
+			Interlocked.Increment(ref _activeOperationCount);
+
+			if (Volatile.Read(ref _disposeState) == DISPOSAL)
+			{
+				EndOperation();
+				throw new ObjectDisposedException(nameof(SvgRenderingService));
+			}
+		}
+
+		private void EndOperation()
+		{
+			if (Interlocked.Decrement(ref _activeOperationCount) == 0 &&
+				Volatile.Read(ref _disposeState) == DISPOSAL)
+			{
+				_disposeCompletion.TrySetResult(null);
+			}
 		}
 
 		public void RegisterWindow(IWindowProvider windowProvider)
@@ -237,10 +269,7 @@ namespace InkscapeTileMaker.ViewModels
 
 		private void OnTilesetChanged()
 		{
-			if (_isDisposed)
-			{
-				return;
-			}
+			if (CheckIfDisposed()) return;
 
 			var cts = new CancellationTokenSource();
 			var previousCts = Interlocked.Exchange(ref _tilesetChangedDebouceCts, cts);
@@ -258,18 +287,21 @@ namespace InkscapeTileMaker.ViewModels
 					await MainThread.InvokeOnMainThreadAsync(RecalculateTileset);
 				}
 				catch (TaskCanceledException) { }
-			});
+			}, _disposeCts.Token);
 		}
 
 		private void RecalculateTileset()
 		{
-			if (_isDisposed)
-			{
-				return;
-			}
+			if (CheckIfDisposed()) return;
+
+			int refreshVersion = Interlocked.Increment(ref _refreshVersion);
+			
+			_cachedTilePixelSize = _tilesetConnection?.Tileset?.TilePixelSize ?? new Scale(1, 1);
+			_cachedImagePixelSize = _tilesetConnection?.Tileset?.ImagePixelSize ?? new Scale(1, 1);
+			_cachedTileSetSize = _cachedImagePixelSize / _cachedTilePixelSize;
 
 			OnPropertyChanged(nameof(TilePixelSize));
-			OnPropertyChanged(nameof(TileSetPixelSize));
+			OnPropertyChanged(nameof(ImagePixelSize));
 			OnPropertyChanged(nameof(TileSetSize));
 
 			_renderedBitmap?.Dispose();
@@ -288,8 +320,8 @@ namespace InkscapeTileMaker.ViewModels
 				return;
 			}
 
-			var newTiles = _tilesetConnection.Tileset.GetAllTileViewModels(this);
-			if (Tiles.Count > 0)
+			TileViewModel[] newTiles = _tilesetConnection.Tileset.GetAllTiles().Select(t => new TileViewModel(t, this)).ToArray();
+			if (Tiles.Count > 0 && SelectedTile != null)
 			{
 				if (SelectedTile != null)
 				{
@@ -311,76 +343,47 @@ namespace InkscapeTileMaker.ViewModels
 
 			MainThread.BeginInvokeOnMainThread(async () =>
 			{
-				if (_isDisposed)
-				{
-					return;
-				}
+				if (CheckIfDisposed()) return;
 
 				if (_windowProvider == null || !_showRenderMessage)
 				{
-					await RenderPreviews();
+					await RenderPreviews(refreshVersion, _disposeCts.Token);
 				}
 				else await _windowProvider.PopupService.ShowProgressOnTaskAsync(
 					"Rendering Preview", isIndeterminate: true,
-					_ => RenderPreviews());
-
+					_ => RenderPreviews(refreshVersion, _disposeCts.Token));
 				_showRenderMessage = false;
 			});
 		}
 
-		public void Dispose()
+		private async Task RenderPreviews(int version, CancellationToken cancellationToken)
 		{
-			if (_isDisposed)
-			{
-				return;
-			}
-
-			_isDisposed = true;
-
-			var cts = Interlocked.Exchange(ref _tilesetChangedDebouceCts, null);
-			cts?.Cancel();
-			cts?.Dispose();
-
-			if (_tilesetConnection != null)
-			{
-				_tilesetConnection.TilesetChanged -= HandleTilesetChanged;
-				_tilesetConnection.Dispose();
-				_tilesetConnection = null;
-			}
-
-			_windowProvider = null;
-			CanvasNeedsRedraw = delegate { };
-			CloseRequested = delegate { };
-
-			// Avoid disposing Skia resources during WinUI shutdown.
-			// The canvas may still be tearing down, and aggressive disposal here can cause native access violations.
-			_renderedBitmap = null;
-
-			_tileBitmaps.Clear();
-		}
-
-		private async Task RenderPreviews()
-		{
-			if (_isDisposed)
-			{
-				return;
-			}
-
 			if (_tilesetConnection == null || _tilesetConnection.CurrentFile == null || _tilesetConnection.Tileset == null) return;
+
+			BeginOperation();
 			try
 			{
-				using (var stream = await _tilesetConnection.RenderFileAsync(".png"))
+				using (var stream = await _tilesetConnection.RenderFileAsync(".png", cancellationToken))
 				{
 					if (stream.CanSeek) stream.Position = 0;
 					_renderedBitmap = SKBitmap.Decode(stream);
 				}
 
-				var tilePixelSize = _tilesetConnection.Tileset.TilePixelSize;
+				var tilePixelSize = TilePixelSize;
+				if (Interlocked.CompareExchange(ref _refreshVersion, version, version) != version)
+				{
+					throw new OperationCanceledException("A newer render operation has started.");
+				}
 
 				foreach (var tile in Tiles)
 				{
 					tile.PreviewImage = ImageSource.FromStream(token =>
 					{
+						if (Interlocked.CompareExchange(ref _refreshVersion, version, version) != version)
+						{
+							throw new OperationCanceledException("A newer render operation has started.");
+						}
+
 						return _tilesetConnection.RenderSegmentAsync(
 						".png",
 						left: tile.Value.Column * tilePixelSize.Width,
@@ -392,16 +395,18 @@ namespace InkscapeTileMaker.ViewModels
 					});
 				}
 
-				if (!_isDisposed)
-				{
-					await MainThread.InvokeOnMainThreadAsync(CanvasNeedsRedraw);
-				}
+				await MainThread.InvokeOnMainThreadAsync(CanvasNeedsRedraw);
 			}
 			catch (OperationCanceledException) { }
+			finally
+			{
+				EndOperation();
+			}
 		}
 
 		public void RenderCanvas(SKCanvas canvas, int width, int height) // note that this must run synchronously
 		{
+			if (CheckIfDisposed()) return;
 			DrawTransparentBackground(canvas, width, height);
 
 			if (_tilesetConnection?.CurrentFile == null)
@@ -480,7 +485,7 @@ namespace InkscapeTileMaker.ViewModels
 					PathEffect = SKPathEffect.CreateDash([10, 10], 0),
 				};
 
-				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.TilePixelSize / 2, 2, majorPaint, minorPaint);
+				DrawGrid(canvas, previewRect, TilePixelSize / 2, 2, majorPaint, minorPaint);
 				DrawBorder(canvas, previewRect);
 			}
 
@@ -589,7 +594,7 @@ namespace InkscapeTileMaker.ViewModels
 
 			if (_tilesetConnection?.Tileset != null && majorPaint != null && minorPaint != null)
 			{
-				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.TilePixelSize / 2, 2, majorPaint, minorPaint);
+				DrawGrid(canvas, previewRect, TilePixelSize / 2, 2, majorPaint, minorPaint);
 				DrawBorder(canvas, previewRect);
 
 				majorPaint.Dispose();
@@ -624,9 +629,9 @@ namespace InkscapeTileMaker.ViewModels
 					Style = SKPaintStyle.Stroke,
 				};
 
-				DrawGrid(canvas, previewRect, _tilesetConnection.Tileset.TilePixelSize / 2, 2, majorPaint, minorPaint);
-				previewRect.Bottom -= _tilesetConnection.Tileset.TilePixelSize.Height * (float)SelectedZoomLevel;
-				previewRect.Right -= _tilesetConnection.Tileset.TilePixelSize.Width * (float)SelectedZoomLevel;
+				DrawGrid(canvas, previewRect, TilePixelSize / 2, 2, majorPaint, minorPaint);
+				previewRect.Bottom -= TilePixelSize.Height * (float)SelectedZoomLevel;
+				previewRect.Right -= TilePixelSize.Width * (float)SelectedZoomLevel;
 				DrawBorder(canvas, previewRect);
 			}
 
@@ -723,16 +728,16 @@ namespace InkscapeTileMaker.ViewModels
 				Top = PreviewOffset.Y * zoomFactor,
 				Left = PreviewOffset.X * zoomFactor,
 				Size = new SKSize(
-					scale.Width * _tilesetConnection.Tileset.TilePixelSize.Width * zoomFactor,
-					scale.Height * _tilesetConnection.Tileset.TilePixelSize.Height * zoomFactor),
+					scale.Width * TilePixelSize.Width * zoomFactor,
+					scale.Height * TilePixelSize.Height * zoomFactor),
 			};
 		}
 
 		public SKRect GetTileRect(int row, int column)
 		{
 			if (_tilesetConnection?.Tileset == null) return SKRect.Empty;
-			float width = _tilesetConnection.Tileset.TilePixelSize.Width * (float)SelectedZoomLevel;
-			float height = _tilesetConnection.Tileset.TilePixelSize.Height * (float)SelectedZoomLevel;
+			float width = TilePixelSize.Width * (float)SelectedZoomLevel;
+			float height = TilePixelSize.Height * (float)SelectedZoomLevel;
 			float top = height * row + PreviewOffset.Y * (float)SelectedZoomLevel;
 			float left = width * column + PreviewOffset.X * (float)SelectedZoomLevel;
 			float right = left + width;
@@ -744,8 +749,8 @@ namespace InkscapeTileMaker.ViewModels
 		public SKRectI GetUnscaledTileRect(int row, int column)
 		{
 			if (_tilesetConnection?.Tileset == null) return SKRectI.Empty;
-			int width = _tilesetConnection.Tileset.TilePixelSize.Width;
-			int height = _tilesetConnection.Tileset.TilePixelSize.Height;
+			int width = TilePixelSize.Width;
+			int height = TilePixelSize.Height;
 			int top = height * row;
 			int left = width * column;
 			int right = left + width;
@@ -978,39 +983,56 @@ namespace InkscapeTileMaker.ViewModels
 		public async Task SaveDesign()
 		{
 			if (_tilesetConnection?.Tileset == null) return;
-			PreSave();
-			var file = _tilesetConnection.CurrentFile;
-			if (file == null) return;
-			await _tilesetConnection.SaveAsync(file);
-			HasUnsavedChanges = false;
+			BeginOperation();
+			try
+			{
+				PreSave();
+				var file = _tilesetConnection.CurrentFile;
+				if (file == null) return;
+				await _tilesetConnection.SaveAsync(file);
+				HasUnsavedChanges = false;
+			}
+			finally
+			{
+				EndOperation();
+			}
 		}
 
 		[RelayCommand]
 		public async Task SaveDesignAs()
 		{
 			if (_tilesetConnection?.Tileset == null) return;
-			PreSave();
-			var svgFile = _tilesetConnection.CurrentFile;
-			if (svgFile == null) return;
-			using var ms = new MemoryStream();
-			await _tilesetConnection.SaveToStreamAsync(ms);
-			ms.Position = 0;
-			var result = await _fileSaver.SaveAsync(svgFile.FullName, svgFile.Name, ms);
+			BeginOperation();
+			try
+			{
+				PreSave();
+				var svgFile = _tilesetConnection.CurrentFile;
+				if (svgFile == null) return;
+				using var ms = new MemoryStream();
+				await _tilesetConnection.SaveToStreamAsync(ms);
+				ms.Position = 0;
+				var result = await _fileSaver.SaveAsync(svgFile.FullName, svgFile.Name, ms);
+			}
+			finally
+			{
+				EndOperation();
+			}
 		}
 
-		public void PreSave()
+		private void PreSave()
 		{
+			if (_tilesetConnection?.Tileset == null) return;
 			var bakedTiles = Tiles.ToArray(); // prevent collection modified during enumeration
 			foreach (var tileWrapper in bakedTiles)
 			{
-				tileWrapper.Sync();
+				_tilesetConnection.Tileset.Update(tileWrapper.Value);
 			}
 		}
 
 		[RelayCommand]
-		public async Task Exit()
+		public void Exit()
 		{
-			CloseRequested.Invoke();
+			_windowProvider?.CloseWindow();
 		}
 
 		[RelayCommand]
@@ -1113,38 +1135,55 @@ namespace InkscapeTileMaker.ViewModels
 			if (_tilesetConnection?.Tileset == null) return;
 			if (SelectedTile == null) return;
 
-			if (_windowProvider != null)
+			BeginOperation();
+			try
 			{
-				var confirm = await _windowProvider.PopupService.ShowConfirmationAsync(
-					"Delete Tile",
-					$"Are you sure you want to delete tile '{SelectedTile.Name}' at ({SelectedTile.Value.Row}, {SelectedTile.Value.Column})?",
-					"Delete");
-				if (!confirm) return;
-			}
+				if (_windowProvider != null)
+				{
+					var confirm = await _windowProvider.PopupService.ShowConfirmationAsync(
+						"Delete Tile",
+						$"Are you sure you want to delete tile '{SelectedTile.Name}' at ({SelectedTile.Value.Row}, {SelectedTile.Value.Column})?",
+						"Delete");
+					if (!confirm) return;
+				}
 
-			_tilesetConnection.Tileset.Remove(SelectedTile.Value);
-			SelectedTile = null;
-			HasUnsavedChanges = true;
+				_tilesetConnection.Tileset.Remove(SelectedTile.Value);
+				SelectedTile = null;
+				HasUnsavedChanges = true;
+			}
+			finally
+			{
+				EndOperation();
+			}
 		}
 
 		[RelayCommand]
 		public async Task FillTiles()
 		{
 			if (_tilesetConnection?.Tileset == null) return;
-			TilesetFillSettings settings = TilesetFillSettings.None;
-			if (ReplaceExistingTiles) settings |= TilesetFillSettings.ReplaceExisting;
-			if (FillEmptyTiles) settings |= TilesetFillSettings.FillEmptyTiles;
 
-			if (_windowProvider == null)
+			BeginOperation();
+			try
 			{
-				await _tilesetConnection.Tileset.FillTilesAsync(settings);
+				TilesetFillSettings settings = TilesetFillSettings.None;
+				if (ReplaceExistingTiles) settings |= TilesetFillSettings.ReplaceExisting;
+				if (FillEmptyTiles) settings |= TilesetFillSettings.FillEmptyTiles;
+
+				if (_windowProvider == null)
+				{
+					await _tilesetConnection.FillTilesAsync(settings, null, _disposeCts.Token);
+				}
+				else await _windowProvider.PopupService.ShowProgressOnTaskAsync(message: "Filling Tiles...", isIndeterminate: false, async progress =>
+				{
+					await _tilesetConnection.FillTilesAsync(settings, progress, _disposeCts.Token);
+				});
+
+				HasUnsavedChanges = true;
 			}
-			else await _windowProvider.PopupService.ShowProgressOnTaskAsync(message: "Filling Tiles...", isIndeterminate: false, async progress =>
+			finally
 			{
-				await _tilesetConnection.Tileset.FillTilesAsync(settings, progress);
-			});
-
-			HasUnsavedChanges = true;
+				EndOperation(); 
+			}
 		}
 
 		[ObservableProperty] public partial bool ReplaceExistingTiles { get; set; } = false;
@@ -1155,19 +1194,27 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			if (_tilesetConnection?.Tileset == null) return;
 
-			if (_windowProvider != null)
+			BeginOperation();
+			try
 			{
-				var confirm = await _windowProvider.PopupService.ShowConfirmationAsync(
-					"Clear All Tiles",
-					"Are you sure you want to clear all tiles from the tileset?",
-					"Clear All");
-				if (!confirm) return;
-			}
+				if (_windowProvider != null)
+				{
+					var confirm = await _windowProvider.PopupService.ShowConfirmationAsync(
+						"Clear All Tiles",
+						"Are you sure you want to clear all tiles from the tileset?",
+						"Clear All");
+					if (!confirm) return;
+				}
 
-			_tilesetConnection.Tileset.Clear();
-			HasUnsavedChanges = true;
-			if (_windowProvider == null) return;
-			await _windowProvider.PopupService.ShowTextAsync("All tiles have been cleared.");
+				_tilesetConnection.Tileset.Clear();
+				HasUnsavedChanges = true;
+				if (_windowProvider == null) return;
+				await _windowProvider.PopupService.ShowTextAsync("All tiles have been cleared.");
+			}
+			finally
+			{
+				EndOperation(); 
+			}
 		}
 
 		[RelayCommand]
@@ -1209,17 +1256,24 @@ namespace InkscapeTileMaker.ViewModels
 		public async Task ExportTilesetImage(string extension)
 		{
 			if (_tilesetConnection?.CurrentFile == null) return;
-
-			if (_windowProvider == null)
+			BeginOperation();
+			try
 			{
-				using var stream = await _tilesetConnection.RenderFileAsync(extension);
-				var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.{extension}", stream);
+				if (_windowProvider == null)
+				{
+					using var stream = await _tilesetConnection.RenderFileAsync(extension);
+					var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.{extension}", stream);
+				}
+				else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async _ =>
+				{
+					using var stream = await _tilesetConnection.RenderFileAsync(extension);
+					var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.{extension}", stream);
+				});
 			}
-			else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async _ =>
+			finally
 			{
-				using var stream = await _tilesetConnection.RenderFileAsync(extension);
-				var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.{extension}", stream);
-			});
+				EndOperation();
+			}
 		}
 
 		[RelayCommand]
@@ -1228,20 +1282,28 @@ namespace InkscapeTileMaker.ViewModels
 			if (_tilesetConnection?.CurrentFile == null) return;
 			if (SelectedTile == null) return;
 
-			if (_windowProvider == null)
+			BeginOperation();
+			try
 			{
-				using var stream = await GetTileImageStream(SelectedTile.Value, extension);
-				if (stream == null) return;
-				string tileFileName = $"{SelectedTile.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].{extension}";
-				var result = await _fileSaver.SaveAsync(tileFileName, stream);
+				if (_windowProvider == null)
+				{
+					using var stream = await GetTileImageStream(SelectedTile.Value, extension);
+					if (stream == null) return;
+					string tileFileName = $"{SelectedTile.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].{extension}";
+					var result = await _fileSaver.SaveAsync(tileFileName, stream, _disposeCts.Token);
+				}
+				else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async _ =>
+				{
+					using var stream = await GetTileImageStream(SelectedTile.Value, extension);
+					if (stream == null) return;
+					string tileFileName = $"{SelectedTile.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].{extension}";
+					var result = await _fileSaver.SaveAsync(tileFileName, stream, _disposeCts.Token);
+				});
 			}
-			else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async _ =>
+			finally
 			{
-				using var stream = await GetTileImageStream(SelectedTile.Value, extension);
-				if (stream == null) return;
-				string tileFileName = $"{SelectedTile.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].{extension}";
-				var result = await _fileSaver.SaveAsync(tileFileName, stream);
-			});
+				EndOperation();
+			}
 		}
 
 		private async Task<Stream?> GetTileImageStream(Tile tile, string extension)
@@ -1256,7 +1318,7 @@ namespace InkscapeTileMaker.ViewModels
 				right: (tile.Column + 1) * tileset.TilePixelSize.Width,
 				bottom: (tile.Row + 1) * tileset.TilePixelSize.Height,
 				null,
-				CancellationToken.None);
+				_disposeCts.Token);
 		}
 
 		[RelayCommand]
@@ -1264,53 +1326,61 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			if (_tilesetConnection?.CurrentFile == null) return;
 			if (_tilesetConnection.Tileset == null) return;
-			var tileset = _tilesetConnection.Tileset;
-			var tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip"));
-			using (var zip = new ZipArchive(tmpFile.OpenWrite(), ZipArchiveMode.Create, leaveOpen: false))
+
+			BeginOperation();
+			FileInfo? tmpFile = null;
+			try
 			{
-				if (_windowProvider == null)
+				tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip"));
+				var tileset = _tilesetConnection.Tileset;
+				using (var zip = new ZipArchive(tmpFile.OpenWrite(), ZipArchiveMode.Create, leaveOpen: false))
 				{
-					foreach (var tvm in Tiles)
+					if (_windowProvider == null)
 					{
-						using var stream = await _tilesetConnection.RenderSegmentAsync(
-							".png",
-							left: tvm.Value.Column * tileset.TilePixelSize.Width,
-							top: tvm.Value.Row * tileset.TilePixelSize.Height,
-							right: (tvm.Value.Column + 1) * tileset.TilePixelSize.Width,
-							bottom: (tvm.Value.Row + 1) * tileset.TilePixelSize.Height,
-							null,
-							CancellationToken.None);
-						string tileFileName = $"{tvm.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].png";
-						var entry = zip.CreateEntry(tileFileName);
-						using var entryStream = await entry.OpenAsync();
-						await stream.CopyToAsync(entryStream);
+						foreach (var tvm in Tiles)
+						{
+							using var stream = await _tilesetConnection.RenderSegmentAsync(
+								".png",
+								left: tvm.Value.Column * tileset.TilePixelSize.Width,
+								top: tvm.Value.Row * tileset.TilePixelSize.Height,
+								right: (tvm.Value.Column + 1) * tileset.TilePixelSize.Width,
+								bottom: (tvm.Value.Row + 1) * tileset.TilePixelSize.Height,
+								null,
+								_disposeCts.Token);
+							string tileFileName = $"{tvm.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].png";
+							var entry = zip.CreateEntry(tileFileName);
+							using var entryStream = await entry.OpenAsync();
+							await stream.CopyToAsync(entryStream, _disposeCts.Token);
+						}
 					}
+					else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: false, async progress =>
+					{
+						foreach (var (tvm, i) in Tiles.Select((t, i) => (t, i)))
+						{
+							progress.Report((double)i / Tiles.Count);
+							using var stream = await _tilesetConnection.RenderSegmentAsync(
+								".png",
+								left: tvm.Value.Column * tileset.TilePixelSize.Width,
+								top: tvm.Value.Row * tileset.TilePixelSize.Height,
+								right: (tvm.Value.Column + 1) * tileset.TilePixelSize.Width,
+								bottom: (tvm.Value.Row + 1) * tileset.TilePixelSize.Height,
+								null,
+								_disposeCts.Token);
+							string tileFileName = $"{tvm.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].png";
+							var entry = zip.CreateEntry(tileFileName);
+							using var entryStream = await entry.OpenAsync();
+							await stream.CopyToAsync(entryStream, _disposeCts.Token);
+						}
+					});
 				}
-				else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: false, async progress =>
-				{
-					foreach (var (tvm, i) in Tiles.Select((t, i) => (t, i)))
-					{
-						progress.Report((double)i / Tiles.Count);
-						using var stream = await _tilesetConnection.RenderSegmentAsync(
-							".png",
-							left: tvm.Value.Column * tileset.TilePixelSize.Width,
-							top: tvm.Value.Row * tileset.TilePixelSize.Height,
-							right: (tvm.Value.Column + 1) * tileset.TilePixelSize.Width,
-							bottom: (tvm.Value.Row + 1) * tileset.TilePixelSize.Height,
-							null,
-							CancellationToken.None);
-						string tileFileName = $"{tvm.Name} [{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}].png";
-						var entry = zip.CreateEntry(tileFileName);
-						using var entryStream = await entry.OpenAsync();
-						await stream.CopyToAsync(entryStream);
-					}
-				});
+				using var fs = new FileStream(tmpFile.FullName, FileMode.Open, FileAccess.Read);
+				_ = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.zip", fs);		
 			}
-			using (var fs = new FileStream(tmpFile.FullName, FileMode.Open, FileAccess.Read))
+			finally
 			{
-				var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.zip", fs);
-			}
-			tmpFile.Delete();
+				if (tmpFile?.Exists ?? false) tmpFile.Delete();
+				EndOperation();
+			}			
 		}
 
 		[RelayCommand]
@@ -1318,25 +1388,33 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			if (_tilesetConnection?.CurrentFile == null) return;
 			if (_tilesetConnection.Tileset == null) return;
-			var tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.unitypackage"));
-			using (var writer = new UnityPackageWriter(tmpFile.OpenWrite(), leaveOpen: false))
-			{
-				var exporter = new UnityPackageExporter(_settingsService, _tilesetConnection);
 
-				if (_windowProvider == null)
-				{
-					await exporter.WriteTilesetPackageAsync(writer);
-				}
-				else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async progress =>
-				{
-					await exporter.WriteTilesetPackageAsync(writer);
-				});
-			}
-			using (var fs = tmpFile.OpenRead())
+			BeginOperation();
+			FileInfo? tmpFile = null;
+			try
 			{
-				var result = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.unitypackage", fs);
+				tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.unitypackage"));
+				using (var writer = new UnityPackageWriter(tmpFile.OpenWrite(), leaveOpen: false))
+				{
+					var exporter = new UnityPackageExporter(_settingsService, _tilesetConnection);
+
+					if (_windowProvider == null)
+					{
+						await exporter.WriteTilesetPackageAsync(writer);
+					}
+					else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async progress =>
+					{
+						await exporter.WriteTilesetPackageAsync(writer);
+					});
+				}
+				using var fs = tmpFile.OpenRead();
+				_ = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.unitypackage", fs);
 			}
-			tmpFile.Delete();
+			finally
+			{
+				if (tmpFile?.Exists ?? false) tmpFile.Delete();
+				EndOperation();
+			}
 		}
 
 		[RelayCommand]
@@ -1345,35 +1423,81 @@ namespace InkscapeTileMaker.ViewModels
 			if (_tilesetConnection?.CurrentFile == null) return;
 			if (SelectedTile == null) return;
 			if (string.IsNullOrWhiteSpace(SelectedTile.MaterialName)) return;
-			var material = new Material(SelectedTile.MaterialName, () => Tiles.Select(t => t.Value));
-			MaterialExporter? exporter = null;
-			foreach (var type in Assembly.GetAssembly(typeof(MaterialExporter))!.GetTypes()
-				.Where(t => typeof(MaterialExporter).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract))
+
+			FileInfo? tmpFile = null;
+			BeginOperation();
+
+			try
 			{
-				var constructor = type.GetConstructor([typeof(string), typeof(ITilesetConnection), typeof(ITilesetRenderingService)])
-					?? throw new Exception($"No valid constructor found for type: {type.FullName}");
-				exporter = (MaterialExporter)constructor.Invoke([material.Name, _tilesetConnection]);
-				if (exporter.Type != material.Type) continue;
+				var material = new Material(SelectedTile.MaterialName, () => Tiles.Select(t => t.Value));
+				MaterialExporter? exporter = null;
+				foreach (var type in Assembly.GetAssembly(typeof(MaterialExporter))!.GetTypes()
+					.Where(t => typeof(MaterialExporter).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract))
+				{
+					var constructor = type.GetConstructor([typeof(string), typeof(ITilesetConnection), typeof(ITilesetRenderingService)])
+						?? throw new Exception($"No valid constructor found for type: {type.FullName}");
+					exporter = (MaterialExporter)constructor.Invoke([material.Name, _tilesetConnection]);
+					if (exporter.Type != material.Type) continue;
+				}
+
+				if (exporter == null) throw new Exception($"No exporter found for material type: {material.Type}");
+
+				tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png"));
+
+				if (_windowProvider == null)
+				{
+					await exporter.ExportAsync(tmpFile, TilePixelSize);
+				}
+				else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async progress =>
+				{
+					await exporter.ExportAsync(tmpFile, TilePixelSize);
+				});
+
+				using var fs = tmpFile.OpenRead();
+				_ = await _fileSaver.SaveAsync($"{material.Name}.png", fs);
+			}
+			finally
+			{
+				if (tmpFile?.Exists ?? false) tmpFile.Delete();
+				EndOperation();
+			}
+		}
+
+		public async ValueTask DisposeAsync()
+		{
+			GC.SuppressFinalize(this);
+
+			_tilesetConnection?.TilesetChanged -= HandleTilesetChanged;
+			_disposeCts.Cancel();
+			var debounceCts = Interlocked.Exchange(ref _tilesetChangedDebouceCts, null);
+			debounceCts?.Cancel();
+			_windowProvider = null;
+			CanvasNeedsRedraw = delegate { };
+
+			if (Interlocked.Exchange(ref _disposeState, DISPOSAL) != ACTIVE)
+			{
+				return;
 			}
 
-			if (exporter == null) throw new Exception($"No exporter found for material type: {material.Type}");
-
-			var tmpFile = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png"));
-
-			if (_windowProvider == null)
+			if (Volatile.Read(ref _activeOperationCount) != 0)
 			{
-				await exporter.ExportAsync(tmpFile, TilePixelSize);
+				await _disposeCompletion.Task.ConfigureAwait(false);
 			}
-			else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async progress =>
-			{
-				await exporter.ExportAsync(tmpFile, TilePixelSize);
-			});
 
-			using (var fs = tmpFile.OpenRead())
+			if (_tilesetConnection != null)
 			{
-				var result = await _fileSaver.SaveAsync($"{material.Name}.png", fs);
+				await _tilesetConnection.DisposeAsync();
+				_tilesetConnection = null;
 			}
-			tmpFile.Delete();
+
+
+			// Avoid disposing Skia resources during WinUI shutdown.
+			// The canvas may still be tearing down, and aggressive disposal here can cause native access violations.
+			_renderedBitmap = null;
+			_tileBitmaps.Clear();
+
+			debounceCts?.Dispose();
+			_disposeCts.Dispose();
 		}
 
 		#endregion

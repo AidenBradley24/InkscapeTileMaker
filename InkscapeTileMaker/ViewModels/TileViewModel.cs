@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using InkscapeTileMaker.Models;
-using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Collections;
 
@@ -10,7 +9,6 @@ namespace InkscapeTileMaker.ViewModels
 	{
 		private readonly Tile _tile;
 		private readonly DesignerViewModel _designerViewModel;
-		private readonly Action<Tile> _syncFunction;
 
 		[ObservableProperty]
 		public partial ImageSource? PreviewImage { get; set; }
@@ -146,11 +144,10 @@ namespace InkscapeTileMaker.ViewModels
 			ValidateAllProperties();
 		}
 
-		public TileViewModel(Tile tile, DesignerViewModel designerViewModel, Action<Tile> syncFunction)
+		public TileViewModel(Tile tile, DesignerViewModel designerViewModel)
 		{
 			_tile = tile;
 			_designerViewModel = designerViewModel;
-			_syncFunction = syncFunction;
 
 			Name = _tile.Name;
 			Position = (_tile.Row, _tile.Column);
@@ -162,11 +159,6 @@ namespace InkscapeTileMaker.ViewModels
 			Priority = _tile.Priority;
 
 			ErrorsChanged += (_, _) => OnPropertyChanged(nameof(CurrentErrorMessage));
-		}
-
-		public void Sync()
-		{
-			_syncFunction.Invoke(_tile);
 		}
 
 		partial void OnNameChanged(string value)

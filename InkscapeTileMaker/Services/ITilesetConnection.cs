@@ -5,11 +5,11 @@ namespace InkscapeTileMaker.Services
 	/// <summary>
 	/// Tileset connections are a thread safe view on a tileset and its file.
 	/// </summary>
-	public interface ITilesetConnection : IDisposable
+	public interface ITilesetConnection : IAsyncDisposable, IDisposable
 	{
 		public ITileset? Tileset { get; }
 
-		public ITilesetRenderingService RenderingService { get; set; }
+		public ITilesetRenderingService RenderingService { get; }
 
 		public FileInfo? CurrentFile { get; }
 

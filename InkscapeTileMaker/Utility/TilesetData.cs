@@ -1,6 +1,5 @@
 ﻿using InkscapeTileMaker.Models;
 using InkscapeTileMaker.Services;
-using InkscapeTileMaker.ViewModels;
 using System.Collections;
 
 namespace InkscapeTileMaker.Utility
@@ -75,24 +74,9 @@ namespace InkscapeTileMaker.Utility
 			_tiles.CopyTo(array, arrayIndex);
 		}
 
-		public Task FillTilesAsync(TilesetFillSettings settings, IProgress<double>? progressReporter = null)
-		{
-			throw new NotSupportedException();
-		}
-
-		public TileViewModel[] GetAllTileViewModels(DesignerViewModel designerViewModel)
-		{
-			throw new NotSupportedException();
-		}
-
 		public IEnumerator<Tile> GetEnumerator()
 		{
 			return _tiles.GetEnumerator();
-		}
-
-		public TileViewModel? GetTileViewModelAt(int row, int column, DesignerViewModel designerViewModel)
-		{
-			throw new NotSupportedException();
 		}
 
 		public bool Remove(Tile item)
@@ -103,6 +87,25 @@ namespace InkscapeTileMaker.Utility
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return GetEnumerator();
+		}
+
+		public Tile? GetTileAt(int row, int column)
+		{
+			return _tiles.Find(t => t.Row == row && t.Column == column);
+		}
+
+		public Tile[] GetAllTiles()
+		{
+			return _tiles.ToArray();
+		}
+
+		public void Update(Tile tile)
+		{
+			var existingTile = _tiles.Find(t => t.Row == tile.Row && t.Column == tile.Column);
+			if (existingTile != null)
+			{
+				_tiles[_tiles.IndexOf(existingTile)] = tile;
+			}
 		}
 	}
 }

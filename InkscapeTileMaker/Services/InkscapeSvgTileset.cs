@@ -1,5 +1,4 @@
 ﻿using InkscapeTileMaker.Models;
-using InkscapeTileMaker.ViewModels;
 using System.Collections;
 
 namespace InkscapeTileMaker.Services
@@ -58,7 +57,7 @@ namespace InkscapeTileMaker.Services
 
 		public IEnumerator<Tile> GetEnumerator()
 		{
-			return ((IEnumerable<Tile>)_connection.GetTiles()).GetEnumerator();
+			return ((IEnumerable<Tile>)_connection.GetAllTiles()).GetEnumerator();
 		}
 
 		public bool Remove(Tile item)
@@ -71,19 +70,24 @@ namespace InkscapeTileMaker.Services
 			return GetEnumerator();
 		}
 
-		public TileViewModel? GetTileViewModelAt(int row, int column, DesignerViewModel designerViewModel)
+		public Tile? GetTileAt(int row, int column)
 		{
-			return _connection.GetTile(row, column, designerViewModel);
+			return _connection.GetTileAt(row, column);
 		}
 
-		public TileViewModel[] GetAllTileViewModels(DesignerViewModel designerViewModel)
+		public Tile[] GetAllTiles()
 		{
-			return _connection.GetAllTiles(designerViewModel);
+			return _connection.GetAllTiles();
 		}
 
 		public async Task FillTilesAsync(TilesetFillSettings settings, IProgress<double>? progressReporter = default)
 		{
 			await _connection.FillTilesAsync(settings, progressReporter);
+		}
+
+		public void Update(Tile tile)
+		{
+			_connection.AddOrReplaceTile(tile);
 		}
 	}
 }

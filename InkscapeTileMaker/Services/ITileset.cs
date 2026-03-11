@@ -1,5 +1,4 @@
 ﻿using InkscapeTileMaker.Models;
-using InkscapeTileMaker.ViewModels;
 
 namespace InkscapeTileMaker.Services
 {
@@ -9,18 +8,10 @@ namespace InkscapeTileMaker.Services
 		public Scale TilePixelSize { get; }
 		public Scale ImagePixelSize { get; }
 
-		public TileViewModel? GetTileViewModelAt(int row, int column, DesignerViewModel designerViewModel);
+		public Tile? GetTileAt(int row, int column);
 
-		public TileViewModel[] GetAllTileViewModels(DesignerViewModel designerViewModel);
+		public Tile[] GetAllTiles();
 
-		public Task FillTilesAsync(TilesetFillSettings settings, IProgress<double>? progressReporter = default);
-	}
-
-	[Flags]
-	public enum TilesetFillSettings
-	{
-		None = 0,
-		FillEmptyTiles = 1 << 0,
-		ReplaceExisting = 1 << 1,
+		public void Update(Tile tile);
 	}
 }

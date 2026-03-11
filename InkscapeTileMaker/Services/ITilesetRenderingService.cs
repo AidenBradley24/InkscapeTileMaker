@@ -2,7 +2,7 @@
 
 namespace InkscapeTileMaker.Services
 {
-	public interface ITilesetRenderingService
+	public interface ITilesetRenderingService : IAsyncDisposable, IDisposable
 	{
 		public Task<Stream> RenderFileAsync(FileInfo file, string extension, CancellationToken cancellationToken = default);
 

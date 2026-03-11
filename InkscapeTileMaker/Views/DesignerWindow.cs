@@ -40,20 +40,16 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 		TitleBar = titleBar;
 		titleBar.SetBinding(Microsoft.Maui.Controls.TitleBar.TitleProperty, new Binding(nameof(vm.Title)));
 
-		vm.CloseRequested += OnCloseRequested;
 
 #if WINDOWS
-		WireUpNativeClose();
+		//WireUpNativeClose();
 #endif
-	}
-
-	private void OnCloseRequested()
-	{
-		_ = RequestCloseAsync();
 	}
 
 	private async Task RequestCloseAsync()
 	{
+		Microsoft.Maui.Controls.Application.Current?.CloseWindow(this);
+		return;
 		if (_isClosing || _isClosePromptActive)
 		{
 			return;
@@ -96,8 +92,7 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 #if WINDOWS
 				_allowNativeClose = true;
 #endif
-
-				Microsoft.Maui.Controls.Application.Current?.CloseWindow(this);
+				await MainThread.InvokeOnMainThreadAsync(() => Microsoft.Maui.Controls.Application.Current?.CloseWindow(this));
 			}
 			catch (Exception ex)
 			{
@@ -121,10 +116,9 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 
 		if (BindingContext is DesignerViewModel viewModel)
 		{
-			viewModel.CloseRequested -= OnCloseRequested;
-			viewModel.Dispose();
+			viewModel.DisposeAsync().AsTask().Wait();
 		}
-
+		return;
 #if WINDOWS
 		HandlerChanged -= OnHandlerChangedForWindows;
 
@@ -138,7 +132,7 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 
 	public void CloseWindow()
 	{
-		OnCloseRequested();
+		Microsoft.Maui.Controls.Application.Current?.CloseWindow(this);
 	}
 
 #if WINDOWS
@@ -182,7 +176,7 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 		}
 
 		args.Cancel = true;
-		OnCloseRequested();
+		MainThread.InvokeOnMainThreadAsync(async () => await RequestCloseAsync());
 	}
 #endif
 }
