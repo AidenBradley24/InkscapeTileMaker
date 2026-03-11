@@ -20,7 +20,7 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 
 	public event Action<ITilesetConnection> TilesetChanged = delegate { };
 
-	private readonly AsyncReaderWriterLock _stateLock = new(); 
+	private readonly AsyncReaderWriterLock _stateLock = new();
 	private readonly TaskCompletionSource<object?> _disposeCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
 	private InkscapeSvg? _svg;
@@ -367,7 +367,7 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 
 	public void AddOrReplaceTiles(IEnumerable<Tile> tiles)
 	{
-		BeginOperation(); 
+		BeginOperation();
 		var stateLock = _stateLock.EnterWriteLock();
 		try
 		{
@@ -419,7 +419,7 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 
 	public void ClearTiles()
 	{
-		BeginOperation(); 
+		BeginOperation();
 		var stateLock = _stateLock.EnterWriteLock();
 		try
 		{

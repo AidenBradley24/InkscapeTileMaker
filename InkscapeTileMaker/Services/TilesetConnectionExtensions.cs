@@ -8,15 +8,15 @@ namespace InkscapeTileMaker.Services
 	public static class TilesetConnectionExtensions
 	{
 		public static async Task FillTilesAsync(
-			this ITilesetConnection connection, 
-			TilesetFillSettings settings, 
+			this ITilesetConnection connection,
+			TilesetFillSettings settings,
 			IProgress<double>? progressReporter = default,
 			CancellationToken cancellationToken = default)
 		{
 			ArgumentNullException.ThrowIfNull(connection);
-			var tileset = connection.Tileset 
+			var tileset = connection.Tileset
 				?? throw new InvalidOperationException("Tileset is not loaded.");
-			var file = connection.CurrentFile 
+			var file = connection.CurrentFile
 				?? throw new InvalidOperationException("No file is currently loaded.");
 
 			int maxRow = tileset.ImagePixelSize.Height / tileset.TilePixelSize.Height - 1;

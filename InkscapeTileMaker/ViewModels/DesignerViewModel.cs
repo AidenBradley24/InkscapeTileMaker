@@ -295,7 +295,7 @@ namespace InkscapeTileMaker.ViewModels
 			if (CheckIfDisposed()) return;
 
 			int refreshVersion = Interlocked.Increment(ref _refreshVersion);
-			
+
 			_cachedTilePixelSize = _tilesetConnection?.Tileset?.TilePixelSize ?? new Scale(1, 1);
 			_cachedImagePixelSize = _tilesetConnection?.Tileset?.ImagePixelSize ?? new Scale(1, 1);
 			_cachedTileSetSize = _cachedImagePixelSize / _cachedTilePixelSize;
@@ -1182,7 +1182,7 @@ namespace InkscapeTileMaker.ViewModels
 			}
 			finally
 			{
-				EndOperation(); 
+				EndOperation();
 			}
 		}
 
@@ -1213,7 +1213,7 @@ namespace InkscapeTileMaker.ViewModels
 			}
 			finally
 			{
-				EndOperation(); 
+				EndOperation();
 			}
 		}
 
@@ -1374,13 +1374,13 @@ namespace InkscapeTileMaker.ViewModels
 					});
 				}
 				using var fs = new FileStream(tmpFile.FullName, FileMode.Open, FileAccess.Read);
-				_ = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.zip", fs);		
+				_ = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.zip", fs);
 			}
 			finally
 			{
 				if (tmpFile?.Exists ?? false) tmpFile.Delete();
 				EndOperation();
-			}			
+			}
 		}
 
 		[RelayCommand]

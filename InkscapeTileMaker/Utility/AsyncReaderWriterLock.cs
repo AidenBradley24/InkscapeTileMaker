@@ -1,5 +1,3 @@
-using System.Threading;
-
 namespace InkscapeTileMaker.Utility;
 
 internal sealed class AsyncReaderWriterLock
