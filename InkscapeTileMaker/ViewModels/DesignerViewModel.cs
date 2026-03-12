@@ -126,8 +126,6 @@ namespace InkscapeTileMaker.ViewModels
 
 		const int TILEMAP_SCALE = 12;
 
-		private bool _showRenderMessage;
-
 		public DesignerViewModel(IServiceProvider serviceProvider,
 			IWindowOpeningService windowService,
 			IFileSaver fileSaver,
@@ -144,7 +142,6 @@ namespace InkscapeTileMaker.ViewModels
 			_paintTilemap.NeedsRedraw += () => CanvasNeedsRedraw.Invoke();
 
 			SelectedZoomLevel = 1.0m;
-			_showRenderMessage = true;
 		}
 
 		private void ThrowIfDisposed()
@@ -343,16 +340,7 @@ namespace InkscapeTileMaker.ViewModels
 
 			MainThread.BeginInvokeOnMainThread(async () =>
 			{
-				if (CheckIfDisposed()) return;
-
-				if (_windowProvider == null || !_showRenderMessage)
-				{
-					await RenderPreviews(refreshVersion, _disposeCts.Token);
-				}
-				else await _windowProvider.PopupService.ShowProgressOnTaskAsync(
-					"Rendering Preview", isIndeterminate: true,
-					_ => RenderPreviews(refreshVersion, _disposeCts.Token));
-				_showRenderMessage = false;
+				await RenderPreviews(refreshVersion, _disposeCts.Token);
 			});
 		}
 

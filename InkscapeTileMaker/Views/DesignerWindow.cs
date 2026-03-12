@@ -42,14 +42,12 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 
 
 #if WINDOWS
-		//WireUpNativeClose();
+		WireUpNativeClose();
 #endif
 	}
 
 	private async Task RequestCloseAsync()
 	{
-		Microsoft.Maui.Controls.Application.Current?.CloseWindow(this);
-		return;
 		if (_isClosing || _isClosePromptActive)
 		{
 			return;
@@ -118,7 +116,7 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 		{
 			viewModel.DisposeAsync().AsTask().Wait();
 		}
-		return;
+
 #if WINDOWS
 		HandlerChanged -= OnHandlerChangedForWindows;
 
