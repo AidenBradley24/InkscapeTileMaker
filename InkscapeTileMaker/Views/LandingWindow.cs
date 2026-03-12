@@ -3,7 +3,7 @@ using InkscapeTileMaker.ViewModels;
 
 namespace InkscapeTileMaker.Views;
 
-public class LandingWindow : Window, ILandingNavigation, IWindowProvider
+public partial class LandingWindow : Window, ILandingNavigation, IWindowProvider
 {
 	private readonly NavigationPage _nav;
 	private readonly LandingViewModel _vm;
