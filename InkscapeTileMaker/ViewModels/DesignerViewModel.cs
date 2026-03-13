@@ -1240,6 +1240,7 @@ namespace InkscapeTileMaker.ViewModels
 
 
 		#region Exports
+
 		[RelayCommand]
 		public async Task ExportTilesetImage(string extension)
 		{
@@ -1409,8 +1410,15 @@ namespace InkscapeTileMaker.ViewModels
 		public async Task ExportMaterial()
 		{
 			if (_tilesetConnection?.CurrentFile == null) return;
-			if (SelectedTile == null) return;
-			if (string.IsNullOrWhiteSpace(SelectedTile.MaterialName)) return;
+
+			if (string.IsNullOrWhiteSpace(SelectedTile?.MaterialName))
+			{
+				if (_windowProvider != null)
+				{
+					await _windowProvider.PopupService.ShowTextAsync("A tile with a material must be selected.");
+				}
+				return;
+			}
 
 			FileInfo? tmpFile = null;
 			BeginOperation();
@@ -1455,17 +1463,17 @@ namespace InkscapeTileMaker.ViewModels
 		{
 			GC.SuppressFinalize(this);
 
+			if (Interlocked.Exchange(ref _disposeState, DISPOSAL) != ACTIVE)
+			{
+				return;
+			}
+
 			_tilesetConnection?.TilesetChanged -= HandleTilesetChanged;
 			_disposeCts.Cancel();
 			var debounceCts = Interlocked.Exchange(ref _tilesetChangedDebouceCts, null);
 			debounceCts?.Cancel();
 			_windowProvider = null;
 			CanvasNeedsRedraw = delegate { };
-
-			if (Interlocked.Exchange(ref _disposeState, DISPOSAL) != ACTIVE)
-			{
-				return;
-			}
 
 			if (Volatile.Read(ref _activeOperationCount) != 0)
 			{

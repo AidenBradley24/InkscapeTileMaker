@@ -61,11 +61,17 @@ public partial class InkscapeSvgConnection : ITilesetConnection
 	{
 		if (Volatile.Read(ref _disposeState) == DISPOSAL)
 		{
-			EndOperation();
 			return false;
 		}
 
 		Interlocked.Increment(ref _activeOperationCount);
+
+		if (Volatile.Read(ref _disposeState) == DISPOSAL)
+		{
+			EndOperation();
+			return false;
+		}
+
 		return true;
 	}
 

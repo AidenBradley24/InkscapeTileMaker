@@ -13,8 +13,10 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 {
 	private readonly NavigationPage _nav;
 	private readonly AppPopupService _popupService;
+	private readonly Lock _disposeSync = new();
 	private bool _isClosePromptActive;
 	private bool _isClosing;
+	private Task? _disposeTask;
 
 #if WINDOWS
 	private AppWindow? _appWindow;
@@ -46,6 +48,24 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 #endif
 	}
 
+	private Task DisposeWindowResourcesAsync()
+	{
+		lock (_disposeSync)
+		{
+			return _disposeTask ??= DisposeWindowResourcesCoreAsync();
+		}
+	}
+
+	private async Task DisposeWindowResourcesCoreAsync()
+	{
+		await PopupService.DisposeAsync();
+
+		if (BindingContext is DesignerViewModel viewModel)
+		{
+			await viewModel.DisposeAsync();
+		}
+	}
+
 	private async Task RequestCloseAsync()
 	{
 		if (_isClosing || _isClosePromptActive)
@@ -70,20 +90,25 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 			{
 				_isClosePromptActive = true;
 
-				if (BindingContext is DesignerViewModel viewModel && viewModel.HasUnsavedChanges)
+				if (BindingContext is DesignerViewModel viewModel)
 				{
-					bool shouldClose = await Page!.DisplayAlertAsync(
-						"Close Designer",
-						"Are you sure you want to close the designer? Unsaved changes will be lost.",
-						"Yes",
-						"No"
-					);
-
-					if (!shouldClose)
+					if (viewModel.HasUnsavedChanges)
 					{
-						return;
+						bool shouldClose = await Page!.DisplayAlertAsync(
+							"Close Designer",
+							"Are you sure you want to close the designer? Unsaved changes will be lost.",
+							"Yes",
+							"No"
+						);
+
+						if (!shouldClose)
+						{
+							return;
+						}
 					}
 				}
+
+				await DisposeWindowResourcesAsync();
 
 				_isClosing = true;
 
@@ -112,10 +137,8 @@ public partial class DesignerWindow : Microsoft.Maui.Controls.Window, IWindowPro
 	{
 		base.OnDestroying();
 
-		if (BindingContext is DesignerViewModel viewModel)
-		{
-			viewModel.DisposeAsync().AsTask().Wait();
-		}
+		_ = DisposeWindowResourcesAsync();
+
 
 #if WINDOWS
 		HandlerChanged -= OnHandlerChangedForWindows;

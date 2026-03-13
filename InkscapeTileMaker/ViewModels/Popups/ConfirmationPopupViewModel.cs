@@ -1,12 +1,13 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Maui.Views;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InkscapeTileMaker.Services;
 
 namespace InkscapeTileMaker.ViewModels.Popups
 {
-	public partial class ConfirmationPopupViewModel : ObservableObject
+	public partial class ConfirmationPopupViewModel : ObservableObject, IAppPopupViewModel
 	{
-		public IAppPopup? PopupView { get; set; }
+		public Popup? View { get; set; }
 
 		[ObservableProperty] public partial string Title { get; set; } = "Confirm";
 		[ObservableProperty] public partial string Message { get; set; } = "(message)";
@@ -16,17 +17,34 @@ namespace InkscapeTileMaker.ViewModels.Popups
 		public bool Result { get; private set; } = false;
 
 		[RelayCommand]
-		public void Confirm()
+		public async Task Confirm()
 		{
 			Result = true;
-			PopupView?.ClosePopup();
+			if (View != null)
+			{
+				await ClosePopup();
+			}
 		}
 
 		[RelayCommand]
-		public void Cancel()
+		public async Task Cancel()
 		{
 			Result = false;
-			PopupView?.ClosePopup();
+			if (View != null)
+			{
+				await ClosePopup();
+			}
+		}
+
+		public async Task ClosePopup()
+		{
+			await MainThread.InvokeOnMainThreadAsync(async () =>
+			{
+				if (View != null && View.IsLoaded)
+				{
+					await View.CloseAsync();
+				}
+			}).ConfigureAwait(false);
 		}
 	}
 }
