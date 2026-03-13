@@ -75,7 +75,7 @@
                              Value="">
                 </DataTrigger>
                 <DataTrigger TargetType="Entry"
-                             Binding="{Binding InkscapePathError, Converter={x:Static x:Boolean.FalseString}}"
+                             Binding="{Binding InkscapePathError, Converter={StaticResource StringNotNullOrEmptyToBoolConverter}}"
                              Value="False">
                 </DataTrigger>
             </Entry.Triggers>
@@ -86,7 +86,7 @@
                Text="{Binding InkscapePathError}"
                TextColor="Red"
                FontSize="12"
-               IsVisible="{Binding InkscapePathError, Converter={x:Static x:Reference NotNullToBool}}" />
+               IsVisible="{Binding InkscapePathError, Converter={StaticResource StringNotNullOrEmptyToBoolConverter}}" />
 
         <!-- Unity Settings Section Label -->
         <Label Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
@@ -114,7 +114,7 @@
                              Value="">
                 </DataTrigger>
                 <DataTrigger TargetType="Entry"
-                             Binding="{Binding UnityImageExportPathError, Converter={x:Static x:Boolean.FalseString}}"
+                             Binding="{Binding UnityImageExportPathError, Converter={StaticResource StringNotNullOrEmptyToBoolConverter}}"
                              Value="False">
                 </DataTrigger>
             </Entry.Triggers>
@@ -125,7 +125,7 @@
                Text="{Binding UnityImageExportPathError}"
                TextColor="Red"
                FontSize="12"
-               IsVisible="{Binding UnityImageExportPathError, Converter={x:Static x:Reference NotNullToBool}}" />
+               IsVisible="{Binding UnityImageExportPathError, Converter={StaticResource StringNotNullOrEmptyToBoolConverter}}" />
 
         <!-- Unity Export Tiles Label -->
         <Label Grid.Row="6" Grid.Column="0"
@@ -160,7 +160,7 @@
                              Value="">
                 </DataTrigger>
                 <DataTrigger TargetType="Entry"
-                             Binding="{Binding UnityEditorScriptPathError, Converter={x:Static x:Boolean.FalseString}}"
+                             Binding="{Binding UnityEditorScriptPathError, Converter={StaticResource StringNotNullOrEmptyToBoolConverter}}"
                              Value="False">
                 </DataTrigger>
             </Entry.Triggers>
@@ -171,7 +171,7 @@
                Text="{Binding UnityEditorScriptPathError}"
                TextColor="Red"
                FontSize="12"
-               IsVisible="{Binding UnityEditorScriptPathError, Converter={x:Static x:Reference NotNullToBool}}" />
+               IsVisible="{Binding UnityEditorScriptPathError, Converter={StaticResource StringNotNullOrEmptyToBoolConverter}}" />
 
         <!-- Unity Script Path Label -->
         <Label Grid.Row="9" Grid.Column="0"
@@ -194,7 +194,7 @@
                              Value="">
                 </DataTrigger>
                 <DataTrigger TargetType="Entry"
-                             Binding="{Binding UnityScriptPathError, Converter={x:Static x:Boolean.FalseString}}"
+                             Binding="{Binding UnityScriptPathError, Converter={StaticResource StringNotNullOrEmptyToBoolConverter}}"
                              Value="False">
                 </DataTrigger>
             </Entry.Triggers>
@@ -205,7 +205,7 @@
                Text="{Binding UnityScriptPathError}"
                TextColor="Red"
                FontSize="12"
-               IsVisible="{Binding UnityScriptPathError, Converter={x:Static x:Reference NotNullToBool}}" />
+               IsVisible="{Binding UnityScriptPathError, Converter={StaticResource StringNotNullOrEmptyToBoolConverter}}" />
 
     </Grid>
 </ContentPage>
