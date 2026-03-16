@@ -13,6 +13,8 @@ jobs:
     env:
       APP_PROJECT: InkscapeTileMaker/InkscapeTileMaker.csproj
       TEST_PROJECT: InkscapeTileMaker.Models.Tests/InkscapeTileMaker.Models.Tests.csproj
+      TARGET_FRAMEWORK: net10.0-windows10.0.19041.0
+      RUNTIME_ID: win-x64
       PUBLISH_DIR: Output/InkscapeTileMaker/Release/net10.0-windows10.0.19041.0/win-x64
       INSTALLER_PATH: Output/InkscapeTileMakerInstaller.exe
 
@@ -39,7 +41,7 @@ jobs:
 
       - name: Restore app dependencies
         shell: pwsh
-        run: dotnet restore $env:APP_PROJECT
+        run: dotnet restore $env:APP_PROJECT -f $env:TARGET_FRAMEWORK -r $env:RUNTIME_ID
 
       - name: Restore test dependencies
         shell: pwsh
@@ -53,7 +55,7 @@ jobs:
         shell: pwsh
         run: |
           $publishDir = "$env:PUBLISH_DIR\"
-          dotnet publish $env:APP_PROJECT -c Release -f net10.0-windows10.0.19041.0 -r win-x64 --no-restore -p:PublishDir=$publishDir
+          dotnet publish $env:APP_PROJECT -c Release -f $env:TARGET_FRAMEWORK -r $env:RUNTIME_ID --no-restore -p:PublishDir=$publishDir
 
       - name: Install Inno Setup
         run: choco install innosetup --no-progress -y
