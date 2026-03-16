@@ -101,7 +101,6 @@
                 <Picker Title="Tile Type"
                         ItemsSource="{Binding SelectedTile.Type, Converter={StaticResource EnumToItemsSourceConverter}}"
                         SelectedItem="{Binding SelectedTile.Type, Mode=TwoWay}"
-                        ItemDisplayBinding="{Binding Converter={StaticResource EnumToStringConverter}}"
                         Margin="0,12,0,0" />
 
                 <Grid ColumnDefinitions="100, *"
@@ -120,14 +119,12 @@
                 <Picker Title="Variant"
                         ItemsSource="{Binding SelectedTile.VariantOptions}"
                         SelectedItem="{Binding SelectedTile.Variant, Mode=TwoWay}"
-                        ItemDisplayBinding="{Binding Converter={StaticResource EnumToStringConverter}}"
                         Margin="0,12,0,0"
                         IsVisible="{Binding SelectedTile.IsMaterial}" />
 
                 <Picker Title="Alignment"
                         ItemsSource="{Binding SelectedTile.AlignmentOptions}"
                         SelectedItem="{Binding SelectedTile.Alignment, Mode=TwoWay}"
-                        ItemDisplayBinding="{Binding Converter={StaticResource EnumToStringConverter}}"
                         Margin="0,12,0,0"
                         IsVisible="{Binding SelectedTile.IsMaterial}" />
 
@@ -154,8 +151,7 @@
                            Margin="0,0,8,0" />
                     <ctrls:MultiPicker Grid.Row="1"
                                        Items="{Binding SelectedTile.SecondaryAlignmentOptions}"
-                                       SelectedItems="{Binding SelectedTile.SecondaryAlignments, Mode=TwoWay}"
-                                       ItemDisplayBinding="{Binding Converter={StaticResource EnumToStringConverter}}">
+                                       SelectedItems="{Binding SelectedTile.SecondaryAlignments, Mode=TwoWay}">
                     </ctrls:MultiPicker>
                 </Grid>
 
