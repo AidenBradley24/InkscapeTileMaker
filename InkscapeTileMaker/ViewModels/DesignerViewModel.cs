@@ -341,7 +341,15 @@ namespace InkscapeTileMaker.ViewModels
 
 			MainThread.BeginInvokeOnMainThread(async () =>
 			{
-				await RenderPreviews(refreshVersion, _disposeCts.Token);
+				try
+				{
+					await RenderPreviews(refreshVersion, _disposeCts.Token);
+				}
+				catch (OperationCanceledException) { }
+				catch (Exception ex)
+				{
+					Trace.TraceError($"Error during rendering: {ex}");
+				}
 			});
 		}
 
@@ -366,14 +374,59 @@ namespace InkscapeTileMaker.ViewModels
 
 				foreach (var tile in Tiles)
 				{
-					tile.PreviewImage = ImageSource.FromStream(token =>
-					{
-						if (Interlocked.CompareExchange(ref _refreshVersion, version, version) != version)
-						{
-							throw new OperationCanceledException("A newer render operation has started.");
-						}
+					tile.PreviewImage = CreateTilePreviewImageSource(tile, tilePixelSize, version);
+				}
 
-						return _tilesetConnection.RenderSegmentAsync(
+				await MainThread.InvokeOnMainThreadAsync(CanvasNeedsRedraw);
+			}
+			catch (OperationCanceledException) { }
+			catch (Exception ex)
+			{
+				Trace.TraceError($"Error during rendering: {ex}");
+			}
+			finally
+			{
+				EndOperation();
+			}
+		}
+
+		private static readonly byte[] TransparentPreviewPngBytes = CreateTransparentPreviewPngBytes();
+
+		private static byte[] CreateTransparentPreviewPngBytes()
+		{
+			using var bitmap = new SKBitmap(1, 1, true);
+			bitmap.Erase(SKColors.Transparent);
+
+			using var image = SKImage.FromBitmap(bitmap);
+			using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+
+			return data.ToArray();
+		}
+
+		private static Stream CreateTransparentPreviewStream()
+		{
+			return new MemoryStream(TransparentPreviewPngBytes, writable: false);
+		}
+
+		private ImageSource CreateTilePreviewImageSource(TileViewModel tile, Scale tilePixelSize, int version)
+		{
+			var connection = _tilesetConnection;
+
+			return ImageSource.FromStream(async token =>
+			{
+				try
+				{
+					if (token.IsCancellationRequested ||
+						CheckIfDisposed() ||
+						connection == null ||
+						connection.CurrentFile == null ||
+						connection.Tileset == null ||
+						Volatile.Read(ref _refreshVersion) != version)
+					{
+						return CreateTransparentPreviewStream();
+					}
+
+					return await connection.RenderSegmentAsync(
 						".png",
 						left: tile.Value.Column * tilePixelSize.Width,
 						top: tile.Value.Row * tilePixelSize.Height,
@@ -381,16 +434,21 @@ namespace InkscapeTileMaker.ViewModels
 						bottom: (tile.Value.Row + 1) * tilePixelSize.Height,
 						null,
 						token);
-					});
 				}
-
-				await MainThread.InvokeOnMainThreadAsync(CanvasNeedsRedraw);
-			}
-			catch (OperationCanceledException) { }
-			finally
-			{
-				EndOperation();
-			}
+				catch (OperationCanceledException)
+				{
+					return CreateTransparentPreviewStream();
+				}
+				catch (ObjectDisposedException)
+				{
+					return CreateTransparentPreviewStream();
+				}
+				catch (Exception ex)
+				{
+					Trace.TraceError($"Tile preview render failed for '{tile.Name}': {ex}");
+					return CreateTransparentPreviewStream();
+				}
+			});
 		}
 
 		public void RenderCanvas(SKCanvas canvas, int width, int height) // note that this must run synchronously

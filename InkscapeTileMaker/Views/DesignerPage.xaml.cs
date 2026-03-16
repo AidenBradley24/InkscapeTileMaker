@@ -1,4 +1,5 @@
 using InkscapeTileMaker.ViewModels;
+using SkiaSharp;
 using SkiaSharp.Views.Maui;
 
 namespace InkscapeTileMaker.Views
@@ -73,6 +74,7 @@ namespace InkscapeTileMaker.Views
 
 		private void OnPreviewCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 		{
+			e.Surface.Canvas.Clear(SKColors.LightGray);
 			if (BindingContext is not DesignerViewModel viewModel) return;
 
 			var canvas = e.Surface.Canvas;
