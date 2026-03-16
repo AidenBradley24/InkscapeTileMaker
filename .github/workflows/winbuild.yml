@@ -41,7 +41,7 @@ jobs:
 
       - name: Restore app dependencies
         shell: pwsh
-        run: dotnet restore $env:APP_PROJECT -r $env:RUNTIME_ID /p:TargetFramework=$env:TARGET_FRAMEWORK
+        run: dotnet restore $env:APP_PROJECT -r $env:RUNTIME_ID /p:TargetFramework=$env:TARGET_FRAMEWORK /p:PublishReadyToRun=true
 
       - name: Restore test dependencies
         shell: pwsh
@@ -55,7 +55,14 @@ jobs:
         shell: pwsh
         run: |
           $publishDir = "$env:PUBLISH_DIR\"
-          dotnet publish $env:APP_PROJECT -c Release -f $env:TARGET_FRAMEWORK -r $env:RUNTIME_ID --no-restore -p:PublishDir=$publishDir
+          dotnet publish $env:APP_PROJECT `
+            -c Release `
+            -f $env:TARGET_FRAMEWORK `
+            -r $env:RUNTIME_ID `
+            --no-restore `
+            -p:PublishDir=$publishDir `
+            -p:PublishReadyToRun=true
+          $publishDir
 
       - name: Install Inno Setup
         run: choco install innosetup --no-progress -y
