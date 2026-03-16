@@ -12,12 +12,13 @@ public class WindowOpeningService : IWindowOpeningService
 		_services = services;
 	}
 
-	public void OpenDesignerWindow(FileInfo? file = null)
+	public async Task OpenDesignerWindowAsync(FileInfo? file = null)
 	{
 		var app = Application.Current;
 		if (app is null) return;
 		var designerWindow = _services.GetRequiredService<DesignerWindow>();
-		app.OpenWindow(designerWindow);
+		await OpenWindowAsync(designerWindow);
+
 		if (file is not null)
 		{
 			var newViewModel = (DesignerViewModel)designerWindow!.BindingContext;
@@ -33,15 +34,28 @@ public class WindowOpeningService : IWindowOpeningService
 			}
 
 			newViewModel.SetTilesetConnection(connection);
-			_ = connection.LoadAsync(file);
+			await connection.LoadAsync(file);
 		}
 	}
 
-	public void OpenLandingWindow()
+	public async Task OpenLandingWindowAsync()
 	{
 		var app = Application.Current;
 		if (app is null) return;
 		var landingWindow = _services.GetRequiredService<LandingWindow>();
-		app.OpenWindow(landingWindow);
+		await OpenWindowAsync(landingWindow);
+	}
+
+	private static Task OpenWindowAsync(Window window)
+	{
+		var app = Application.Current;
+		var taskCompletionSource = new TaskCompletionSource();
+		window.Activated += (_, _) =>
+		{
+			taskCompletionSource.TrySetResult();
+		};
+
+		app!.OpenWindow(window);
+		return taskCompletionSource.Task;
 	}
 }

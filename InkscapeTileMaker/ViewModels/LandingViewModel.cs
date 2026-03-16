@@ -90,8 +90,7 @@ namespace InkscapeTileMaker.ViewModels
 			}
 
 			var svgFile = new FileInfo(result.FullPath);
-			_windowService.OpenDesignerWindow(svgFile);
-			await Task.Delay(500); // wait for designer to spawn
+			await _windowService.OpenDesignerWindowAsync(svgFile);
 			_windowProvider?.CloseWindow();
 		}
 
@@ -112,8 +111,7 @@ namespace InkscapeTileMaker.ViewModels
 			if (result != null && !string.IsNullOrEmpty(result.FilePath))
 			{
 				var svgFile = new FileInfo(result.FilePath);
-				_windowService.OpenDesignerWindow(svgFile);
-				await Task.Delay(500); // wait for designer to spawn
+				await _windowService.OpenDesignerWindowAsync(svgFile);
 				_windowProvider?.CloseWindow();
 			}
 		}

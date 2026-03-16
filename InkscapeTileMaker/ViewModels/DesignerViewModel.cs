@@ -964,7 +964,7 @@ namespace InkscapeTileMaker.ViewModels
 		[RelayCommand]
 		public async Task OpenLanding()
 		{
-			_windowService.OpenLandingWindow();
+			await _windowService.OpenLandingWindowAsync();
 		}
 
 		[RelayCommand]
