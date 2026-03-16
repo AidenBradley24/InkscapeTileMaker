@@ -4,20 +4,39 @@
              x:Class="InkscapeTileMaker.Views.LandingPage"
              xmlns:vms="clr-namespace:InkscapeTileMaker.ViewModels"
              x:DataType="vms:LandingViewModel">
-    <Grid RowDefinitions="0.2*, 0.8*"
+    <Grid RowDefinitions="50, Auto, *"
           ColumnDefinitions="0.3*, 0.7*"
-          Padding="50"
+          Padding="50,0,50,0"
           ColumnSpacing="5">
-        
-        <Label 
-            Text="Welcome to Inkscape Tile Maker!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center"
-            Grid.ColumnSpan="2"
-            FontSize="Title"/>
+
+        <Grid Grid.Row="0"
+              Grid.ColumnSpan="2">
+            <ImageButton Grid.Column="1"
+                         Source="settings.png"
+                         Command="{Binding OpenSettingsCommand}"
+                         HorizontalOptions="End"
+                         VerticalOptions="Start"
+                         WidthRequest="16"
+                         HeightRequest="16"
+                         Padding="0"
+                         BackgroundColor="Transparent"
+                         BorderWidth="0"
+                         SemanticProperties.Description="Settings" />
+        </Grid>
+
+        <Grid Grid.Row="1"
+              Grid.ColumnSpan="2"
+              ColumnDefinitions="*, Auto">
+            <Label 
+                Text="Welcome to Inkscape Tile Maker!"
+                VerticalOptions="Center" 
+                HorizontalOptions="Center"
+                Grid.ColumnSpan="2"
+                FontSize="Title"/>
+        </Grid>
 
         <VerticalStackLayout
-            Grid.Row="1"
+            Grid.Row="2"
             Grid.Column="0"
             Spacing="5"
             VerticalOptions="Start"
@@ -31,11 +50,11 @@
         </VerticalStackLayout>
 
         <StackLayout
-            Grid.Row="1"
+            Grid.Row="2"
             Grid.Column="1"
             Padding="10">
             <Label 
-                Text="Inkscape Tile Maker helps you create beautiful tile designs using Inkscape. Get started by creating a new design or opening an existing one."
+                Text="Create SVG-based tilesets for use in games, using Inkscape. Get started by creating a new design or opening an existing one."
                 FontSize="Body"
                 VerticalOptions="Center"
                 HorizontalOptions="Center"/>

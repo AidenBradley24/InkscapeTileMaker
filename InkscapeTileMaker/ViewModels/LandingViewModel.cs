@@ -95,6 +95,13 @@ namespace InkscapeTileMaker.ViewModels
 		}
 
 		[RelayCommand]
+		public async Task OpenSettings()
+		{
+			if (LandingNavigation == null) return;
+			await LandingNavigation.GotoSettingsPage();
+		}
+
+		[RelayCommand]
 		public async Task CreateWithTemplate()
 		{
 			if (SelectedTemplate == null) return;

@@ -7,9 +7,10 @@ public partial class LandingWindow : Window, ILandingNavigation, IWindowProvider
 {
 	private readonly NavigationPage _nav;
 	private readonly LandingViewModel _vm;
+	private readonly IServiceProvider _services;
 	private readonly AppPopupService _popupService;
 
-	public LandingWindow(LandingViewModel vm)
+	public LandingWindow(LandingViewModel vm, IServiceProvider services)
 	{
 		Width = 600;
 		Height = 400;
@@ -20,6 +21,7 @@ public partial class LandingWindow : Window, ILandingNavigation, IWindowProvider
 
 		_nav = new NavigationPage(new LandingPage(vm));
 		_vm = vm;
+		_services = services;
 		Page = _nav;
 		vm.LandingNavigation = this;
 		vm.RegisterWindow(this);
@@ -47,10 +49,21 @@ public partial class LandingWindow : Window, ILandingNavigation, IWindowProvider
 	{
 		await _nav.PushAsync(new TemplatePage(_vm));
 	}
+
+	public async Task GotoSettingsPage()
+	{
+		if (_nav.CurrentPage is SettingsPage)
+		{
+			return;
+		}
+
+		await _nav.PushAsync(_services.GetRequiredService<SettingsPage>());
+	}
 }
 
 public interface ILandingNavigation
 {
 	Task GotoLandingPage();
 	Task GotoTemplatePage();
+	Task GotoSettingsPage();
 }

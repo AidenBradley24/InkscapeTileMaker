@@ -3,7 +3,6 @@ using CommunityToolkit.Maui.Storage;
 using InkscapeTileMaker.Services;
 using InkscapeTileMaker.ViewModels;
 using InkscapeTileMaker.Views;
-using Microsoft.Extensions.Logging;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace InkscapeTileMaker
