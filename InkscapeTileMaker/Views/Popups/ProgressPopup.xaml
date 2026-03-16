@@ -7,7 +7,9 @@
                x:DataType="vms:ProgressPopupViewModel"
                MinimumWidthRequest="200"
                MinimumHeightRequest="120"
-               CanBeDismissedByTappingOutsideOfPopup="False">
+               CanBeDismissedByTappingOutsideOfPopup="False"
+               Padding="0"
+               BackgroundColor="{DynamicResource OffBlack}">
 
     <ContentView.Resources>
         <toolkit:InvertedBoolConverter x:Key="InverseBoolConverter"/>
@@ -21,7 +23,7 @@
         <Label Grid.Row="0"
                Text="{Binding Message}"
                FontSize="14"
-               TextColor="{DynamicResource LightGray}"
+               TextColor="{DynamicResource White}"
                HorizontalOptions="Center"
                HorizontalTextAlignment="Center"
                LineBreakMode="WordWrap"

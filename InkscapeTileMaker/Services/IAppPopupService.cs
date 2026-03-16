@@ -2,7 +2,7 @@
 {
 	public interface IAppPopupService : IAsyncDisposable
 	{
-		public Task ShowTextAsync(string text);
+		public Task ShowTextAsync(string text, string title = "");
 
 		public Task<bool> ShowConfirmationAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel");
 

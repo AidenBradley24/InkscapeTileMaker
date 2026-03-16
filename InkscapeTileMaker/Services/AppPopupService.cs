@@ -9,8 +9,6 @@ namespace InkscapeTileMaker.Services
 	{
 		private readonly IWindowProvider _windowProvider;
 		private readonly SemaphoreSlim _progressSemaphore;
-		private readonly Lock _popupSync = new();
-		private readonly HashSet<IAppPopupViewModel> _activePopups = [];
 
 		private int _activeOperationCount;
 
@@ -52,35 +50,6 @@ namespace InkscapeTileMaker.Services
 			}
 		}
 
-		private bool TryRegisterPopup(IAppPopupViewModel popupViewModel)
-		{
-			lock (_popupSync)
-			{
-				if (Volatile.Read(ref _disposeState) == DISPOSAL)
-				{
-					return false;
-				}
-
-				return _activePopups.Add(popupViewModel);
-			}
-		}
-
-		private void UnregisterPopup(IAppPopupViewModel popupViewModel)
-		{
-			lock (_popupSync)
-			{
-				_activePopups.Remove(popupViewModel);
-			}
-		}
-
-		private IAppPopupViewModel[] GetActivePopupsSnapshot()
-		{
-			lock (_popupSync)
-			{
-				return [.. _activePopups];
-			}
-		}
-
 		private static async Task SafeClosePopupAsync(IAppPopupViewModel popupViewModel)
 		{
 			try
@@ -96,75 +65,27 @@ namespace InkscapeTileMaker.Services
 		{
 			if (!TryBeginOperation()) return false;
 
-			var vm = new ConfirmationPopupViewModel()
-			{
-				Title = title,
-				Message = message,
-				ConfirmButtonText = confirmText,
-				CancelButtonText = cancelText
-			};
-
-			if (!TryRegisterPopup(vm))
-			{
-				EndOperation();
-				return false;
-			}
-
 			try
 			{
-				await _windowProvider.NavPage.Dispatcher.DispatchAsync(async () =>
-				{
-					var view = new ConfirmationPopup(vm);
-					var opts = new PopupOptions()
-					{
-						CanBeDismissedByTappingOutsideOfPopup = false
-					};
-
-					await PopupExtensions.ShowPopupAsync(_windowProvider.NavPage, view, opts, _disposeCts.Token);
-				});
-
-				return vm.Result;
-			}
-			catch (OperationCanceledException)
-			{
-				return false;
+				bool result = await _windowProvider.NavPage.DisplayAlertAsync(title, message, confirmText, cancelText, FlowDirection.LeftToRight);
+				return result;
 			}
 			finally
 			{
-				await SafeClosePopupAsync(vm).ConfigureAwait(false);
-				UnregisterPopup(vm);
 				EndOperation();
 			}
 		}
 
-		public async Task ShowTextAsync(string text)
+		public async Task ShowTextAsync(string text, string title = "")
 		{
 			if (!TryBeginOperation()) return;
 
-			var vm = new TextPopupViewModel()
-			{
-				Text = text
-			};
-
-			if (!TryRegisterPopup(vm))
-			{
-				EndOperation();
-				return;
-			}
-
 			try
 			{
-				await _windowProvider.NavPage.Dispatcher.DispatchAsync(async () =>
-				{
-					var view = new TextPopup(vm);
-					await PopupExtensions.ShowPopupAsync(_windowProvider.NavPage, view, PopupOptions.Empty, _disposeCts.Token);
-				});
+				await _windowProvider.NavPage.DisplayAlertAsync(title, text, "OK");
 			}
-			catch (OperationCanceledException) { }
 			finally
 			{
-				await SafeClosePopupAsync(vm).ConfigureAwait(false);
-				UnregisterPopup(vm);
 				EndOperation();
 			}
 		}
@@ -188,16 +109,6 @@ namespace InkscapeTileMaker.Services
 					Message = message,
 					IsIndeterminate = isIndeterminate
 				};
-
-				if (!TryRegisterPopup(vm))
-				{
-					if (semaphoreHeld)
-					{
-						_progressSemaphore.Release();
-					}
-
-					throw new OperationCanceledException();
-				}
 
 				Task popupTask = _windowProvider.NavPage.Dispatcher.DispatchAsync(async () =>
 				{
@@ -233,8 +144,6 @@ namespace InkscapeTileMaker.Services
 					catch (OperationCanceledException) { }
 					finally
 					{
-						UnregisterPopup(vm);
-
 						if (semaphoreHeld)
 						{
 							_progressSemaphore.Release();
@@ -258,15 +167,12 @@ namespace InkscapeTileMaker.Services
 
 			_disposeCts.Cancel();
 
-			foreach (var popupViewModel in GetActivePopupsSnapshot())
-			{
-				await SafeClosePopupAsync(popupViewModel).ConfigureAwait(false);
-			}
-
 			if (Volatile.Read(ref _activeOperationCount) != 0)
 			{
 				await _disposeCompletion.Task.ConfigureAwait(false);
 			}
+
+			await Task.Delay(500).ConfigureAwait(false);
 
 			_disposeCts.Dispose();
 		}

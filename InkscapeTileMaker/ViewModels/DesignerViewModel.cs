@@ -1346,7 +1346,7 @@ namespace InkscapeTileMaker.ViewModels
 					{
 						foreach (var (tvm, i) in Tiles.Select((t, i) => (t, i)))
 						{
-							progress.Report((double)i / Tiles.Count);
+							progress?.Report((double)i / Tiles.Count);
 							using var stream = await _tilesetConnection.RenderSegmentAsync(
 								".png",
 								left: tvm.Value.Column * tileset.TilePixelSize.Width,
@@ -1390,14 +1390,16 @@ namespace InkscapeTileMaker.ViewModels
 					if (_windowProvider == null)
 					{
 						await exporter.WriteTilesetPackageAsync(writer);
+						using var fs = tmpFile.OpenRead();
+						_ = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.unitypackage", fs);
 					}
 					else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async progress =>
 					{
 						await exporter.WriteTilesetPackageAsync(writer);
+						using var fs = tmpFile.OpenRead();
+						_ = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.unitypackage", fs);
 					});
 				}
-				using var fs = tmpFile.OpenRead();
-				_ = await _fileSaver.SaveAsync($"{Path.GetFileNameWithoutExtension(_tilesetConnection.CurrentFile.Name)}.unitypackage", fs);
 			}
 			finally
 			{
@@ -1430,7 +1432,7 @@ namespace InkscapeTileMaker.ViewModels
 				foreach (var type in Assembly.GetAssembly(typeof(MaterialExporter))!.GetTypes()
 					.Where(t => typeof(MaterialExporter).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract))
 				{
-					var constructor = type.GetConstructor([typeof(string), typeof(ITilesetConnection), typeof(ITilesetRenderingService)])
+					var constructor = type.GetConstructor([typeof(string), typeof(ITilesetConnection)])
 						?? throw new Exception($"No valid constructor found for type: {type.FullName}");
 					exporter = (MaterialExporter)constructor.Invoke([material.Name, _tilesetConnection]);
 					if (exporter.Type != material.Type) continue;
@@ -1443,14 +1445,15 @@ namespace InkscapeTileMaker.ViewModels
 				if (_windowProvider == null)
 				{
 					await exporter.ExportAsync(tmpFile, TilePixelSize);
+					using var fs = tmpFile.OpenRead();
+					_ = await _fileSaver.SaveAsync($"{material.Name}.png", fs);
 				}
 				else await _windowProvider.PopupService.ShowProgressOnTaskAsync("Exporting...", isIndeterminate: true, async progress =>
 				{
 					await exporter.ExportAsync(tmpFile, TilePixelSize);
+					using var fs = tmpFile.OpenRead();
+					_ = await _fileSaver.SaveAsync($"{material.Name}.png", fs);
 				});
-
-				using var fs = tmpFile.OpenRead();
-				_ = await _fileSaver.SaveAsync($"{material.Name}.png", fs);
 			}
 			finally
 			{
