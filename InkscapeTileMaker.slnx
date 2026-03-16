@@ -1,8 +1,11 @@
 <Solution>
   <Folder Name="/Solution Items/">
+    <File Path=".github/workflows/winbuild.yml" />
+    <File Path=".gitignore" />
     <File Path="attributions.md" />
     <File Path="LICENSE.txt" />
     <File Path="README.md" />
+    <File Path="scripts/wininstaller.iss" />
     <File Path="testplan.md" />
   </Folder>
   <Project Path="InkscapeTileMaker.Models.Tests/InkscapeTileMaker.Models.Tests.csproj" Id="71849d7a-25bd-4197-9876-05f449b2b2d7" />

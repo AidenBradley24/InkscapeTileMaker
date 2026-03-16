@@ -13,6 +13,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<BaseOutputPath>..\Output\InkscapeTileMaker\</BaseOutputPath>
+		<DefaultItemExcludes>$(DefaultItemExcludes);bin\**;obj\**</DefaultItemExcludes>
 
 		<ApplicationTitle>InkscapeTileMaker</ApplicationTitle>
 

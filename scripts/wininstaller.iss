@@ -28,7 +28,7 @@ VersionInfoDescription=
 VersionInfoCopyright=© 2026 Aiden Bradley
 
 [Files]
-Source: "..\InkscapeTileMaker\bin\Release\net10.0-windows10.0.19041.0\win-x64\*"; DestDir: "{app}"; Flags: recursesubdirs
+Source: "..\Output\InkscapeTileMaker\Release\net10.0-windows10.0.19041.0\win-x64\*"; DestDir: "{app}"; Flags: recursesubdirs
 
 [Icons]
 Name: "{group}\InkscapeTileMaker"; Filename: "{app}\InkscapeTileMaker.exe"
