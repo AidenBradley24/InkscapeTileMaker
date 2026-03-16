@@ -116,5 +116,49 @@ namespace InkscapeTileMaker.Utility
 			SvgRoot.SetAttributeValue(XName.Get("width"), size.Width.ToString());
 			SvgRoot.SetAttributeValue(XName.Get("height"), size.Height.ToString());
 		}
+
+		public InkscapeSvg Clone()
+		{
+			if (Document is null) throw new InvalidOperationException("SVG Document is not loaded.");
+			using var ms = new MemoryStream();
+			Document.Save(ms);
+			ms.Position = 0;
+			return new InkscapeSvg(ms);
+		}
+
+		public InkscapeSvg Crop(Models.Rect rect)
+		{
+			if (Defs is null) throw new Exception("SVG Document isn't loaded or missing <defs> element.");
+
+			var clone = Clone();
+			var clip = new XElement(XName.Get("{svg}clipPath"), new XAttribute(XName.Get("id"), "crop"));
+			var cropRect = new XElement(XName.Get("{svg}rect"),
+				new XAttribute(XName.Get("x"), rect.Left),
+				new XAttribute(XName.Get("y"), rect.Top),
+				new XAttribute(XName.Get("width"), rect.Width),
+				new XAttribute(XName.Get("height"), rect.Height));
+			clip.Add(cropRect);
+			clone.Defs!.Add(clip);
+
+			clone.SvgRoot!.SetAttributeValue("width", rect.Width);
+			clone.SvgRoot.SetAttributeValue("height", rect.Height);
+			clone.SvgRoot.SetAttributeValue("viewBox", $"{rect.Left} {rect.Top} {rect.Width} {rect.Height}");
+
+			foreach (var element in clone.SvgRoot.Descendants())
+			{
+				if (element.Name.LocalName != "g") continue; // Only apply clipping to groups, to avoid interfering with defs and other elements
+				var existingClip = element.Attribute(XName.Get("clip-path"))?.Value;
+				if (existingClip != null)
+				{
+					element.SetAttributeValue(XName.Get("clip-path"), $"url(#crop) {existingClip}");
+				}
+				else
+				{
+					element.SetAttributeValue(XName.Get("clip-path"), "url(#crop)");
+				}
+			}
+
+			return clone;
+		}
 	}
 }

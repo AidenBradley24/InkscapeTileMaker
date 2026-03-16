@@ -144,13 +144,6 @@ namespace InkscapeTileMaker.Services
 			{
 				var exportType = NormalizeExportType(extension);
 
-				if (exportType == "svg")
-				{
-					throw new NotSupportedException("Segment rendering to SVG is not yet supported.");
-					// TODO crop SVG content to specified area
-					// inkscape export area only works for raster formats
-				}
-
 				var requestHash = HashCode.Combine(
 					file.FullName,
 					exportType,
@@ -165,6 +158,14 @@ namespace InkscapeTileMaker.Services
 					_ => RenderSegmentCoreAsync(file, exportType, left, top, right, bottom, exportScale, _disposeCancellation.Token));
 
 				var exportFile = await renderTask.WaitAsync(cancellationToken).ConfigureAwait(false);
+				if (exportType == "svg")
+				{
+					using var fs = exportFile.OpenRead();
+					using var svgM = StripAppSvgData(fs);
+					var croppedSvg = await CropSvgAsync(new Models.Rect(left, top, right, bottom), svgM).ConfigureAwait(false);
+					return croppedSvg;
+				}
+
 				return exportFile.OpenRead();
 			}
 			finally
@@ -328,6 +329,16 @@ namespace InkscapeTileMaker.Services
 			document.Save(outputStream);
 			outputStream.Position = 0;
 			return outputStream;
+		}
+
+		private static async Task<MemoryStream> CropSvgAsync(Models.Rect rect, Stream svgStream)
+		{
+			var doc = new InkscapeSvg(svgStream);
+			var cropedDoc = doc.Crop(rect);
+			var ms = new MemoryStream();
+			await cropedDoc.SaveToStreamAsync(ms);
+			ms.Position = 0;
+			return ms;
 		}
 
 		private async Task<int> ComputeFileHashAsync(FileInfo file, CancellationToken cancellationToken)

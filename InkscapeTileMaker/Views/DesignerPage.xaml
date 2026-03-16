@@ -78,19 +78,18 @@
                 <MenuFlyoutItem Text="SVG"
                                 Command="{Binding ExportTilesetImageCommand}" CommandParameter="svg" />
             </MenuFlyoutSubItem>
-            <MenuFlyoutSubItem Text="Selected Tile Image"
-                               IsEnabled="{Binding SelectedTile, Converter={StaticResource IsNotNullConverter}}">
-                <MenuFlyoutItem Text="PNG"
+            <MenuFlyoutSubItem Text="Selected Tile Image">
+                <MenuFlyoutItem Text="PNG" IsEnabled="{Binding SelectedTile, Converter={StaticResource IsNotNullConverter}}"
                     Command="{Binding ExportSelectedTileImageCommand}" CommandParameter="png" />
-                <!--<MenuFlyoutItem Text="SVG"
-                    Command="{Binding ExportSelectedTileImageCommand}" CommandParameter="svg" />-->
+                <MenuFlyoutItem Text="SVG" IsEnabled="{Binding SelectedTile, Converter={StaticResource IsNotNullConverter}}"
+                    Command="{Binding ExportSelectedTileImageCommand}" CommandParameter="svg" />
             </MenuFlyoutSubItem>
             <MenuFlyoutSeparator />
             <MenuFlyoutSubItem Text="Seperated Tiles">
                 <MenuFlyoutItem Text="PNG"
                                 Command="{Binding ExportSeparatedTilesPngCommand}" />
-                <!--<MenuFlyoutItem Text="SVG"
-                                Command="{Binding ExportSeparatedTilesSvgCommand}" />-->
+                <MenuFlyoutItem Text="SVG"
+                                Command="{Binding ExportSeparatedTilesSvgCommand}" />
             </MenuFlyoutSubItem>
             <MenuFlyoutSeparator/>
             <MenuFlyoutItem Text="Material"
