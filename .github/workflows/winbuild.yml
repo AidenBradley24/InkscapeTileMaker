@@ -41,7 +41,7 @@ jobs:
 
       - name: Restore app dependencies
         shell: pwsh
-        run: dotnet restore $env:APP_PROJECT -f $env:TARGET_FRAMEWORK -r $env:RUNTIME_ID
+        run: dotnet restore $env:APP_PROJECT -r $env:RUNTIME_ID /p:TargetFramework=$env:TARGET_FRAMEWORK
 
       - name: Restore test dependencies
         shell: pwsh
