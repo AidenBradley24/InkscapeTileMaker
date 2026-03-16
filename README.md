@@ -19,9 +19,10 @@ At the moment, I only add things that I need for my own projects, but I will try
 
 ## Installation
 
-1. Go to the latest release. 
-2. Pick the desired method (Installer, Prebuilt ZIP, or Compile yourself from source code).
-3. Run the program.
+1. Ensure you have the latest version of Inkscape installed. You can download it from https://inkscape.org/.
+2. Go to the latest release. 
+3. Pick the desired method (Installer, Prebuilt ZIP, or Compile yourself from source code).
+4. Run the program.
 
 ## Creating a New SVG Tileset from Templates
 
